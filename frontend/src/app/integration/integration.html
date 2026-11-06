@@ -1,0 +1,32 @@
+<div class="integration-container">
+  <h1>{{ i18n.t('externalIntegrations') }}</h1>
+  <div *ngIf="loading" class="loading">{{ i18n.t('loadingIntegrations') }}</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+  <div *ngIf="!loading && integrations.length === 0" class="no-data">{{ i18n.t('noIntegrations') }}</div>
+  
+  <table *ngIf="integrations.length > 0" class="integration-table">
+    <thead>
+      <tr>
+        <th>{{ i18n.t('integrationName') }}</th>
+        <th>{{ i18n.t('integrationType') }}</th>
+        <th>{{ i18n.t('integrationStatus') }}</th>
+        <th>{{ i18n.t('lastSync') }}</th>
+        <th>{{ i18n.t('actions') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let integration of integrations">
+        <td>{{ integration.name }}</td>
+        <td>{{ integrationTypeLabel(integration.integration_type) }}</td>
+        <td>
+          <span [class]="'status-' + integration.status">{{ integrationStatusLabel(integration.status) }}</span>
+        </td>
+        <td>{{ integration.last_sync | date:'short' }}</td>
+        <td>
+          <button (click)="testIntegration(integration.id)">{{ i18n.t('test') }}</button>
+          <button (click)="syncIntegration(integration.id)">{{ i18n.t('sync') }}</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,107 @@
+<main class="restaurants-page">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">JETFOOD</p>
+      <h1>{{ i18n.t('restaurants') }}</h1>
+      <p>{{ i18n.t('restaurantsDescription') }}</p>
+    </div>
+  </header>
+
+  <p *ngIf="loading" class="notice" role="status">{{ i18n.t('loading') }}</p>
+  <p *ngIf="error" class="notice error" role="alert">{{ error }}</p>
+  <div *ngIf="!loading && !error && restaurants.length === 0" class="notice">{{ i18n.t('noRestaurants') }}</div>
+
+  <section class="restaurant-grid" *ngIf="restaurants.length">
+    <article class="restaurant-card" *ngFor="let restaurant of restaurants">
+      <button type="button" class="restaurant-select" (click)="selectRestaurant(restaurant)">
+        <img *ngIf="restaurant.image_url" [src]="restaurant.image_url" [alt]="restaurant.name">
+        <span class="restaurant-placeholder" *ngIf="!restaurant.image_url" aria-hidden="true">JF</span>
+        <span class="restaurant-info">
+          <strong>{{ restaurant.name }}</strong>
+          <span>{{ restaurant.address }}</span>
+          <span>{{ restaurant.opening_time.slice(0, 5) }}–{{ restaurant.closing_time.slice(0, 5) }}</span>
+          <span>{{ restaurant.description }}</span>
+        </span>
+      </button>
+      <div class="restaurant-actions" *ngIf="canManage">
+        <span class="availability" [class.closed]="!restaurant.is_active">
+          {{ restaurant.is_active ? i18n.t('available') : i18n.t('unavailable') }}
+        </span>
+        <button type="button" (click)="editRestaurant(restaurant)">{{ i18n.t('edit') }}</button>
+        <button type="button" class="danger" (click)="deleteRestaurant(restaurant)">{{ i18n.t('delete') }}</button>
+      </div>
+    </article>
+  </section>
+
+  <section class="management-grid" *ngIf="canManage">
+    <form class="management-card" (ngSubmit)="saveRestaurant()">
+      <h2>{{ editingRestaurantId ? i18n.t('editRestaurant') : i18n.t('registerRestaurant') }}</h2>
+      <label>{{ i18n.t('restaurantName') }}<input name="restaurantName" [(ngModel)]="restaurantForm.name" required maxlength="200"></label>
+      <label>{{ i18n.t('description') }}<textarea name="restaurantDescription" [(ngModel)]="restaurantForm.description"></textarea></label>
+      <label>{{ i18n.t('address') }}<input name="restaurantAddress" [(ngModel)]="restaurantForm.address" required maxlength="500"></label>
+      <label>{{ i18n.t('phone') }}<input name="restaurantPhone" [(ngModel)]="restaurantForm.phone"></label>
+      <label>{{ i18n.t('imageUrl') }}<input name="restaurantImage" type="url" [(ngModel)]="restaurantForm.image_url"></label>
+      <div class="time-fields">
+        <label>{{ i18n.t('opensAt') }}<input name="opensAt" type="time" [(ngModel)]="restaurantForm.opening_time" required></label>
+        <label>{{ i18n.t('closesAt') }}<input name="closesAt" type="time" [(ngModel)]="restaurantForm.closing_time" required></label>
+      </div>
+      <fieldset>
+        <legend>{{ i18n.t('workingDays') }}</legend>
+        <label class="day-option" *ngFor="let day of weekdays">
+          <input type="checkbox" [checked]="restaurantForm.working_days.includes(day.value)"
+            (change)="toggleWorkingDay(day.value, $any($event.target).checked)">
+          {{ i18n.t(day.key) }}
+        </label>
+      </fieldset>
+      <label class="checkbox-option">
+        <input type="checkbox" name="restaurantActive" [(ngModel)]="restaurantForm.is_active">
+        {{ i18n.t('restaurantAvailable') }}
+      </label>
+      <p *ngIf="restaurantFormError" class="notice error" role="alert">{{ restaurantFormError }}</p>
+      <div class="form-actions">
+        <button type="submit" [disabled]="saving">{{ saving ? i18n.t('saving') : i18n.t('save') }}</button>
+        <button type="button" class="secondary" *ngIf="editingRestaurantId" (click)="resetRestaurantForm()">{{ i18n.t('cancel') }}</button>
+      </div>
+    </form>
+
+    <section class="management-card menu-management">
+      <h2>{{ i18n.t('menuManagement') }}</h2>
+      <p *ngIf="!selectedRestaurant" class="notice">{{ i18n.t('selectRestaurantToManageMenu') }}</p>
+      <ng-container *ngIf="selectedRestaurant">
+        <p class="selected-name">{{ selectedRestaurant.name }}</p>
+        <p *ngIf="menuLoading" class="notice" role="status">{{ i18n.t('loading') }}</p>
+        <p *ngIf="menuError" class="notice error" role="alert">{{ menuError }}</p>
+        <ul class="menu-list">
+          <li *ngFor="let item of menuItems">
+            <div>
+              <strong>{{ item.name }}</strong>
+              <span>{{ item.category }} · {{ item.price }} ₸</span>
+              <span [class.closed]="!item.is_active">{{ item.is_active ? i18n.t('available') : i18n.t('unavailable') }}</span>
+            </div>
+            <div class="inline-actions">
+              <button type="button" (click)="editMenuItem(item)">{{ i18n.t('edit') }}</button>
+              <button type="button" class="danger" (click)="deleteMenuItem(item)">{{ i18n.t('delete') }}</button>
+            </div>
+          </li>
+        </ul>
+        <form class="menu-form" (ngSubmit)="saveMenuItem()">
+          <h3>{{ editingMenuItemId ? i18n.t('editMenuItem') : i18n.t('addMenuItem') }}</h3>
+          <label>{{ i18n.t('dishName') }}<input name="dishName" [(ngModel)]="menuForm.name" required maxlength="200"></label>
+          <label>{{ i18n.t('category') }}<input name="dishCategory" [(ngModel)]="menuForm.category" required maxlength="100"></label>
+          <label>{{ i18n.t('description') }}<textarea name="dishDescription" [(ngModel)]="menuForm.description"></textarea></label>
+          <label>{{ i18n.t('price') }}<input name="dishPrice" type="number" min="0.01" step="0.01" [(ngModel)]="menuForm.price" required></label>
+          <label>{{ i18n.t('imageUrl') }}<input name="dishImage" type="url" [(ngModel)]="menuForm.image_url"></label>
+          <label class="checkbox-option">
+            <input type="checkbox" name="dishActive" [(ngModel)]="menuForm.is_active">
+            {{ i18n.t('dishAvailable') }}
+          </label>
+          <p *ngIf="menuFormError" class="notice error" role="alert">{{ menuFormError }}</p>
+          <div class="form-actions">
+            <button type="submit" [disabled]="saving">{{ saving ? i18n.t('saving') : i18n.t('save') }}</button>
+            <button type="button" class="secondary" *ngIf="editingMenuItemId" (click)="resetMenuForm()">{{ i18n.t('cancel') }}</button>
+          </div>
+        </form>
+      </ng-container>
+    </section>
+  </section>
+</main>

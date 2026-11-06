@@ -1,0 +1,48 @@
+<main class="payments-page">
+  <header class="page-heading">
+    <p class="eyebrow">JETFOOD</p>
+    <h1>{{ i18n.t(canManage ? 'paymentMonitoring' : 'paymentHistory') }}</h1>
+    <p>{{ i18n.t('paymentsDescription') }}</p>
+  </header>
+  <p *ngIf="loading" class="notice" role="status">{{ i18n.t('loading') }}</p>
+  <p *ngIf="error" class="notice error" role="alert">{{ error }}</p>
+  <p *ngIf="actionError" class="notice error" role="alert">{{ actionError }}</p>
+  <div *ngIf="!loading && !error && payments.length === 0" class="notice">{{ i18n.t('noPayments') }}</div>
+
+  <div class="payments-list" *ngIf="payments.length">
+    <article class="payment-card" *ngFor="let payment of payments">
+      <div class="payment-heading">
+        <div>
+          <strong>{{ payment.order_number }}</strong>
+          <span *ngIf="canManage">{{ payment.customer_name }}</span>
+        </div>
+        <span [ngClass]="['payment-status', payment.status]">{{ paymentStatusLabel(payment.status) }}</span>
+      </div>
+      <dl>
+        <div><dt>{{ i18n.t('paymentMethod') }}</dt><dd>{{ paymentMethodLabel(payment.method) }}</dd></div>
+        <div><dt>{{ i18n.t('totalAmount') }}</dt><dd>{{ payment.amount }} ₸</dd></div>
+        <div *ngIf="payment.transaction_id"><dt>{{ i18n.t('transactionId') }}</dt><dd>{{ payment.transaction_id }}</dd></div>
+        <div><dt>{{ i18n.t('created') }}</dt><dd>{{ payment.created_at | date:'dd.MM.yyyy HH:mm' }}</dd></div>
+        <div *ngIf="payment.paid_at"><dt>{{ i18n.t('paidAt') }}</dt><dd>{{ payment.paid_at | date:'dd.MM.yyyy HH:mm' }}</dd></div>
+        <div *ngIf="payment.refund_reason"><dt>{{ i18n.t('refundReason') }}</dt><dd>{{ payment.refund_reason }}</dd></div>
+      </dl>
+      <div class="payment-actions">
+        <button *ngIf="canConfirmCash && payment.method === 'cash' && payment.status === 'pending'"
+          type="button" [disabled]="saving" (click)="confirmCash(payment)">
+          {{ i18n.t('confirmCashPayment') }}
+        </button>
+        <button *ngIf="canManage && ['paid', 'refund_requested'].includes(payment.status) && refundPaymentId !== payment.id"
+          type="button" class="secondary" (click)="beginRefund(payment)">
+          {{ i18n.t('issueRefund') }}
+        </button>
+      </div>
+      <form *ngIf="refundPaymentId === payment.id" class="refund-form" (ngSubmit)="submitRefund(payment.id)">
+        <label>{{ i18n.t('refundReason') }}
+          <textarea name="refundReason" [(ngModel)]="refundReason" required maxlength="1000"></textarea>
+        </label>
+        <button type="submit" [disabled]="saving">{{ saving ? i18n.t('saving') : i18n.t('issueRefund') }}</button>
+        <button type="button" class="secondary" [disabled]="saving" (click)="refundPaymentId = null">{{ i18n.t('cancel') }}</button>
+      </form>
+    </article>
+  </div>
+</main>

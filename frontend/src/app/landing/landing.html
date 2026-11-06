@@ -1,0 +1,141 @@
+<div class="landing-container">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <nav class="navbar">
+      <div class="navbar-content">
+        <div class="logo">
+          <span class="logo-icon" aria-hidden="true">J</span>
+          <span class="logo-text">JetFood</span>
+        </div>
+        <div class="nav-buttons">
+          <app-language-switcher></app-language-switcher>
+          <button (click)="goToLogin()" class="btn btn-outline">{{ i18n.t('login') }}</button>
+          <button (click)="goToRegister()" class="btn btn-primary">{{ i18n.t('register') }}</button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="hero-content">
+      <div class="hero-text">
+        <h1>{{ i18n.t('landingTitle') }}</h1>
+        <p>{{ i18n.t('landingIntro') }}</p>
+        <div class="hero-buttons">
+          <button (click)="goToRegister()" class="btn btn-large btn-primary">
+            {{ i18n.t('orderNow') }}
+          </button>
+          <button (click)="goToLogin()" class="btn btn-large btn-outline">
+            {{ i18n.t('accountLogin') }}
+          </button>
+        </div>
+      </div>
+      <div class="hero-image">
+        <img
+          class="food-illustration"
+          src="https://images.unsplash.com/photo-1546549032-9571cd6b27df?auto=format&fit=crop&w=1100&q=85"
+          [attr.alt]="i18n.t('foodImageAlt')"
+          fetchpriority="high"
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="features-section">
+    <div class="container">
+      <h2 class="section-title">{{ i18n.t('whyChooseUs') }}</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">30</div>
+          <h3>{{ i18n.t('fastDelivery') }}</h3>
+          <p>{{ i18n.t('fastDeliveryDescription') }}</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">✓</div>
+          <h3>{{ i18n.t('accurateDelivery') }}</h3>
+          <p>{{ i18n.t('accurateDeliveryDescription') }}</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">%</div>
+          <h3>{{ i18n.t('bestPrices') }}</h3>
+          <p>{{ i18n.t('bestPricesDescription') }}</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">4.9</div>
+          <h3>{{ i18n.t('quality') }}</h3>
+          <p>{{ i18n.t('qualityDescription') }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How It Works Section -->
+  <div class="how-it-works-section">
+    <div class="container">
+      <h2 class="section-title">{{ i18n.t('howItWorks') }}</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3>{{ i18n.t('chooseDishes') }}</h3>
+          <p>{{ i18n.t('chooseDishesDescription') }}</p>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3>{{ i18n.t('placeYourOrder') }}</h3>
+          <p>{{ i18n.t('placeOrderDescription') }}</p>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3>{{ i18n.t('receiveOrder') }}</h3>
+          <p>{{ i18n.t('receiveOrderDescription') }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA Section -->
+  <div class="cta-section">
+    <div class="container">
+      <h2>{{ i18n.t('readyToOrder') }}</h2>
+      <p>{{ i18n.t('registerIntro') }}</p>
+      <button (click)="goToRegister()" class="btn btn-large btn-primary">
+        {{ i18n.t('startNow') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>JetFood</h3>
+          <p>{{ i18n.t('fastFoodDelivery') }}</p>
+        </div>
+        <div class="footer-section">
+          <h4>{{ i18n.t('company') }}</h4>
+          <ul>
+            <li><a href="#">{{ i18n.t('aboutUs') }}</a></li>
+            <li><a href="#">{{ i18n.t('careers') }}</a></li>
+            <li><a href="#">{{ i18n.t('blog') }}</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>{{ i18n.t('help') }}</h4>
+          <ul>
+            <li><a href="#">{{ i18n.t('faq') }}</a></li>
+            <li><a href="#">{{ i18n.t('contacts') }}</a></li>
+            <li><a href="#">{{ i18n.t('support') }}</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>{{ i18n.t('application') }}</h4>
+          <button class="btn app-btn">App Store</button>
+          <button class="btn app-btn">Google Play</button>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 JetFood. {{ i18n.t('allRightsReserved') }}</p>
+      </div>
+    </div>
+  </footer>
+</div>

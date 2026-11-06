@@ -1,0 +1,42 @@
+<div class="reports-container">
+  <div class="reports-heading">
+    <div>
+      <p class="page-eyebrow">JETFOOD</p>
+      <h1>{{ i18n.t('reports') }}</h1>
+      <p class="page-description">{{ i18n.t('reportsDescription') }}</p>
+    </div>
+    <button *ngIf="error && !loading" type="button" class="retry-button" (click)="loadReports()">{{ i18n.t('retry') }}</button>
+  </div>
+  <div *ngIf="loading" class="loading" role="status">{{ i18n.t('reportsLoading') }}</div>
+  <div *ngIf="error" class="error" role="alert">{{ error }}</div>
+  <div *ngIf="!loading && !error && reports.length === 0" class="no-data">{{ i18n.t('reportsEmpty') }}</div>
+  
+  <table *ngIf="!loading && reports.length > 0" class="reports-table">
+    <thead>
+      <tr>
+        <th>{{ i18n.t('reportTitleColumn') }}</th>
+        <th>{{ i18n.t('reportType') }}</th>
+        <th>{{ i18n.t('status') }}</th>
+        <th>{{ i18n.t('format') }}</th>
+        <th>{{ i18n.t('created') }}</th>
+        <th>{{ i18n.t('action') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let report of reports">
+        <td>{{ report.title }}</td>
+        <td>{{ reportTypeLabel(report.report_type) }}</td>
+        <td>
+          <span [class]="'status-' + report.status">{{ reportStatusLabel(report.status) }}</span>
+        </td>
+        <td>{{ reportFormatLabel(report.format) }}</td>
+        <td>{{ report.created_at | date:'dd.MM.yyyy HH:mm' }}</td>
+        <td>
+          <button *ngIf="report.status === 'completed'" type="button" (click)="downloadReport(report.id)">
+            {{ i18n.t('downloadSummary') }}
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

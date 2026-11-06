@@ -1,0 +1,159 @@
+<div class="dashboard-container">
+  <div class="main-content">
+    <div class="top-bar">
+      <label class="search-bar">
+        <span class="search-icon" aria-hidden="true"></span>
+        <input
+          type="search"
+          [placeholder]="i18n.t('searchFood')"
+          [attr.aria-label]="i18n.t('searchFood')"
+          [value]="searchTerm"
+          (input)="searchTerm = $any($event.target).value"
+        >
+      </label>
+      <div class="top-bar-meta">
+        <span class="delivery-note">{{ i18n.t('deliveryApprox') }}</span>
+        <button class="cart-trigger" *ngIf="cart.length > 0" type="button" (click)="cartOpen = !cartOpen">
+          {{ i18n.t('cart') }} <span class="cart-count">{{ cartItemCount }}</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="hero-section">
+      <div>
+        <p class="hero-eyebrow">JETFOOD</p>
+        <h1>{{ i18n.t('welcomeFood') }} {{ currentUser?.username }}!</h1>
+        <p>{{ i18n.t('welcomeDescription') }}</p>
+      </div>
+      <div class="hero-promo">
+        <span>{{ i18n.t('today') }}</span>
+        <strong>{{ i18n.t('deliveryFrom') }}</strong>
+        <small>{{ i18n.t('kitchenPromo') }}</small>
+      </div>
+    </div>
+
+    <section class="catalog-section" [attr.aria-label]="i18n.t('menu')">
+      <div class="section-heading">
+        <div>
+          <h2>{{ i18n.t('orderPrompt') }}</h2>
+          <p>{{ i18n.t('popularDishes') }}</p>
+        </div>
+        <span class="result-count">{{ filteredItems.length }} {{ i18n.t('dishes') }}</span>
+      </div>
+
+      <div class="categories" [attr.aria-label]="i18n.t('foodCategories')">
+      <button
+        *ngFor="let category of categories"
+        type="button"
+        (click)="selectCategory(category)"
+        [class.active]="(allCategoriesSelected && category === i18n.t('allCategories')) || selectedCategory === category"
+        class="category-btn"
+      >
+        {{ categoryLabel(category) }}
+      </button>
+      </div>
+      <div class="price-filters" role="group" [attr.aria-label]="i18n.t('filterByPrice')">
+        <label>{{ i18n.t('minPrice') }}
+          <input type="number" min="0" step="1" [value]="minPrice ?? ''"
+            (input)="setPriceFilter('min', $any($event.target).value)">
+        </label>
+        <label>{{ i18n.t('maxPrice') }}
+          <input type="number" min="0" step="1" [value]="maxPrice ?? ''"
+            (input)="setPriceFilter('max', $any($event.target).value)">
+        </label>
+      </div>
+
+      <div *ngIf="menuLoading" class="empty-menu" role="status">{{ i18n.t('menuLoading') }}</div>
+      <div *ngIf="menuError" class="empty-menu" role="alert">
+        {{ menuError }}
+        <button type="button" class="add-to-cart-btn" (click)="loadMenu()">{{ i18n.t('retry') }}</button>
+      </div>
+      <div class="food-grid" *ngIf="!menuLoading && !menuError && filteredItems.length; else emptyMenu">
+      <article *ngFor="let item of filteredItems; let index = index" class="food-card">
+        <div class="food-image">
+          <img
+            [src]="item.image_url"
+            [alt]="itemName(item)"
+            [attr.loading]="index < 2 ? 'eager' : 'lazy'"
+            [attr.fetchpriority]="index === 0 ? 'high' : 'auto'"
+          >
+          <span class="food-rating"><span aria-hidden="true">★</span> {{ item.rating }}</span>
+        </div>
+        <div class="food-info">
+          <div class="food-category">{{ categoryLabel(item.category) }}</div>
+          <h3 class="food-name">{{ itemName(item) }}</h3>
+          <p class="food-description">{{ itemDescription(item) }}</p>
+          <div class="food-footer">
+            <div class="food-price">{{ item.price }} ₸</div>
+            <button type="button" (click)="addToCart(item)" class="add-to-cart-btn" [disabled]="submittingOrder || cartItemCount >= 50" [attr.aria-label]="i18n.t('addToCart') + ' ' + itemName(item)">
+              {{ i18n.t('addToCart') }}
+            </button>
+          </div>
+        </div>
+      </article>
+      </div>
+      <ng-template #emptyMenu>
+        <div *ngIf="!menuLoading && !menuError && foodItems.length === 0" class="empty-menu">
+          {{ i18n.t('menuEmpty') }}
+        </div>
+        <div *ngIf="!menuLoading && !menuError && foodItems.length > 0 && filteredItems.length === 0" class="empty-menu">
+          {{ i18n.t('noDishesFound') }}
+        </div>
+      </ng-template>
+    </section>
+
+    <div class="cart-sidebar" *ngIf="cart.length > 0 && cartOpen">
+      <div class="cart-header">
+        <h3>{{ i18n.t('cart') }}</h3>
+        <button type="button" (click)="clearCart()" class="clear-cart" [disabled]="submittingOrder">{{ i18n.t('clearCart') }}</button>
+        <button type="button" (click)="cartOpen = false" class="close-cart" [attr.aria-label]="i18n.t('closeCart')">×</button>
+      </div>
+      <div class="cart-items">
+        <div *ngFor="let line of cart" class="cart-item">
+          <div class="cart-item-info">
+            <span class="cart-item-name">{{ itemName(line.item) }}</span>
+            <span class="cart-item-price">{{ line.item.price * line.quantity }} ₸</span>
+          </div>
+          <div class="quantity-control">
+            <button type="button" (click)="changeQuantity(line, -1)" [disabled]="submittingOrder" [attr.aria-label]="i18n.t('decreaseQuantity') + ': ' + itemName(line.item)">−</button>
+            <span>{{ line.quantity }}</span>
+            <button type="button" (click)="changeQuantity(line, 1)" [disabled]="submittingOrder || cartItemCount >= 50" [attr.aria-label]="i18n.t('increaseQuantity') + ': ' + itemName(line.item)">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="cart-footer">
+        <p *ngIf="cartNotice" class="checkout-message" role="status">{{ cartNotice }}</p>
+        <p class="cart-limit">{{ i18n.t('cartLimit') }}</p>
+        <label class="address-field">
+          {{ i18n.t('deliveryAddressLabel') }}
+          <select *ngIf="savedAddresses.length" [value]="selectedAddressId ?? ''" (change)="selectSavedAddress($any($event.target).value)">
+            <option value="">{{ i18n.t('chooseSavedAddress') }}</option>
+            <option *ngFor="let address of savedAddresses" [value]="address.id">
+              {{ address.label }} — {{ address.address_line }}, {{ address.city }}
+            </option>
+          </select>
+          <input [value]="deliveryAddress" (input)="deliveryAddress = $any($event.target).value" [placeholder]="i18n.t('addressPlaceholder')">
+        </label>
+        <label class="address-field">
+          {{ i18n.t('paymentMethod') }}
+          <select [value]="paymentMethod" (change)="setPaymentMethod($any($event.target).value)">
+            <option value="online">{{ i18n.t('onlinePaymentSimulation') }}</option>
+            <option value="cash">{{ i18n.t('cashOnDelivery') }}</option>
+          </select>
+        </label>
+        <p *ngIf="savedAddressError" class="checkout-message checkout-error" role="alert">{{ savedAddressError }}</p>
+        <a routerLink="/profile" class="manage-addresses">{{ i18n.t('manageAddresses') }}</a>
+        <p *ngIf="checkoutError" class="checkout-message checkout-error">{{ checkoutError }}</p>
+        <div class="cart-total">
+          <span>{{ i18n.t('total') }}</span>
+          <span>{{ cartTotal }} ₸</span>
+        </div>
+        <button type="button" class="checkout-btn" [disabled]="submittingOrder" (click)="checkout()">
+          {{ submittingOrder ? i18n.t('placingOrder') : i18n.t('checkout') }}
+        </button>
+      </div>
+    </div>
+    <div *ngIf="cartNotice && cart.length === 0" class="checkout-message" role="status">{{ cartNotice }}</div>
+    <div *ngIf="checkoutSuccess" class="checkout-success" role="status">{{ checkoutSuccess }}</div>
+  </div>
+</div>

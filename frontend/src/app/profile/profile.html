@@ -1,0 +1,85 @@
+<main class="profile-page">
+  <header class="page-heading">
+    <p class="eyebrow">JETFOOD</p>
+    <h1>{{ i18n.t('profile') }}</h1>
+    <p>{{ i18n.t('profileDescription') }}</p>
+  </header>
+
+  <p *ngIf="profileLoading" class="notice" role="status">{{ i18n.t('loading') }}</p>
+  <section class="profile-grid">
+    <form class="profile-card" (ngSubmit)="saveProfile()">
+      <h2>{{ i18n.t('personalInformation') }}</h2>
+      <label>{{ i18n.t('username') }}<input name="username" [(ngModel)]="profile.username" required maxlength="150"></label>
+      <label>{{ i18n.t('email') }}<input name="email" type="email" [(ngModel)]="profile.email"></label>
+      <label>{{ i18n.t('phone') }}<input name="phone" type="tel" [(ngModel)]="profile.phone"></label>
+      <label>{{ i18n.t('address') }}<textarea name="address" [(ngModel)]="profile.address"></textarea></label>
+      <p *ngIf="profileError" class="notice error" role="alert">{{ profileError }}</p>
+      <p *ngIf="profileMessage" class="notice success" role="status">{{ profileMessage }}</p>
+      <button type="submit" [disabled]="profileLoading || profileSaving">
+        {{ profileSaving ? i18n.t('saving') : i18n.t('save') }}
+      </button>
+    </form>
+
+    <section class="profile-card">
+      <h2>{{ i18n.t('addressBook') }}</h2>
+      <p *ngIf="addressesLoading" class="notice" role="status">{{ i18n.t('loading') }}</p>
+      <p *ngIf="!addressesLoading && addresses.length === 0" class="notice">{{ i18n.t('noSavedAddresses') }}</p>
+      <p *ngIf="addressError" class="notice error" role="alert">{{ addressError }}</p>
+      <p *ngIf="addressMessage" class="notice success" role="status">{{ addressMessage }}</p>
+      <ul class="address-list">
+        <li *ngFor="let address of addresses">
+          <div class="address-details">
+            <strong>{{ address.label }} <span *ngIf="address.is_default" class="default-badge">{{ i18n.t('defaultAddress') }}</span></strong>
+            <span>{{ address.recipient_name }}<ng-container *ngIf="address.recipient_name && address.phone"> · </ng-container>{{ address.phone }}</span>
+            <span>{{ address.address_line }}, {{ address.city }} {{ address.postal_code }}</span>
+            <span *ngIf="address.instructions">{{ address.instructions }}</span>
+          </div>
+          <div class="address-actions">
+            <button type="button" class="secondary" *ngIf="!address.is_default" (click)="setDefaultAddress(address)">{{ i18n.t('setAsDefault') }}</button>
+            <button type="button" class="secondary" (click)="editAddress(address)">{{ i18n.t('edit') }}</button>
+            <button type="button" class="danger" (click)="deleteAddress(address)">{{ i18n.t('delete') }}</button>
+          </div>
+        </li>
+      </ul>
+
+      <form class="address-form" (ngSubmit)="saveAddress()">
+        <h3>{{ editingAddressId ? i18n.t('editAddress') : i18n.t('addAddress') }}</h3>
+        <label>{{ i18n.t('addressLabel') }}<input name="addressLabel" [(ngModel)]="addressForm.label" required maxlength="50"></label>
+        <label>{{ i18n.t('recipientName') }}<input name="recipientName" [(ngModel)]="addressForm.recipient_name" maxlength="150"></label>
+        <label>{{ i18n.t('phone') }}<input name="addressPhone" type="tel" [(ngModel)]="addressForm.phone"></label>
+        <label>{{ i18n.t('addressLine') }}<input name="addressLine" [(ngModel)]="addressForm.address_line" required maxlength="500"></label>
+        <label>{{ i18n.t('city') }}<input name="city" [(ngModel)]="addressForm.city" required maxlength="100"></label>
+        <label>{{ i18n.t('postalCode') }}<input name="postalCode" [(ngModel)]="addressForm.postal_code"></label>
+        <label>{{ i18n.t('deliveryInstructions') }}<textarea name="instructions" [(ngModel)]="addressForm.instructions"></textarea></label>
+        <label class="checkbox-option">
+          <input type="checkbox" name="defaultAddress" [(ngModel)]="addressForm.is_default">
+          {{ i18n.t('makeDefaultAddress') }}
+        </label>
+        <div class="form-actions">
+          <button type="submit" [disabled]="addressSaving">{{ addressSaving ? i18n.t('saving') : i18n.t('save') }}</button>
+          <button type="button" class="secondary" *ngIf="editingAddressId" (click)="resetAddressForm()">{{ i18n.t('cancel') }}</button>
+        </div>
+      </form>
+    </section>
+
+    <form class="profile-card" (ngSubmit)="changePassword()">
+      <h2>{{ i18n.t('passwordChange') }}</h2>
+      <label>{{ i18n.t('currentPassword') }}<input name="oldPassword" type="password" [(ngModel)]="passwordForm.old_password" required autocomplete="current-password"></label>
+      <label>{{ i18n.t('newPassword') }}<input name="newPassword" type="password" [(ngModel)]="passwordForm.new_password" required minlength="8" autocomplete="new-password"></label>
+      <label>{{ i18n.t('confirmNewPassword') }}<input name="confirmNewPassword" type="password" [(ngModel)]="passwordForm.confirm_password" required minlength="8" autocomplete="new-password"></label>
+      <p *ngIf="passwordError" class="notice error" role="alert">{{ passwordError }}</p>
+      <p *ngIf="passwordMessage" class="notice success" role="status">{{ passwordMessage }}</p>
+      <button type="submit" [disabled]="passwordSaving">{{ passwordSaving ? i18n.t('saving') : i18n.t('changePasswordButton') }}</button>
+    </form>
+
+    <section class="profile-card danger-zone" *ngIf="isCustomer">
+      <h2>{{ i18n.t('deleteAccount') }}</h2>
+      <p>{{ i18n.t('deleteAccountWarning') }}</p>
+      <label>{{ i18n.t('password') }}<input name="deleteAccountPassword" type="password" [(ngModel)]="accountPassword" autocomplete="current-password"></label>
+      <p *ngIf="accountError" class="notice error" role="alert">{{ accountError }}</p>
+      <button type="button" class="danger" [disabled]="accountDeleting || !accountPassword" (click)="deleteAccount()">
+        {{ accountDeleting ? i18n.t('deletingAccount') : i18n.t('deleteAccount') }}
+      </button>
+    </section>
+  </section>
+</main>

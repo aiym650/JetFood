@@ -1,0 +1,680 @@
+================================================================================
+FOOD DELIVERY SYSTEM - COMPLETE DOCUMENTATION
+================================================================================
+
+This document explains the implementation of all major system components.
+
+================================================================================
+1. TESTING / ANALYTICS / REPORTS / SUM OF ORDERS / INTEGRATION
+================================================================================
+
+--- ANALYTICS ---
+Location: C:\Users\tald1\Desktop\Food_delivery\analytics\
+
+Backend Models (analytics/models.py):
+- AnalyticsEvent: Tracks system events (order_created, order_completed, user_login, etc.)
+  * Stores event type, user, timestamp, metadata, IP address
+  * Indexed by event_type and timestamp for fast queries
+- SystemMetric: Stores system performance metrics (name, value, unit, description)
+- PerformanceReport: Stores periodic performance reports (daily/weekly/monthly)
+  * Tracks total orders, revenue, average delivery time, active users
+
+Backend Views (analytics/views.py):
+- AnalyticsEventListCreateView: CRUD for analytics events
+  * Admin/Manager/Analyst can see all events
+  * Regular users see only their own events
+  * Auto-captures user IP address
+- SystemMetricListCreateView: Manage system metrics
+  * Only Admin/Manager can create metrics
+  * Analyst can view metrics
+- PerformanceReportListView: View performance reports
+  * Restricted to Admin/Manager/Analyst
+- system_analysis(): Performs comprehensive system analysis
+  * Analyzes order volume per user
+  * Calculates delivery performance
+  * Tracks active users (last 30 days)
+  * Shows revenue trends (last 7 days)
+  * SUGGESTS ROLE UPDATES based on analysis (e.g., upgrade high-volume customers to manager)
+- apply_role_updates(): Applies suggested role changes (Admin only)
+
+Frontend (frontend/src/app/analytics/):
+- analytics.ts: Angular component that loads and displays system analysis
+- analytics.html: UI template for analytics dashboard
+- Uses AnalyticsService to fetch data from backend API
+
+API Endpoints:
+- GET/POST /api/analytics/events/ - Manage analytics events
+- GET/POST /api/analytics/metrics/ - Manage system metrics
+- GET /api/analytics/reports/ - View performance reports
+- GET /api/analytics/system-analysis/ - Get system analysis with role suggestions
+- POST /api/analytics/apply-role-updates/ - Apply role updates (Admin only)
+
+
+--- REPORTS ---
+Location: C:\Users\tald1\Desktop\Food_delivery\reports\
+
+Backend Models (reports/models.py):
+- Report: Stores generated reports
+  * Types: sales, delivery, customer, performance, inventory
+  * Status: generating, completed, failed
+  * Formats: PDF, Excel, CSV
+  * Stores parameters, file path, generated_by user
+- ReportSchedule: Scheduled report generation
+  * Frequency: daily, weekly, monthly, quarterly
+  * Multiple recipients can receive scheduled reports
+  * Tracks last_run and next_run timestamps
+
+Backend Views (reports/views.py):
+- ReportListCreateView: Create and list reports
+  * Admin/Manager/Analyst can create reports
+  * Generates report content based on type (sales, delivery, customer, performance)
+  * Automatically calculates statistics (total revenue, order count, delivery times)
+- ReportDetailView: View/update/delete individual reports
+  * Only Admin can delete reports
+- ReportScheduleListCreateView: Manage scheduled reports
+  * Admin/Manager can create schedules
+  * Recipients can view their scheduled reports
+- download_report(): Download generated report file
+  * Checks report status and user permissions
+
+Report Generation Logic:
+- Sales Report: Total revenue and order count for date range
+- Delivery Report: Average delivery time calculations
+- Customer Report: Total customer count
+- Performance Report: Total delivered orders count
+
+Frontend (frontend/src/app/reports/):
+- reports.ts: Angular component for report management
+- reports.html: UI for listing and downloading reports
+- ReportsService handles API communication
+
+API Endpoints:
+- GET/POST /api/reports/ - Create and list reports
+- GET/PUT/DELETE /api/reports/{id}/ - Manage individual reports
+- GET/POST /api/reports/schedules/ - Manage report schedules
+- GET /api/reports/download/{id}/ - Download report file
+
+
+--- SUM OF ORDERS (Order Summary) ---
+Location: C:\Users\tald1\Desktop\Food_delivery\orders\views.py
+
+Backend Implementation:
+- order_summary() API endpoint (line 134-160)
+  * Restricted to Admin/Manager/Analyst roles
+  * Filters orders by date range (start_date, end_date query params)
+  * Calculates:
+    - Total orders count
+    - Total revenue (sum of all order amounts)
+    - Status breakdown (counts by status: pending, delivered, cancelled, etc.)
+  * Returns JSON with summary statistics
+
+Frontend Service (frontend/src/app/orders.ts):
+- getOrderSummary(startDate?, endDate?): Observable<any>
+  * Accepts optional date parameters
+  * Calls backend API with query parameters
+  * Returns summary data
+
+Usage Example:
+GET /api/orders/summary/?start_date=2026-01-01&end_date=2026-01-31
+Response:
+{
+  "total_orders": 150,
+  "total_revenue": 15000.00,
+  "status_breakdown": [
+    {"status": "delivered", "count": 120},
+    {"status": "pending", "count": 20},
+    {"status": "cancelled", "count": 10}
+  ]
+}
+
+
+--- INTEGRATION ---
+Location: C:\Users\tald1\Desktop\Food_delivery\integration\
+
+Backend Models (integration/models.py):
+- ExternalIntegration: Stores external service integrations
+  * Types: payment_gateway, mapping_service, notification_service, analytics_service, inventory_system
+  * Status: active, inactive, error
+  * Stores API endpoint, API key, config JSON
+  * Tracks last_sync timestamp
+- IntegrationLog: Logs all integration activity
+  * Levels: info, warning, error, debug
+  * Stores request/response data, status codes
+  * Indexed by integration and timestamp
+
+Backend Views (integration/views.py):
+- ExternalIntegrationListCreateView: Manage integrations
+  * Admin/Manager can create/update integrations
+  * Regular users see only active integrations
+- ExternalIntegrationDetailView: Detailed integration management
+  * Admin/Manager can update, only Admin can delete
+- IntegrationLogListView: View integration logs
+  * Only Admin/Manager can view logs
+- test_integration(): Test external API connection
+  * Creates log entry for test attempt
+  * Admin/Manager only
+- sync_integration(): Sync data with external service
+  * Updates last_sync timestamp
+  * Creates log entry
+  * Admin/Manager only
+
+Frontend (frontend/src/app/integration/):
+- integration.ts: Angular component for integration management
+- integration.html: UI for listing, testing, and syncing integrations
+- IntegrationService handles API communication
+
+API Endpoints:
+- GET/POST /api/integration/ - Manage integrations
+- GET/PUT/DELETE /api/integration/{id}/ - Manage individual integration
+- GET /api/integration/logs/ - View integration logs
+- POST /api/integration/{id}/test/ - Test integration
+- POST /api/integration/{id}/sync/ - Sync integration data
+
+
+================================================================================
+2. SYSTEM ANALYSIS / ROLE UPDATES
+================================================================================
+
+Location: C:\Users\tald1\Desktop\Food_delivery\analytics\views.py (lines 66-171)
+
+System Analysis Implementation (system_analysis() function):
+-----------------------------------------------------------
+Performs comprehensive analysis of system data:
+
+1. Order Volume Analysis:
+   - Groups orders by customer
+   - Counts total orders per customer
+   - Calculates total spent per customer
+   - Returns top 10 customers by order volume
+
+2. Delivery Performance Analysis:
+   - Filters delivered orders with actual delivery times
+   - Calculates delivery duration (actual_delivery_time - created_at)
+   - Returns last 5 delivery performance metrics
+
+3. Active Users Analysis:
+   - Counts users who logged in within last 30 days
+   - Uses User.last_login field for calculation
+
+4. Revenue Trend Analysis:
+   - Analyzes last 7 days of delivered orders
+   - Groups by date
+   - Calculates daily revenue and daily order count
+   - Returns chronological trend data
+
+5. Role Update Suggestions:
+   - Analyzes order volume per user
+   - If customer has > 20 orders, suggests upgrade to manager role
+   - Returns list of suggested role changes with:
+     * user_id, username, current_role, suggested_role, reason
+
+Access Control:
+- Requires Admin, Manager, or Analyst role
+- Uses validate_role_access() function to enforce permissions
+
+Role Update Implementation (apply_role_updates() function):
+-----------------------------------------------------------
+Allows Admin to apply suggested role changes:
+
+1. Accepts list of updates: [{user_id, new_role}, ...]
+2. Validates each target user exists
+3. Validates new role is valid (from ROLE_CHOICES)
+4. Updates user.role field
+5. Returns list of successfully applied updates
+
+Access Control:
+- Admin only
+- Uses validate_role_access(['admin'])
+
+Example Workflow:
+1. Manager calls GET /api/analytics/system-analysis/
+2. System returns analysis with role suggestions
+3. Admin reviews suggestions
+4. Admin calls POST /api/analytics/apply-role-updates/ with updates
+5. System applies role changes
+
+
+================================================================================
+3. CONSTRAINTS
+================================================================================
+
+Location: C:\Users\tald1\Desktop\Food_delivery\users\constraints.py
+
+Business Constraints Class:
+---------------------------
+Defines all system-wide business rules:
+
+Order Constraints:
+- MIN_ORDER_AMOUNT: $10.00 (minimum order value)
+- MAX_ORDER_AMOUNT: $10,000.00 (maximum order value)
+- MAX_ITEMS_PER_ORDER: 50 items per order
+
+Delivery Constraints:
+- MAX_DELIVERY_TIME_HOURS: 4 hours maximum delivery time
+- MIN_DELIVERY_TIME_MINUTES: 30 minutes minimum delivery time
+
+User Constraints:
+- MIN_PASSWORD_LENGTH: 8 characters minimum
+- MAX_PENDING_ORDERS_PER_USER: 5 pending orders maximum
+
+System Constraints:
+- MAX_ORDERS_PER_HOUR: 100 orders per hour system limit
+- MAX_CONCURRENT_USERS: 500 concurrent users maximum
+
+Validation Functions:
+---------------------
+1. validate_order_amount(amount):
+   - Checks order is between $10 and $10,000
+   - Raises ValidationError if out of range
+   - Used in orders/views.py when creating orders
+
+2. validate_delivery_time(estimated_time):
+   - Ensures delivery time is between 30 min and 4 hours from now
+   - Prevents unrealistic delivery promises
+   - Used in orders/views.py
+
+3. validate_user_pending_orders(user):
+   - Counts user's pending/confirmed/preparing/delivering orders
+   - Blocks new orders if user has 5+ pending orders
+   - Prevents order spam
+   - Used in orders/views.py
+
+4. validate_role_access(user, required_roles):
+   - Checks if user.role is in required_roles list
+   - Raises ValidationError if access denied
+   - Used throughout the system for role-based access control
+   - Example: validate_role_access(user, ['admin', 'manager'])
+
+Constraint Enforcement Points:
+- Order creation: validates amount, delivery time, pending order count
+- Report creation: validates role (admin/manager/analyst only)
+- Integration management: validates role (admin/manager only)
+- Analytics access: validates role for viewing sensitive data
+- Role updates: validates admin role only
+
+
+================================================================================
+4. BACKEND
+================================================================================
+
+Location: C:\Users\tald1\Desktop\Food_delivery\backend\
+
+Django Project Structure:
+-------------------------
+- settings.py: Main configuration file
+  * Database: SQLite (db.sqlite3)
+  * Apps: users, orders, analytics, reports, integration
+  * Auth: Token authentication + Session authentication
+  * CORS: Configured for localhost:4200 (Angular frontend)
+  * Custom User Model: users.User
+  * REST Framework configuration with permissions
+
+- urls.py: Main URL routing
+  * /admin/ - Django admin interface
+  * /api/auth/ - Authentication endpoints (users app)
+  * /api/orders/ - Order management (orders app)
+  * /api/analytics/ - Analytics and system analysis (analytics app)
+  * /api/integration/ - External integrations (integration app)
+  * /api/reports/ - Report generation (reports app)
+
+- wsgi.py/asgi.py: WSGI/ASGI application entry points
+- manage.py: Django management script (in project root)
+
+Database Configuration:
+-----------------------
+- Engine: SQLite3
+- Location: C:\Users\tald1\Desktop\Food_delivery\db.sqlite3
+- Tables:
+  * auth_user (custom User model)
+  * authtoken (Token authentication)
+  * orders_order, orders_orderitem
+  * analytics_analyticsevent, analytics_systemmetric, analytics_performancereport
+  * reports_report, reports_reportschedule
+  * integration_externalintegration, integration_integrationlog
+
+Security Settings:
+------------------
+- SECRET_KEY: Django secret key (should be environment variable in production)
+- DEBUG: True (development mode)
+- ALLOWED_HOSTS: Empty (development)
+- Password validators: UserAttributeSimilarity, MinimumLength, CommonPassword, NumericPassword
+
+Installed Apps:
+---------------
+1. Django core apps (admin, auth, contenttypes, sessions, messages, staticfiles)
+2. Third-party apps:
+   - rest_framework (Django REST Framework)
+   - rest_framework.authtoken (Token authentication)
+   - corsheaders (CORS support)
+3. Custom apps:
+   - users (User management, authentication)
+   - orders (Order and OrderItem models)
+   - analytics (System analytics and performance tracking)
+   - reports (Report generation and scheduling)
+   - integration (External service integrations)
+
+REST Framework Configuration:
+-----------------------------
+- Default Authentication:
+  * SessionAuthentication
+  * TokenAuthentication
+- Default Permissions:
+  * IsAuthenticated (all endpoints require login)
+- Pagination:
+  * PageNumberPagination
+  * Page size: 20 items per page
+
+Middleware Stack:
+-----------------
+1. SecurityMiddleware
+2. CorsMiddleware (handles CORS)
+3. SessionMiddleware
+4. CommonMiddleware
+5. CsrfViewMiddleware
+6. AuthenticationMiddleware
+7. MessageMiddleware
+8. XFrameOptionsMiddleware
+
+Running the Backend:
+-------------------
+Command: python manage.py runserver
+Default URL: http://localhost:8000
+Admin Panel: http://localhost:8000/admin/
+API Root: http://localhost:8000/api/
+
+
+================================================================================
+5. AUTHENTICATION / ACCESS
+================================================================================
+
+Location: C:\Users\tald1\Desktop\Food_delivery\users\
+
+User Model (users/models.py):
+-------------------------------
+- Extends Django's AbstractUser
+- Fields:
+  * role: One of [admin, manager, analyst, delivery, customer]
+  * phone: Phone number with regex validation
+  * address: Text field for address
+  * created_at, updated_at: Timestamps
+- Custom database table: auth_user
+- String representation: "{username} ({role})"
+
+Role Hierarchy:
+----------------
+1. admin: Full system access, can manage all users and settings
+2. manager: Can manage orders, reports, integrations, view analytics
+3. analyst: Can view analytics and reports (read-only)
+4. delivery: Can manage assigned orders, update delivery status
+5. customer: Can create orders, view own orders, cancel pending orders
+
+Authentication Methods:
+-----------------------
+1. Token Authentication (Primary):
+   - REST Framework Token Authentication
+   - Token generated on login
+   - Token stored in localStorage in frontend
+   - Sent in Authorization header: "Token {token_key}"
+
+2. Session Authentication (Secondary):
+   - Django session-based authentication
+   - Used for admin panel
+
+Authentication Endpoints (users/views.py):
+-------------------------------------------
+1. RegisterView (POST /api/auth/register/):
+   - Public endpoint (no authentication required)
+   - Creates new user with UserRegistrationSerializer
+   - Default role: 'customer'
+   - Validates phone number format
+
+2. LoginView (POST /api/auth/login/):
+   - Public endpoint
+   - Accepts username and password
+   - Returns token and user data
+   - Token created if doesn't exist
+
+3. LogoutView (POST /api/auth/logout/):
+   - Requires authentication
+   - Deletes user's auth token
+   - Calls Django logout()
+
+4. ChangePasswordView (POST /api/auth/change-password/):
+   - Requires authentication
+   - Validates old password
+   - Updates to new password
+   - Uses Django's set_password() method (hashes automatically)
+
+5. UserProfileView (GET/PUT /api/auth/profile/):
+   - Requires authentication
+   - User can only view/update their own profile
+
+6. UserListView (GET /api/auth/users/):
+   - Requires authentication
+   - Admin sees all users
+   - Manager sees delivery and customer users
+   - Other roles see only themselves
+
+7. UserDetailView (GET/PUT/DELETE /api/auth/users/{id}/):
+   - Requires authentication
+   - Users can update their own profile
+   - Admin can update/delete any user
+   - Role changes require admin approval
+
+8. update_user_role (POST /api/auth/users/{id}/role/):
+   - Admin only
+   - Updates user role
+   - Validates role is in ROLE_CHOICES
+
+Access Control Implementation:
+------------------------------
+Role-based access is enforced throughout the system:
+
+1. In Views (using validate_role_access):
+   ```python
+   validate_role_access(user, ['admin', 'manager'])
+   ```
+
+2. In QuerySets (filtering by role):
+   ```python
+   if user.role == 'admin':
+       return Order.objects.all()
+   elif user.role == 'manager':
+       return Order.objects.all()
+   elif user.role == 'delivery':
+       return Order.objects.filter(delivery_person=user)
+   else:
+       return Order.objects.filter(customer=user)
+   ```
+
+3. In Actions (role-specific permissions):
+   - Customers can only cancel pending orders
+   - Delivery persons can only update to 'delivering' or 'delivered'
+   - Admin/Manager have full access
+
+Frontend Authentication (Angular):
+-----------------------------------
+Location: frontend/src/app/auth/
+
+- auth.ts: Authentication service
+  * login(): Stores token in localStorage
+  * logout(): Removes token from localStorage
+  * getToken(): Retrieves token from localStorage
+  * isAuthenticated(): Checks if token exists
+
+- HTTP Interceptor:
+  * Adds Authorization header to all requests
+  * Format: "Token {token}"
+  * Redirects to login on 401 errors
+
+Example Request Headers:
+```
+Authorization: Token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b
+Content-Type: application/json
+```
+
+Access Control Matrix:
+-----------------------
+Endpoint                    | Admin | Manager | Analyst | Delivery | Customer
+---------------------------|-------|---------|---------|----------|----------
+/login, /register           |  ✓    |   ✓     |   ✓     |    ✓     |   ✓
+/logout, /profile           |  ✓    |   ✓     |   ✓     |    ✓     |   ✓
+/change-password            |  ✓    |   ✓     |   ✓     |    ✓     |   ✓
+/users (list)               |  ✓    |   ✓     |   -     |    -     |   -
+/users/{id} (update)        |  ✓    |   -     |   -     |    -     |   ✓ (self)
+/users/{id} (delete)        |  ✓    |   -     |   -     |    -     |   -
+/users/{id}/role (update)   |  ✓    |   -     |   -     |    -     |   -
+/orders (create)            |  ✓    |   ✓     |   -     |    -     |   ✓
+/orders (list)              |  ✓    |   ✓     |   -     |   ✓ (own) |   ✓ (own)
+/orders/{id}/status         |  ✓    |   ✓     |   -     |   ✓ (own) |   ✓ (cancel)
+/orders/{id}/assign         |  ✓    |   ✓     |   -     |    -     |   -
+/orders/summary             |  ✓    |   ✓     |   ✓     |    -     |   -
+/analytics/events           |  ✓    |   ✓     |   ✓     |   ✓ (own) |   ✓ (own)
+/analytics/system-analysis |  ✓    |   ✓     |   ✓     |    -     |   -
+/analytics/apply-role-updates| ✓    |   -     |   -     |    -     |   -
+/reports (create)           |  ✓    |   ✓     |   ✓     |    -     |   -
+/reports (list)             |  ✓    |   ✓     |   ✓     |    -     |   ✓ (own)
+/integration (create)       |  ✓    |   ✓     |   -     |    -     |   -
+/integration (list)         |  ✓    |   ✓     |   -     |   ✓ (active)|   ✓ (active)
+/integration/logs           |  ✓    |   ✓     |   -     |    -     |   -
+
+
+================================================================================
+6. PASSWORD PROTECTION IN BACKEND
+================================================================================
+
+Location: C:\Users\tald1\Desktop\Food_delivery\users\
+
+Password Storage:
+-----------------
+- Uses Django's built-in password hashing system
+- Passwords are never stored in plain text
+- Django uses PBKDF2 algorithm with SHA256 hash by default
+- Salt is automatically generated and stored with the hash
+- Hash stored in auth_user.password field
+
+Password Change Implementation (users/views.py, lines 53-63):
+-------------------------------------------------------------
+ChangePasswordView endpoint:
+- Requires authentication (user must be logged in)
+- Accepts: old_password, new_password
+- Validates old password using Django's check_password()
+- Updates password using set_password() method
+- set_password() automatically:
+  * Generates new salt
+  * Hashes the new password
+  * Stores the hash in database
+
+Code:
+```python
+class ChangePasswordView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ChangePasswordSerializer
+    
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+        return Response({'message': 'Password changed successfully'})
+```
+
+Password Validation (Django Built-in):
+-------------------------------------
+In backend/settings.py (lines 95-108):
+1. UserAttributeSimilarityValidator:
+   - Prevents passwords too similar to user attributes (username, email, etc.)
+
+2. MinimumLengthValidator:
+   - Enforces minimum password length (default 8 characters)
+   - Configured in users/constraints.py as MIN_PASSWORD_LENGTH = 8
+
+3. CommonPasswordValidator:
+   - Prevents use of common/weak passwords (e.g., "password", "123456")
+
+4. NumericPasswordValidator:
+   - Prevents purely numeric passwords
+
+Additional Password Constraints (users/constraints.py):
+-------------------------------------------------------
+- MIN_PASSWORD_LENGTH: 8 characters minimum
+- Enforced through Django's MinimumLengthValidator
+
+Password Requirements:
+-----------------------
+1. Minimum 8 characters
+2. Not similar to username or email
+3. Not a common password
+4. Not purely numeric
+5. Old password must be correct for password change
+
+Registration Password Handling (users/serializers.py):
+-----------------------------------------------------
+UserRegistrationSerializer:
+- Uses Django's create_user() method
+- Automatically hashes password
+- Stores hash in database
+- Never exposes plain text password
+
+Login Password Verification (users/serializers.py):
+--------------------------------------------------
+LoginSerializer:
+- Uses Django's authenticate() function
+- authenticate() automatically:
+  * Retrieves password hash from database
+  * Hashes provided password with stored salt
+  * Compares hashes
+  * Returns user if match, None if no match
+
+Password Security Best Practices Implemented:
+---------------------------------------------
+1. ✓ Passwords never stored in plain text
+2. ✓ Strong hashing algorithm (PBKDF2 with SHA256)
+3. ✓ Unique salt for each password
+4. ✓ Password validation on registration
+5. ✓ Old password verification on change
+6. ✓ Minimum length requirement (8 characters)
+7. ✓ Prevention of common passwords
+8. ✓ Prevention of passwords similar to user data
+9. ✓ Tokens used for API authentication (separate from passwords)
+10. ✓ Token deletion on logout (invalidates session)
+
+Password Recovery (Not Implemented):
+-------------------------------------
+- Current system does not have password reset functionality
+- Would require implementing:
+  * Password reset token generation
+  * Email sending configuration
+  * Reset token validation
+  * Password reset endpoint
+
+Security Notes:
+---------------
+- SECRET_KEY in settings.py should be environment variable in production
+- Current SECRET_KEY is for development only
+- Tokens are separate from passwords and used for API authentication
+- Token authentication stateless (no server-side session storage)
+- Password change invalidates session but does not invalidate tokens (admin can delete tokens if needed)
+
+
+================================================================================
+SUMMARY
+================================================================================
+
+This Food Delivery System implements:
+- Full role-based access control (5 roles)
+- Comprehensive analytics and reporting
+- Order management with constraints
+- External integration support
+- Secure password handling
+- System analysis with role update suggestions
+- RESTful API architecture
+- Angular frontend with TypeScript
+
+All components are properly integrated and tested. The system follows Django
+REST Framework best practices and implements proper security measures.
+
+For questions or modifications, refer to the specific file locations mentioned
+in each section.
+================================================================================

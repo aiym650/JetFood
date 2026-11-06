@@ -1,0 +1,101 @@
+<div class="register-container">
+  <div class="register-wrapper">
+    <div class="register-left">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">J</span>
+        <span class="brand-text">JetFood</span>
+      </div>
+      <h1>{{ i18n.t('registerWelcome') }}</h1>
+      <p>{{ i18n.t('registerIntro') }}</p>
+      <div class="benefits">
+        <div class="benefit">
+          <span class="benefit-icon">1</span>
+          <span>{{ i18n.t('welcomeBonus') }}</span>
+        </div>
+        <div class="benefit">
+          <span class="benefit-icon">APP</span>
+          <span>{{ i18n.t('easyOrdering') }}</span>
+        </div>
+        <div class="benefit">
+          <span class="benefit-icon">OK</span>
+          <span>{{ i18n.t('secureService') }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="register-right">
+      <div class="register-card">
+        <app-language-switcher></app-language-switcher>
+        <h2>{{ i18n.t('register') }}</h2>
+        <form (ngSubmit)="onSubmit()">
+          <div class="form-group">
+            <label for="username">{{ i18n.t('username') }}</label>
+            <input
+              type="text"
+              id="username"
+              [(ngModel)]="username"
+              name="username"
+              required
+              [placeholder]="i18n.t('chooseUsername')"
+            >
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              [(ngModel)]="email"
+              name="email"
+              required
+              [placeholder]="i18n.t('enterEmail')"
+            >
+          </div>
+          <div class="form-group">
+            <label for="phone">{{ i18n.t('phone') }}</label>
+            <input
+              type="tel"
+              id="phone"
+              [(ngModel)]="phone"
+              name="phone"
+              [placeholder]="i18n.t('enterPhone')"
+            >
+          </div>
+          <div class="form-group">
+            <label for="password">{{ i18n.t('password') }}</label>
+            <input
+              type="password"
+              id="password"
+              [(ngModel)]="password"
+              name="password"
+              required
+              [placeholder]="i18n.t('passwordMinLength')"
+            >
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword">{{ i18n.t('confirmPassword') }}</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              [(ngModel)]="confirmPassword"
+              name="confirmPassword"
+              required
+              [placeholder]="i18n.t('repeatPassword')"
+            >
+          </div>
+          <div *ngIf="errorMessage" class="error-message">
+            {{ errorMessage }}
+          </div>
+          <button type="submit" [disabled]="loading" class="btn btn-primary">
+            {{ loading ? i18n.t('registering') : i18n.t('register') }}
+          </button>
+        </form>
+        <div class="register-footer">
+          <p>{{ i18n.t('alreadyHaveAccount') }}</p>
+          <a routerLink="/login">{{ i18n.t('login') }}</a>
+        </div>
+        <div class="back-to-home">
+          <a routerLink="/landing">← {{ i18n.t('dashboard') }}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

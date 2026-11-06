@@ -1,0 +1,81 @@
+<div class="admin-container">
+  <div class="admin-header">
+    <h1>{{ i18n.t('adminPanel') }}</h1>
+    <button (click)="openUserModal()" class="btn btn-primary">{{ i18n.t('createUser') }}</button>
+  </div>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+
+  <div *ngIf="loading" class="loading">{{ i18n.t('loading') }}</div>
+
+  <div *ngIf="!loading" class="users-table">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('id') }}</th>
+          <th>{{ i18n.t('usernameColumn') }}</th>
+          <th>{{ i18n.t('emailColumn') }}</th>
+          <th>{{ i18n.t('role') }}</th>
+          <th>{{ i18n.t('phoneColumn') }}</th>
+          <th>{{ i18n.t('actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td>{{ user.id }}</td>
+          <td>{{ user.username }}</td>
+          <td>{{ user.email }}</td>
+          <td>
+            <select
+              [value]="user.role"
+              (change)="updateUserRole(user.id, $any($event.target).value)"
+              class="role-select"
+            >
+              <option *ngFor="let role of roles" [value]="role">{{ i18n.t('roles.' + role) }}</option>
+            </select>
+          </td>
+          <td>{{ user.phone || '-' }}</td>
+          <td>
+            <button (click)="openUserModal(user)" class="btn btn-sm btn-secondary">{{ i18n.t('editUser') }}</button>
+            <button (click)="deleteUser(user.id)" class="btn btn-sm btn-danger">{{ i18n.t('deleteUser') }}</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- User Modal -->
+  <div *ngIf="showUserModal" class="modal-overlay" (click)="closeUserModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h2>{{ selectedUser.id ? i18n.t('editUser') : i18n.t('createUser') }}</h2>
+      <form (ngSubmit)="saveUser()">
+        <div class="form-group">
+          <label>{{ i18n.t('username') }}</label>
+          <input [(ngModel)]="selectedUser.username" name="username" required>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('email') }}</label>
+          <input [(ngModel)]="selectedUser.email" name="email" type="email" required>
+        </div>
+        <div class="form-group" *ngIf="!selectedUser.id">
+          <label>{{ i18n.t('password') }}</label>
+          <input [(ngModel)]="selectedUser.password" name="password" type="password" required>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('role') }}</label>
+          <select [(ngModel)]="selectedUser.role" name="role">
+            <option *ngFor="let role of roles" [value]="role">{{ i18n.t('roles.' + role) }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('phone') }}</label>
+          <input [(ngModel)]="selectedUser.phone" name="phone">
+        </div>
+        <div class="modal-actions">
+          <button type="button" (click)="closeUserModal()" class="btn btn-secondary">{{ i18n.t('cancel') }}</button>
+          <button type="submit" class="btn btn-primary">{{ i18n.t('save') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

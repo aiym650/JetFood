@@ -1,0 +1,46 @@
+<div class="notifications-container">
+  <div class="notifications-header">
+    <h1>{{ i18n.t('notifications') }}</h1>
+    <div class="header-actions">
+      <span class="unread-badge" *ngIf="unreadCount > 0">{{ unreadCount }} {{ i18n.t('unreadCount') }}</span>
+      <button (click)="markAllAsRead()" class="btn btn-sm btn-secondary" *ngIf="unreadCount > 0" [disabled]="updating">{{ i18n.t('markAllRead') }}</button>
+      <button (click)="clearAll()" class="btn btn-sm btn-danger" *ngIf="notifications.length > 0" [disabled]="updating">{{ i18n.t('deleteAll') }}</button>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="error-message" role="alert">
+    {{ error }}
+    <button *ngIf="!loading" type="button" class="retry-button" (click)="loadNotifications()">{{ i18n.t('retry') }}</button>
+  </div>
+
+  <div *ngIf="loading" class="loading" role="status">{{ i18n.t('notificationsLoading') }}</div>
+
+  <div *ngIf="!loading && notifications.length === 0" class="no-notifications">
+    {{ i18n.t('notificationsEmpty') }}
+  </div>
+
+  <div *ngIf="!loading && notifications.length > 0" class="notifications-list">
+    <div
+      *ngFor="let notification of notifications"
+      [class.unread]="!notification.is_read"
+      class="notification-item"
+    >
+      <div class="notification-content">
+        <h3 class="notification-title">{{ notification.title }}</h3>
+        <p class="notification-message">{{ notification.message }}</p>
+        <span class="notification-time">{{ notification.created_at | date:'medium' }}</span>
+      </div>
+      <div class="notification-actions">
+        <button
+          *ngIf="!notification.is_read"
+          (click)="markAsRead(notification.id)"
+          class="btn btn-sm btn-primary"
+          [disabled]="updating"
+        >
+          {{ i18n.t('read') }}
+        </button>
+        <a *ngIf="notification.link" [href]="notification.link" class="btn btn-sm btn-secondary">{{ i18n.t('open') }}</a>
+      </div>
+    </div>
+  </div>
+</div>

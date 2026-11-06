@@ -1,0 +1,57 @@
+<div class="analytics-container">
+  <h1>{{ i18n.t('systemAnalysis') }}</h1>
+  <div *ngIf="loading" class="loading">{{ i18n.t('analyticsLoading') }}</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+  
+  <div *ngIf="analysis && !loading">
+    <div class="analytics-section">
+      <h2>{{ i18n.t('activeUsers30Days') }}</h2>
+      <p class="stat-number">{{ analysis.active_users_last_30_days }}</p>
+    </div>
+    
+    <div class="analytics-section">
+      <h2>{{ i18n.t('orderVolumeAnalysis') }}</h2>
+      <table class="analytics-table">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('customer') }}</th>
+            <th>{{ i18n.t('ordersPlural') }}</th>
+            <th>{{ i18n.t('totalSpent') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of analysis.order_volume_analysis">
+            <td>{{ item.customer }}</td>
+            <td>{{ item.order_count }}</td>
+            <td>{{ item.total_spent }} ₸</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="analytics-section">
+      <h2>{{ i18n.t('roleSuggestions') }}</h2>
+      <div *ngIf="analysis.role_update_suggestions?.length === 0" class="no-suggestions">
+        {{ i18n.t('noRoleSuggestions') }}
+      </div>
+      <table *ngIf="analysis.role_update_suggestions?.length > 0" class="analytics-table">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('usernameColumn') }}</th>
+            <th>{{ i18n.t('currentRole') }}</th>
+            <th>{{ i18n.t('suggestedRole') }}</th>
+            <th>{{ i18n.t('reason') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let suggestion of analysis.role_update_suggestions">
+            <td>{{ suggestion.username }}</td>
+            <td>{{ suggestion.current_role }}</td>
+            <td>{{ suggestion.suggested_role }}</td>
+            <td>{{ suggestion.reason }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

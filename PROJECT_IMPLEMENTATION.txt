@@ -1,0 +1,690 @@
+===============================================================================
+JETFOOD - FOOD DELIVERY SYSTEM - PROJECT IMPLEMENTATION DOCUMENTATION
+===============================================================================
+
+Project: JetFood - Food Delivery Management System
+Technologies: Django (Backend) + Angular (Frontend)
+Team Size: 6 people
+Date: 2026-11-04
+
+===============================================================================
+TABLE OF CONTENTS
+===============================================================================
+
+1. Project Structure Overview
+2. Team Task Assignments & Implementation Details
+3. Backend Implementation (Django)
+4. Frontend Implementation (Angular)
+5. Testing Infrastructure
+6. Deployment Instructions
+7. API Endpoints Reference
+
+===============================================================================
+1. PROJECT STRUCTURE OVERVIEW
+===============================================================================
+
+Food_delivery/
+├── backend/                          # Django backend project
+│   ├── settings.py                  # Django settings with apps & CORS
+│   ├── urls.py                      # Main URL routing
+│   └── __init__.py
+├── users/                           # User management app
+│   ├── models.py                    # Custom User model with roles
+│   ├── views.py                     # Authentication & user management
+│   ├── serializers.py               # User serializers
+│   ├── constraints.py               # Business constraints & validation
+│   ├── urls.py                      # User routes
+│   ├── admin.py                     # Admin interface
+│   └── tests.py                     # User tests
+├── orders/                          # Order management app
+│   ├── models.py                    # Order & OrderItem models
+│   ├── views.py                     # Order CRUD & status updates
+│   ├── serializers.py               # Order serializers
+│   ├── urls.py                      # Order routes
+│   ├── admin.py                     # Admin interface
+│   └── tests.py                     # Order tests
+├── analytics/                       # Analytics app
+│   ├── models.py                    # AnalyticsEvent, SystemMetric, PerformanceReport
+│   ├── views.py                     # Analytics & system analysis
+│   ├── serializers.py               # Analytics serializers
+│   ├── urls.py                      # Analytics routes
+│   ├── admin.py                     # Admin interface
+│   └── tests.py                     # Analytics tests
+├── integration/                     # External integration app
+│   ├── models.py                    # ExternalIntegration, IntegrationLog
+│   ├── views.py                     # Integration management
+│   ├── serializers.py               # Integration serializers
+│   ├── urls.py                      # Integration routes
+│   ├── admin.py                     # Admin interface
+│   └── tests.py                     # Integration tests
+├── reports/                         # Reports app
+│   ├── models.py                    # Report, ReportSchedule
+│   ├── views.py                     # Report generation & scheduling
+│   ├── serializers.py               # Report serializers
+│   ├── urls.py                      # Report routes
+│   ├── admin.py                     # Admin interface
+│   └── tests.py                     # Report tests
+├── manage.py                        # Django management script
+├── db.sqlite3                       # SQLite database
+└── frontend/                        # Angular frontend
+    ├── src/app/
+    │   ├── auth.ts                  # Authentication service
+    │   ├── orders.ts                # Orders service
+    │   ├── analytics.ts             # Analytics service
+    │   ├── reports.ts               # Reports service
+    │   ├── integration.ts           # Integration service
+    │   ├── auth/
+    │   │   └── login/               # Login component
+    │   ├── dashboard/               # Dashboard component
+    │   ├── orders/                  # Orders component
+    │   ├── analytics/               # Analytics component
+    │   ├── reports/                 # Reports component
+    │   └── integration/             # Integration component
+    └── package.json
+
+===============================================================================
+2. TEAM TASK ASSIGNMENTS & IMPLEMENTATION DETAILS
+===============================================================================
+
+TASK 1: Testing / Analytics / Report / Sum of Orders / Integration
+------------------------------------------------------------------
+
+Team Member: Person 1
+Implementation Location: Multiple files
+
+A. TESTING
+   - Backend Tests:
+     * users/tests.py - User authentication, registration, role management tests
+     * orders/tests.py - Order creation, status updates, permission tests
+     * analytics/tests.py - Analytics events, system analysis access tests
+     * integration/tests.py - Integration creation, sync, test endpoint tests
+     * reports/tests.py - Report generation, scheduling, download tests
+
+   - Test Commands:
+     * Run all tests: python manage.py test
+     * Run specific app: python manage.py test users
+     * Run with coverage: python manage.py test --coverage
+
+B. ANALYTICS
+   - Backend Implementation:
+     * analytics/models.py - AnalyticsEvent, SystemMetric, PerformanceReport models
+     * analytics/views.py - system_analysis() function for comprehensive analysis
+     * analytics/serializers.py - Data serialization for API responses
+   
+   - Frontend Implementation:
+     * frontend/src/app/analytics.ts - Analytics service
+     * frontend/src/app/analytics/analytics.ts - Analytics component
+     * frontend/src/app/analytics/analytics.html - Analytics UI with charts
+
+   - Features:
+     * Event tracking (order_created, order_completed, user_login, etc.)
+     * System metrics monitoring
+     * Performance reports (daily, weekly, monthly)
+     * Active users tracking (last 30 days)
+
+C. REPORTS
+   - Backend Implementation:
+     * reports/models.py - Report and ReportSchedule models
+     * reports/views.py - Report generation, scheduling, download endpoints
+     * reports/serializers.py - Report data serialization
+   
+   - Frontend Implementation:
+     * frontend/src/app/reports.ts - Reports service
+     * frontend/src/app/reports/reports.ts - Reports component
+     * frontend/src/app/reports/reports.html - Reports list UI
+
+   - Features:
+     * Report types: sales, delivery, customer, performance, inventory
+     * Formats: PDF, Excel, CSV
+     * Automated scheduling (daily, weekly, monthly, quarterly)
+     * Download functionality
+
+D. SUM OF ORDERS
+   - Backend Implementation:
+     * orders/views.py - order_summary() endpoint
+     * Returns: total_orders, total_revenue, status_breakdown
+   
+   - Frontend Implementation:
+     * frontend/src/app/orders.ts - getOrderSummary() method
+     * Dashboard displays order summary statistics
+
+E. INTEGRATION
+   - Backend Implementation:
+     * integration/models.py - ExternalIntegration, IntegrationLog models
+     * integration/views.py - Integration CRUD, test, sync endpoints
+     * integration/serializers.py - Integration data serialization
+   
+   - Frontend Implementation:
+     * frontend/src/app/integration.ts - Integration service
+     * frontend/src/app/integration/integration.ts - Integration component
+     * frontend/src/app/integration/integration.html - Integration management UI
+
+   - Features:
+     * Integration types: payment_gateway, mapping_service, notification_service
+     * Integration testing endpoint
+     * Data synchronization
+     * Comprehensive logging
+
+===============================================================================
+
+TASK 2: System Analysis / Role Updates Based on Analysis
+------------------------------------------------------------------
+
+Team Member: Person 2
+Implementation Location: analytics/views.py
+
+A. SYSTEM ANALYSIS
+   - File: analytics/views.py
+   - Function: system_analysis(request)
+   - Endpoint: GET /api/analytics/analysis/
+   
+   - Analysis Features:
+     1. Order Volume per User
+        * Aggregates order count and total spent per customer
+        * Identifies high-volume customers (threshold: >20 orders)
+     
+     2. Delivery Performance
+        * Calculates average delivery time per delivery person
+        * Tracks delivery duration metrics
+     
+     3. Active Users (Last 30 Days)
+        * Counts users with last_login within 30 days
+        * User engagement tracking
+     
+     4. Revenue Trends (Last 7 Days)
+        * Daily revenue aggregation
+        * Daily order count
+        * Time-series data for charts
+
+B. ROLE UPDATE SUGGESTIONS
+   - File: analytics/views.py
+   - Function: system_analysis() returns role_update_suggestions
+   
+   - Logic:
+     * Users with >20 orders suggested for "manager" role
+     * Analyzes user behavior patterns
+     * Returns list of suggested role changes with reasons
+
+C. APPLY ROLE UPDATES
+   - File: analytics/views.py
+   - Function: apply_role_updates(request)
+   - Endpoint: POST /api/analytics/apply-role-updates/
+   - Access: Admin only
+   
+   - Implementation:
+     * Accepts list of role updates
+     * Validates role permissions
+     * Updates user roles in database
+     * Returns confirmation of applied changes
+
+===============================================================================
+
+TASK 3: Constraints
+------------------------------------------------------------------
+
+Team Member: Person 3
+Implementation Location: users/constraints.py
+
+A. BUSINESS CONSTRAINTS CLASS
+   - File: users/constraints.py
+   - Class: BusinessConstraints
+   
+   - Order Constraints:
+     * MIN_ORDER_AMOUNT = $10.00
+     * MAX_ORDER_AMOUNT = $10,000.00
+     * MAX_ITEMS_PER_ORDER = 50
+   
+   - Delivery Constraints:
+     * MAX_DELIVERY_TIME_HOURS = 4
+     * MIN_DELIVERY_TIME_MINUTES = 30
+   
+   - User Constraints:
+     * MIN_PASSWORD_LENGTH = 8
+     * MAX_PENDING_ORDERS_PER_USER = 5
+   
+   - System Constraints:
+     * MAX_ORDERS_PER_HOUR = 100
+     * MAX_CONCURRENT_USERS = 500
+
+B. VALIDATION FUNCTIONS
+   - validate_order_amount(amount)
+     * Validates order against min/max limits
+     * Raises ValidationError if out of range
+   
+   - validate_delivery_time(estimated_time)
+     * Ensures delivery time is within valid range
+     * Min: 30 minutes from now
+     * Max: 4 hours from now
+   
+   - validate_user_pending_orders(user)
+     * Checks if user has too many pending orders
+     * Max: 5 pending orders per user
+   
+   - validate_role_access(user, required_roles)
+     * Validates if user has required role
+     * Used throughout views for permission checks
+
+C. CONSTRAINT APPLICATION
+   - Applied in:
+     * orders/views.py - Order creation validation
+     * users/views.py - User management validation
+     * All CRUD operations check constraints before proceeding
+
+===============================================================================
+
+TASK 4: Backend
+------------------------------------------------------------------
+
+Team Member: Person 4
+Implementation Location: Multiple files
+
+A. DJANGO PROJECT SETUP
+   - File: backend/settings.py
+   - Installed Apps:
+     * django.contrib.admin
+     * django.contrib.auth
+     * rest_framework
+     * rest_framework.authtoken
+     * corsheaders
+     * users, orders, analytics, integration, reports
+   
+   - Configuration:
+     * Custom User Model: AUTH_USER_MODEL = 'users.User'
+     * REST Framework: Token authentication, pagination
+     * CORS: Enabled for Angular frontend (localhost:4200)
+     * Database: SQLite (development)
+
+B. DATABASE MODELS
+   - users/models.py:
+     * User model with roles (admin, manager, analyst, delivery, customer)
+     * Fields: username, email, role, phone, address, timestamps
+   
+   - orders/models.py:
+     * Order model: order_number, customer, delivery_person, status, priority
+     * OrderItem model: item_name, quantity, price_per_item, subtotal
+     * Indexes on status, created_at, customer
+   
+   - analytics/models.py:
+     * AnalyticsEvent: event_type, user, timestamp, metadata, ip_address
+     * SystemMetric: name, value, unit, description
+     * PerformanceReport: period, start_date, end_date, metrics
+   
+   - integration/models.py:
+     * ExternalIntegration: name, type, status, api_endpoint, api_key
+     * IntegrationLog: integration, level, message, request/response data
+   
+   - reports/models.py:
+     * Report: type, title, status, format, file_path, parameters
+     * ReportSchedule: type, frequency, recipients, schedule
+
+C. API ENDPOINTS
+   - Authentication: /api/auth/login/, /api/auth/register/, /api/auth/logout/
+   - Orders: /api/orders/, /api/orders/<id>/, /api/orders/summary/
+   - Analytics: /api/analytics/events/, /api/analytics/analysis/
+   - Integration: /api/integration/, /api/integration/<id>/test/
+   - Reports: /api/reports/, /api/reports/schedules/
+
+D. ADMIN INTERFACE
+   - All apps have admin.py configured
+   - Register at: http://localhost:8000/admin/
+   - Default admin: username='admin', password='admin123'
+
+===============================================================================
+
+TASK 5: Authentication / Access Control
+------------------------------------------------------------------
+
+Team Member: Person 5
+Implementation Location: users/models.py, users/views.py, users/serializers.py
+
+A. CUSTOM USER MODEL
+   - File: users/models.py
+   - Extends: AbstractUser
+   - Additional Fields:
+     * role (CharField with choices)
+     * phone (CharField with regex validation)
+     * address (TextField)
+     * created_at, updated_at (DateTimeField)
+   
+   - Role Choices:
+     * admin - Full system access
+     * manager - Order and user management
+     * analyst - Analytics and reports access
+     * delivery - Delivery person functions
+     * customer - Order placement and tracking
+
+B. AUTHENTICATION SERVICES
+   - File: users/serializers.py
+   - Serializers:
+     * UserSerializer - User data serialization
+     * UserRegistrationSerializer - Registration with password confirmation
+     * LoginSerializer - Login credentials validation
+     * ChangePasswordSerializer - Password change with old password verification
+
+C. AUTHENTICATION VIEWS
+   - File: users/views.py
+   - Endpoints:
+     * RegisterView - POST /api/auth/register/
+     * LoginView - POST /api/auth/login/ (returns token)
+     * LogoutView - POST /api/auth/logout/
+     * UserProfileView - GET/PUT /api/auth/profile/
+     * ChangePasswordView - POST /api/auth/change-password/
+     * UserListView - GET /api/auth/users/ (role-filtered)
+     * UserDetailView - GET/PUT/DELETE /api/auth/users/<id>/
+     * update_user_role - POST /api/auth/users/<id>/role/ (admin only)
+
+D. ROLE-BASED ACCESS CONTROL
+   - Implemented in all views:
+     * validate_role_access(user, required_roles) function
+     * Permission checks before CRUD operations
+     * Admin has full access
+     * Manager can manage orders and some users
+     * Analyst can access analytics and reports
+     * Delivery persons can only see assigned orders
+     * Customers can only see their own orders
+
+E. TOKEN AUTHENTICATION
+   - REST Framework Token Authentication
+   - Token generated on registration/login
+   - Token stored in localStorage (frontend)
+   - Token sent in Authorization header for all API calls
+
+===============================================================================
+
+TASK 6: Password Protection in Backend
+------------------------------------------------------------------
+
+Team Member: Person 6
+Implementation Location: backend/settings.py, users/models.py, users/constraints.py
+
+A. DJANGO PASSWORD VALIDATORS
+   - File: backend/settings.py
+   - AUTH_PASSWORD_VALIDATORS:
+     * UserAttributeSimilarityValidator
+       - Prevents passwords similar to user attributes
+     * MinimumLengthValidator
+       - Enforces minimum password length (8 characters)
+     * CommonPasswordValidator
+       - Prevents common/weak passwords
+     * NumericPasswordValidator
+       - Prevents all-numeric passwords
+
+B. PASSWORD HASHING
+   - Django's built-in password hashing
+   - Uses PBKDF2 with SHA256 algorithm
+   - Automatic salt generation
+   - Passwords never stored in plain text
+
+C. PASSWORD VALIDATION IN CONSTRAINTS
+   - File: users/constraints.py
+   - BusinessConstraints.MIN_PASSWORD_LENGTH = 8
+   - Applied in UserRegistrationSerializer
+   - Password confirmation required for registration
+
+D. PASSWORD CHANGE FUNCTIONALITY
+   - File: users/views.py
+   - ChangePasswordView endpoint
+   - Requires old password verification
+   - Validates new password against Django validators
+   - New password must be confirmed
+
+E. SECURITY MEASURES
+   - SECRET_KEY in settings (should be environment variable in production)
+   - Token-based authentication (not session-based)
+   - HTTPS recommended for production
+   - Password change requires old password
+   - Password reset endpoint can be added using Django's built-in auth
+
+===============================================================================
+3. BACKEND IMPLEMENTATION (DJANGO)
+===============================================================================
+
+STARTING THE BACKEND SERVER
+----------------------------
+1. Navigate to project directory:
+   cd C:\Users\tald1\Desktop\Food_delivery
+
+2. Install dependencies:
+   pip install django djangorestframework django-cors-headers django-environ requests
+
+3. Run migrations:
+   python manage.py migrate
+
+4. Create superuser (already created):
+   Username: admin
+   Email: admin@fooddelivery.com
+   Password: admin123
+
+5. Start development server:
+   python manage.py runserver
+
+6. API will be available at: http://localhost:8000
+7. Admin panel: http://localhost:8000/admin/
+
+RUNNING TESTS
+-------------
+python manage.py test
+
+===============================================================================
+4. FRONTEND IMPLEMENTATION (ANGULAR)
+===============================================================================
+
+STARTING THE FRONTEND SERVER
+-----------------------------
+1. Navigate to frontend directory:
+   cd C:\Users\tald1\Desktop\Food_delivery\frontend
+
+2. Install dependencies:
+   npm install
+
+3. Start development server:
+   ng serve
+
+4. Application will be available at: http://localhost:4200
+
+ANGULAR COMPONENTS
+------------------
+- Login: /login
+- Dashboard: /dashboard
+- Orders: /orders
+- Analytics: /analytics
+- Reports: /reports
+- Integration: /integration
+
+ANGULAR SERVICES
+----------------
+- auth.ts: Authentication and token management
+- orders.ts: Order API calls
+- analytics.ts: Analytics API calls
+- reports.ts: Reports API calls
+- integration.ts: Integration API calls
+
+===============================================================================
+5. TESTING INFRASTRUCTURE
+===============================================================================
+
+BACKEND TESTS
+-------------
+Run all tests:
+  python manage.py test
+
+Run specific app tests:
+  python manage.py test users
+  python manage.py test orders
+  python manage.py test analytics
+  python manage.py test integration
+  python manage.py test reports
+
+Test Coverage:
+  - User authentication and authorization
+  - Order CRUD operations
+  - Role-based access control
+  - Analytics and reporting
+  - Integration management
+  - Business constraints validation
+
+FRONTEND TESTS
+--------------
+Angular tests are generated in .spec.ts files for each component.
+Run tests:
+  cd frontend
+  ng test
+
+===============================================================================
+6. DEPLOYMENT INSTRUCTIONS
+===============================================================================
+
+BACKEND DEPLOYMENT
+------------------
+1. Set environment variables:
+   - SECRET_KEY
+   - DEBUG=False
+   - ALLOWED_HOSTS
+   - DATABASE_URL (PostgreSQL recommended for production)
+
+2. Collect static files:
+   python manage.py collectstatic
+
+3. Use Gunicorn or uWSGI as WSGI server:
+   gunicorn backend.wsgi:application
+
+4. Configure Nginx as reverse proxy
+
+5. Use PostgreSQL instead of SQLite for production
+
+FRONTEND DEPLOYMENT
+-------------------
+1. Build for production:
+   cd frontend
+   ng build --prod
+
+2. Deploy dist/ folder to web server
+3. Configure Nginx to serve Angular files
+4. Update API URL in services to production backend URL
+
+===============================================================================
+7. API ENDPOINTS REFERENCE
+===============================================================================
+
+AUTHENTICATION ENDPOINTS
+------------------------
+POST   /api/auth/register/        - Register new user
+POST   /api/auth/login/           - Login (returns token)
+POST   /api/auth/logout/          - Logout
+GET    /api/auth/profile/         - Get current user profile
+PUT    /api/auth/profile/         - Update profile
+POST   /api/auth/change-password/ - Change password
+GET    /api/auth/users/           - List users (filtered by role)
+GET    /api/auth/users/<id>/      - Get user details
+PUT    /api/auth/users/<id>/      - Update user
+DELETE /api/auth/users/<id>/      - Delete user (admin only)
+POST   /api/auth/users/<id>/role/ - Update user role (admin only)
+
+ORDER ENDPOINTS
+---------------
+GET    /api/orders/               - List orders (filtered by role)
+POST   /api/orders/               - Create new order
+GET    /api/orders/<id>/          - Get order details
+PUT    /api/orders/<id>/          - Update order
+DELETE /api/orders/<id>/          - Delete order
+POST   /api/orders/<id>/status/   - Update order status
+POST   /api/orders/<id>/assign/   - Assign delivery person
+GET    /api/orders/summary/       - Get order summary statistics
+
+ANALYTICS ENDPOINTS
+-------------------
+GET    /api/analytics/events/     - List analytics events
+POST   /api/analytics/events/     - Create analytics event
+GET    /api/analytics/metrics/    - List system metrics
+POST   /api/analytics/metrics/    - Create system metric
+GET    /api/analytics/reports/    - List performance reports
+GET    /api/analytics/analysis/   - Get system analysis (admin/manager/analyst)
+POST   /api/analytics/apply-role-updates/ - Apply role updates (admin only)
+
+INTEGRATION ENDPOINTS
+---------------------
+GET    /api/integration/          - List integrations
+POST   /api/integration/          - Create integration (admin/manager)
+GET    /api/integration/<id>/     - Get integration details
+PUT    /api/integration/<id>/     - Update integration
+DELETE /api/integration/<id>/     - Delete integration (admin only)
+GET    /api/integration/logs/     - List integration logs
+POST   /api/integration/<id>/test/ - Test integration
+POST   /api/integration/<id>/sync/ - Sync integration
+
+REPORT ENDPOINTS
+----------------
+GET    /api/reports/              - List reports
+POST   /api/reports/              - Create report
+GET    /api/reports/<id>/         - Get report details
+PUT    /api/reports/<id>/         - Update report
+DELETE /api/reports/<id>/         - Delete report (admin only)
+GET    /api/reports/<id>/download/ - Download report
+GET    /api/reports/schedules/    - List report schedules
+POST   /api/reports/schedules/    - Create schedule
+PUT    /api/reports/schedules/<id>/ - Update schedule
+DELETE /api/reports/schedules/<id>/ - Delete schedule (admin only)
+
+===============================================================================
+ADDITIONAL NOTES
+===============================================================================
+
+DEFAULT CREDENTIALS
+-------------------
+Admin User:
+  Username: admin
+  Password: admin123
+  Role: admin
+
+JetFood System Name Change:
+  - Project renamed from "Food Delivery" to "JetFood"
+  - Dashboard header updated to "JetFood"
+  - All documentation references updated
+
+ROLE MANAGEMENT
+---------------
+The system implements 5 roles:
+1. admin - Full system access, can manage users and roles
+2. manager - Can manage orders, view analytics, assign delivery persons
+3. analyst - Can view analytics and generate reports
+4. delivery - Can view and update assigned orders
+5. customer - Can place orders and view own orders
+
+SECURITY FEATURES
+-----------------
+- Token-based authentication
+- Password hashing with Django's built-in system
+- Role-based access control
+- CORS configuration for Angular integration
+- Input validation with serializers
+- Business constraints enforcement
+
+DATABASE
+--------
+- SQLite for development (can be upgraded to PostgreSQL)
+- Migrations applied: users, orders, analytics, integration, reports
+- Superuser created: admin/admin123
+
+TECHNOLOGY STACK
+----------------
+Backend:
+  - Django 5.2.13
+  - Django REST Framework 3.14.0
+  - Django CORS Headers 4.9.0
+  - Python 3.14.3
+
+Frontend:
+  - Angular (latest)
+  - TypeScript
+  - RxJS (for reactive programming)
+
+===============================================================================
+END OF DOCUMENTATION
+===============================================================================
+
+This document provides a comprehensive overview of the Food Delivery System
+implementation, detailing where and how each team member's tasks were
+completed in the codebase.
+
+For questions or support, refer to the respective module files and tests
+included in the project.

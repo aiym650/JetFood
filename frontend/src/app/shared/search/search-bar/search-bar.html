@@ -1,0 +1,60 @@
+<div class="search-bar-container">
+  <div class="search-input-wrapper">
+    <input
+      type="text"
+      [(ngModel)]="query"
+      (keyup.enter)="onSearch()"
+      [placeholder]="i18n.t('globalSearchPlaceholder')"
+      [attr.aria-label]="i18n.t('search')"
+      class="search-input"
+    >
+    <button type="button" (click)="onSearch()" class="search-btn" [attr.aria-label]="i18n.t('search')"></button>
+  </div>
+
+  <div *ngIf="showResults" class="search-results">
+    <div *ngIf="loading" class="loading">{{ i18n.t('loading') }}</div>
+    <div *ngIf="error" class="no-results" role="alert">{{ error }}</div>
+
+    <div *ngIf="!loading && !error && results as searchResults">
+      <div *ngIf="searchResults.orders.length > 0" class="results-section">
+        <h3>{{ i18n.t('orders') }}</h3>
+        <button
+          *ngFor="let order of searchResults.orders"
+          (click)="selectResult('order', order)"
+          class="result-item"
+        >
+          <span class="result-title">{{ order.order_number }}</span>
+          <span class="result-subtitle">{{ statusLabel(order.status) }} - {{ order.total_amount }} ₸</span>
+        </button>
+      </div>
+
+      <div *ngIf="searchResults.users.length > 0" class="results-section">
+        <h3>{{ i18n.t('userManagement') }}</h3>
+        <button
+          *ngFor="let user of searchResults.users"
+          (click)="selectResult('user', user)"
+          class="result-item"
+        >
+          <span class="result-title">{{ user.username }}</span>
+          <span class="result-subtitle">{{ roleLabel(user.role) }} - {{ user.email }}</span>
+        </button>
+      </div>
+
+      <div *ngIf="searchResults.menu_items.length > 0" class="results-section">
+        <h3>{{ i18n.t('menu') }}</h3>
+        <button
+          *ngFor="let item of searchResults.menu_items"
+          (click)="selectResult('menu', item)"
+          class="result-item"
+        >
+          <span class="result-title">{{ catalogLabel(item.name) }}</span>
+          <span class="result-subtitle">{{ catalogLabel(item.category) }} - {{ item.price }} ₸</span>
+        </button>
+      </div>
+
+      <div *ngIf="!searchResults.orders.length && !searchResults.users.length && !searchResults.menu_items.length" class="no-results">
+        {{ i18n.t('noResults') }}
+      </div>
+    </div>
+  </div>
+</div>

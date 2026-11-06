@@ -1,0 +1,54 @@
+<div class="sidebar" [class.collapsed]="isCollapsed">
+  <div class="sidebar-header">
+    <div class="brand">
+      <span class="brand-icon" aria-hidden="true">J</span>
+      <span class="brand-text" *ngIf="!isCollapsed">JetFood</span>
+    </div>
+    <button (click)="toggle()" class="toggle-btn">
+      {{ isCollapsed ? '→' : '←' }}
+    </button>
+  </div>
+
+  <div class="sidebar-user" *ngIf="!isCollapsed">
+    <div class="user-avatar">
+      {{ currentUser?.username?.charAt(0).toUpperCase() }}
+    </div>
+    <div class="user-info">
+      <div class="user-name">{{ currentUser?.username }}</div>
+      <div class="user-role">{{ roleLabel(currentUser?.role) }}</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a
+      *ngFor="let item of visibleMenuItems"
+      [routerLink]="item.route"
+      routerLinkActive="active"
+      [attr.aria-label]="i18n.t(item.label)"
+      [title]="isCollapsed ? i18n.t(item.label) : null"
+      class="nav-item"
+    >
+      <span class="nav-icon">{{ item.icon }}</span>
+      <span class="nav-label" *ngIf="!isCollapsed">{{ i18n.t(item.label) }}</span>
+    </a>
+
+    <a
+      *ngIf="currentUser?.role === 'admin'"
+      routerLink="/admin"
+      routerLinkActive="active"
+      [attr.aria-label]="i18n.t('admin')"
+      [title]="isCollapsed ? i18n.t('admin') : null"
+      class="nav-item admin-item"
+    >
+      <span class="nav-icon">AD</span>
+      <span class="nav-label" *ngIf="!isCollapsed">{{ i18n.t('admin') }}</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button (click)="logout()" class="logout-btn">
+      <span class="logout-icon" aria-hidden="true">↪</span>
+      <span *ngIf="!isCollapsed">{{ i18n.t('logout') }}</span>
+    </button>
+  </div>
+</div>

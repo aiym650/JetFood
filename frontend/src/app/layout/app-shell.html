@@ -1,0 +1,8 @@
+<app-sidebar [currentUser]="currentUser" (toggleSidebar)="toggleSidebar()"></app-sidebar>
+<main class="app-content" [class.sidebar-collapsed]="sidebarCollapsed">
+  <header class="app-toolbar">
+    <app-search-bar (resultSelected)="selectSearchResult($event)"></app-search-bar>
+    <app-language-switcher></app-language-switcher>
+  </header>
+  <router-outlet></router-outlet>
+</main>

@@ -1,0 +1,69 @@
+<div class="login-container">
+  <div class="login-wrapper">
+    <div class="login-left">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">J</span>
+        <span class="brand-text">JetFood</span>
+      </div>
+      <h1>{{ i18n.t('loginWelcome') }}</h1>
+      <p>{{ i18n.t('loginIntro') }}</p>
+      <div class="features">
+        <div class="feature">
+          <span class="feature-icon">30</span>
+          <span>{{ i18n.t('fastDelivery') }}</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">✓</span>
+          <span>{{ i18n.t('accurateDelivery') }}</span>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">%</span>
+          <span>{{ i18n.t('bestPrices') }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="login-right">
+      <div class="login-card">
+        <app-language-switcher></app-language-switcher>
+        <h2>{{ i18n.t('accountLogin') }}</h2>
+        <form (ngSubmit)="onSubmit()">
+          <div class="form-group">
+            <label for="username">{{ i18n.t('username') }}</label>
+            <input
+              type="text"
+              id="username"
+              [(ngModel)]="username"
+              name="username"
+              required
+              [placeholder]="i18n.t('enterUsername')"
+            >
+          </div>
+          <div class="form-group">
+            <label for="password">{{ i18n.t('password') }}</label>
+            <input
+              type="password"
+              id="password"
+              [(ngModel)]="password"
+              name="password"
+              required
+              [placeholder]="i18n.t('enterPassword')"
+            >
+          </div>
+          <div *ngIf="errorMessage" class="error-message">
+            {{ errorMessage }}
+          </div>
+          <button type="submit" [disabled]="loading" class="btn btn-primary">
+            {{ loading ? i18n.t('loggingIn') : i18n.t('login') }}
+          </button>
+        </form>
+        <div class="login-footer">
+          <p>{{ i18n.t('dontHaveAccount') }}</p>
+          <a routerLink="/register">{{ i18n.t('register') }}</a>
+        </div>
+        <div class="back-to-home">
+          <a routerLink="/landing">← {{ i18n.t('dashboard') }}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

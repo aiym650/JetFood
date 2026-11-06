@@ -1,0 +1,121 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  color: #252a31;
+  background: #f5f7fa;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.order-edit {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 18px;
+  border: 1px solid #dfe9e2;
+  border-radius: 12px;
+  background: #f8fbf8;
+}
+
+.order-edit h3 { margin: 0; }
+.order-edit label { display: grid; gap: 6px; }
+.order-edit input,
+.order-edit textarea,
+.order-edit select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #dfe3e7;
+  border-radius: 8px;
+}
+.order-edit textarea { min-height: 60px; }
+.edit-item,
+.edit-total,
+.edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.edit-quantity { display: flex; align-items: center; gap: 10px; }
+.edit-quantity button,
+.edit-actions button {
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.edit-actions .checkout-button { background: #24734f; color: #fff; }
+.edit-actions button:disabled { opacity: .6; cursor: wait; }
+.edit-success { color: #24734f; }
+
+.delivery-route,
+.delivery-confirmation {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid #e6ebe8;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.delivery-route .details-heading h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.route-summary p,
+.delivery-confirmation p {
+  margin: 7px 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+.route-summary a {
+  display: inline-block;
+  margin-top: 5px;
+  color: #176b4d;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.route-edit {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.route-edit label {
+  display: grid;
+  gap: 6px;
+  color: #535c65;
+  font-size: 13px;
+}
+
+.route-edit input,
+.route-edit textarea {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #dfe5e2;
+  border-radius: 8px;
+}
+
+.delivery-confirmed {
+  margin: 14px 0 0;
+  color: #236942;
+  font-size: 13px;
+  font-weight: 600;
+}

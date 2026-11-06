@@ -1,0 +1,193 @@
+<div class="orders-container">
+  <div class="orders-heading">
+    <div>
+      <p class="page-eyebrow">JETFOOD</p>
+      <h1>{{ currentUser?.role === 'customer' ? i18n.t('myOrders') : i18n.t('orders') }}</h1>
+      <p class="page-description">{{ i18n.t('orderPageDescription') }}</p>
+    </div>
+    <button type="button" class="retry-button" [disabled]="loading || refreshing" (click)="retryOrders()">
+      {{ refreshing ? i18n.t('refreshing') : i18n.t('refreshStatuses') }}
+    </button>
+  </div>
+  <div *ngIf="loading" class="loading" role="status">
+    <span class="loading-spinner" aria-hidden="true"></span>
+    {{ i18n.t('ordersLoading') }}
+  </div>
+  <div *ngIf="error" class="error" role="alert">{{ error }}</div>
+  <div *ngIf="refreshError" class="error" role="alert">{{ refreshError }}</div>
+  <p *ngIf="hasActiveOrders && !refreshing" class="refresh-hint">{{ i18n.t('autoRefreshHint') }}</p>
+  <p *ngIf="refreshing" class="refresh-hint" role="status">{{ i18n.t('checkingStatuses') }}</p>
+  <div *ngIf="!loading && !error && orders.length === 0" class="no-data">{{ i18n.t('noOrders') }}</div>
+  <table *ngIf="orders.length > 0" class="orders-table">
+    <thead>
+      <tr>
+        <th>{{ i18n.t('orderNumber') }}</th>
+        <th *ngIf="currentUser?.role !== 'customer'">{{ i18n.t('customer') }}</th>
+        <th>{{ i18n.t('status') }}</th>
+        <th>{{ i18n.t('totalAmount') }}</th>
+        <th>{{ i18n.t('date') }}</th>
+        <th>{{ i18n.t('orderItems') }}</th>
+        <th *ngIf="currentUser?.role === 'customer'">{{ i18n.t('actions') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let order of orders">
+        <tr>
+          <td>{{ order.order_number }}</td>
+          <td *ngIf="currentUser?.role !== 'customer'">{{ order.customer_name }}</td>
+          <td><span class="order-status" [class]="'status-' + order.status">{{ statusLabel(order.status) }}</span></td>
+          <td>{{ order.total_amount }} ₸</td>
+          <td>{{ order.created_at | date:'dd.MM.yyyy HH:mm' }}</td>
+          <td>
+            <button
+              type="button"
+              class="details-button"
+              [attr.aria-expanded]="expandedOrderId === order.id"
+              [attr.aria-controls]="'order-details-' + order.id"
+              (click)="toggleOrderDetails(order.id)"
+            >
+              {{ expandedOrderId === order.id ? i18n.t('hide') : i18n.t('details') }}
+            </button>
+          </td>
+          <td *ngIf="currentUser?.role === 'customer'">
+            <button
+              *ngIf="order.status === 'pending'"
+              type="button"
+              class="details-button"
+              [disabled]="savingEdit"
+              (click)="beginEditOrder(order)"
+            >
+              {{ i18n.t('editOrder') }}
+            </button>
+            <button
+              *ngIf="order.status === 'pending'"
+              type="button"
+              class="cancel-button"
+              [disabled]="cancellingOrderId === order.id"
+              (click)="cancelOrder(order.id)"
+            >
+              {{ cancellingOrderId === order.id ? i18n.t('cancelling') : i18n.t('cancelOrderButton') }}
+            </button>
+            <span *ngIf="order.status !== 'pending'" class="no-order-action">—</span>
+          </td>
+        </tr>
+        <tr class="details-row" [hidden]="expandedOrderId !== order.id">
+          <td [attr.colspan]="currentUser?.role === 'customer' ? 7 : 6">
+            <section class="order-details" [id]="'order-details-' + order.id" [attr.aria-label]="i18n.t('orderItems') + ' ' + order.order_number">
+              <div class="details-heading">
+                <h2>{{ i18n.t('orderDetails') }} {{ order.order_number }}</h2>
+                <span>{{ order.items.length }} {{ i18n.t('positions') }}</span>
+              </div>
+              <ul class="order-items">
+                <li *ngFor="let item of order.items">
+                  <span>{{ i18n.catalogLabel(item.item_name) }} <span class="item-quantity">× {{ item.quantity }}</span></span>
+                  <span>{{ item.subtotal }} ₸</span>
+                </li>
+              </ul>
+              <div class="order-delivery-info">
+                <div><span>{{ i18n.t('deliveryAddress') }}</span><strong>{{ order.delivery_address }}</strong></div>
+                <div *ngIf="order.delivery_notes"><span>{{ i18n.t('comment') }}</span><strong>{{ order.delivery_notes }}</strong></div>
+                <div *ngIf="order.estimated_delivery_time"><span>{{ i18n.t('expectedTime') }}</span><strong>{{ order.estimated_delivery_time | date:'dd.MM.yyyy HH:mm' }}</strong></div>
+                <div *ngIf="order.actual_delivery_time"><span>{{ i18n.t('deliveredAt') }}</span><strong>{{ order.actual_delivery_time | date:'dd.MM.yyyy HH:mm' }}</strong></div>
+                <div *ngIf="order.delivery_confirmed_at"><span>{{ i18n.t('deliveryConfirmedAt') }}</span><strong>{{ order.delivery_confirmed_at | date:'dd.MM.yyyy HH:mm' }}</strong></div>
+              </div>
+              <section class="delivery-route">
+                <div class="details-heading">
+                  <h3>{{ i18n.t('deliveryRoute') }}</h3>
+                  <button
+                    *ngIf="canManageRoute(order)"
+                    type="button"
+                    class="details-button"
+                    [disabled]="savingRoute"
+                    (click)="beginRouteEdit(order)"
+                  >
+                    {{ deliveryRoutes[order.id] ? i18n.t('editDeliveryRoute') : i18n.t('planDeliveryRoute') }}
+                  </button>
+                </div>
+                <p *ngIf="routeLoading" role="status">{{ i18n.t('deliveryRouteLoading') }}</p>
+                <p *ngIf="routeLoadErrors[order.id]" class="error" role="alert">{{ routeLoadErrors[order.id] }}</p>
+                <div *ngIf="deliveryRoutes[order.id] as deliveryRoute" class="route-summary">
+                  <p><strong>{{ i18n.t('routeFrom') }}:</strong> {{ deliveryRoute.origin_address }}</p>
+                  <p><strong>{{ i18n.t('routeTo') }}:</strong> {{ deliveryRoute.destination_address }}</p>
+                  <p *ngIf="deliveryRoute.notes"><strong>{{ i18n.t('routeNotes') }}:</strong> {{ deliveryRoute.notes }}</p>
+                  <a [href]="deliveryRoute.directions_url" target="_blank" rel="noopener noreferrer">
+                    {{ i18n.t('openDirections') }}
+                  </a>
+                </div>
+                <p *ngIf="!routeLoading && deliveryRoutes[order.id] === null">{{ i18n.t('deliveryRouteNotPlanned') }}</p>
+                <div *ngIf="routeEditingOrderId === order.id" class="route-edit">
+                  <label>{{ i18n.t('routeOrigin') }}
+                    <input [value]="routeOriginAddress" (input)="routeOriginAddress = $any($event.target).value">
+                  </label>
+                  <label>{{ i18n.t('routeNotes') }}
+                    <textarea [value]="routeNotes" (input)="routeNotes = $any($event.target).value"></textarea>
+                  </label>
+                  <p *ngIf="routeSaveError" class="error" role="alert">{{ routeSaveError }}</p>
+                  <div class="edit-actions">
+                    <button type="button" class="checkout-button" [disabled]="savingRoute" (click)="saveDeliveryRoute(order.id)">
+                      {{ savingRoute ? i18n.t('saving') : i18n.t('saveDeliveryRoute') }}
+                    </button>
+                    <button type="button" class="details-button" [disabled]="savingRoute" (click)="routeEditingOrderId = null">
+                      {{ i18n.t('cancel') }}
+                    </button>
+                  </div>
+                </div>
+              </section>
+              <div *ngIf="currentUser?.role === 'customer' && order.status === 'delivered' && !order.delivery_confirmed_at" class="delivery-confirmation">
+                <p>{{ i18n.t('confirmDeliveryPrompt') }}</p>
+                <p *ngIf="deliveryConfirmationError" class="error" role="alert">{{ deliveryConfirmationError }}</p>
+                <button
+                  type="button"
+                  class="checkout-button"
+                  [disabled]="confirmingDeliveryOrderId === order.id"
+                  (click)="confirmDelivery(order)"
+                >
+                  {{ confirmingDeliveryOrderId === order.id ? i18n.t('confirmingDelivery') : i18n.t('confirmDelivery') }}
+                </button>
+              </div>
+              <p *ngIf="currentUser?.role === 'customer' && order.delivery_confirmed_at" class="delivery-confirmed" role="status">
+                {{ i18n.t('deliveryReceiptConfirmed') }}
+              </p>
+              <p *ngIf="expandedOrderId === order.id && editSuccess" class="edit-success" role="status">{{ editSuccess }}</p>
+              <section *ngIf="editingOrderId === order.id" class="order-edit">
+                <h3>{{ i18n.t('editOrder') }}</h3>
+                <label>{{ i18n.t('deliveryAddress') }}
+                  <input [value]="editAddress" (input)="editAddress = $any($event.target).value">
+                </label>
+                <label>{{ i18n.t('comment') }}
+                  <textarea [value]="editNotes" (input)="editNotes = $any($event.target).value"></textarea>
+                </label>
+                <div class="edit-item-list">
+                  <div *ngFor="let item of editItems; let index = index" class="edit-item">
+                    <span>{{ i18n.catalogLabel(item.item_name) }} · {{ item.price }} ₸</span>
+                    <div class="edit-quantity">
+                      <button type="button" (click)="changeEditQuantity(index, -1)" [disabled]="savingEdit">−</button>
+                      <span>{{ item.quantity }}</span>
+                      <button type="button" (click)="changeEditQuantity(index, 1)" [disabled]="savingEdit">+</button>
+                    </div>
+                  </div>
+                </div>
+                <label>{{ i18n.t('addDish') }}
+                  <select #menuItemSelect (change)="addEditMenuItem(menuItemSelect.value); menuItemSelect.value = ''">
+                    <option value="">{{ i18n.t('selectDish') }}</option>
+                    <option *ngFor="let item of availableMenuItems" [value]="item.id">
+                      {{ i18n.catalogLabel(item.name) }} · {{ item.price }} ₸
+                    </option>
+                  </select>
+                </label>
+                <div class="edit-total"><span>{{ i18n.t('total') }}</span><strong>{{ editTotal }} ₸</strong></div>
+                <p *ngIf="editError" class="error" role="alert">{{ editError }}</p>
+                <div class="edit-actions">
+                  <button type="button" class="checkout-button" [disabled]="savingEdit" (click)="saveOrderEdit(order.id)">
+                    {{ savingEdit ? i18n.t('saving') : i18n.t('saveChanges') }}
+                  </button>
+                  <button type="button" class="details-button" [disabled]="savingEdit" (click)="cancelEdit()">{{ i18n.t('cancel') }}</button>
+                </div>
+              </section>
+            </section>
+          </td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>

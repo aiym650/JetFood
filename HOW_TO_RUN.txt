@@ -1,0 +1,363 @@
+================================================================================
+HOW TO RUN THE FOOD DELIVERY SYSTEM
+================================================================================
+
+This guide explains how to run the complete system, backend only, or frontend only.
+
+
+================================================================================
+REQUIREMENTS
+================================================================================
+
+Before running the system, ensure you have installed:
+
+1. Python 3.8+ (for Django Backend)
+   - Download: https://www.python.org/downloads/
+   - Check version: python --version
+
+2. Node.js 18+ and npm (for Angular Frontend)
+   - Download: https://nodejs.org/
+   - Check version: node --version and npm --version
+
+3. Git (optional, for version control)
+
+
+================================================================================
+INSTALLATION (FIRST TIME ONLY)
+================================================================================
+
+Step 1: Install Backend Dependencies
+-------------------------------------
+Open terminal in project root: C:\Users\tald1\Desktop\Food_delivery
+
+Command:
+```
+pip install django djangorestframework django-cors-headers
+```
+
+Step 2: Run Database Migrations
+--------------------------------
+Command:
+```
+python manage.py migrate
+```
+
+Step 3: Create Superuser (for Admin Panel)
+-------------------------------------------
+Command:
+```
+python manage.py createsuperuser
+```
+Follow prompts to create username, email, and password.
+
+Step 4: Install Frontend Dependencies
+--------------------------------------
+Open terminal in frontend folder: C:\Users\tald1\Desktop\Food_delivery\frontend
+
+Command:
+```
+npm install
+```
+
+Step 5: Build Frontend (optional for development)
+-------------------------------------------------
+Command:
+```
+npm run build
+```
+
+
+================================================================================
+OPTION 1: RUN COMPLETE SYSTEM (BACKEND + FRONTEND)
+================================================================================
+
+This runs both backend and frontend simultaneously in separate terminals.
+
+Step 1: Start Backend
+----------------------
+Open Terminal 1 in project root: C:\Users\tald1\Desktop\Food_delivery
+
+Command:
+```
+python manage.py runserver
+```
+
+Backend will start at: http://localhost:8000
+You will see output like:
+```
+Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+November 05, 2026 - 10:00:00
+Django version 5.2.13, using settings 'backend.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+```
+
+Step 2: Start Frontend
+-----------------------
+Open Terminal 2 in frontend folder: C:\Users\tald1\Desktop\Food_delivery\frontend
+
+Command:
+```
+npm start
+```
+OR
+```
+ng serve
+```
+
+Frontend will start at: http://localhost:4200
+You will see output like:
+```
+Angular Live Development Server is listening on localhost:4200, open your browser on http://localhost:4200/
+```
+
+Step 3: Access the Application
+------------------------------
+Open your browser and go to: http://localhost:4200
+
+The frontend will communicate with backend at http://localhost:8000
+
+
+================================================================================
+OPTION 2: RUN BACKEND ONLY
+================================================================================
+
+Use this option if you only need to work on the backend or test API endpoints.
+
+Step 1: Start Backend Server
+-----------------------------
+Open terminal in project root: C:\Users\tald1\Desktop\Food_delivery
+
+Command:
+```
+python manage.py runserver
+```
+
+Backend will start at: http://localhost:8000
+
+Step 2: Access Backend
+-----------------------
+You can access:
+
+1. API Endpoints:
+   - http://localhost:8000/api/auth/
+   - http://localhost:8000/api/orders/
+   - http://localhost:8000/api/analytics/
+   - http://localhost:8000/api/reports/
+   - http://localhost:8000/api/integration/
+
+2. Django Admin Panel:
+   - http://localhost:8000/admin/
+   - Login with superuser credentials created during installation
+
+3. API Documentation (browsable API):
+   - Visit any API endpoint in browser
+   - Example: http://localhost:8000/api/orders/
+   - Shows browsable REST API interface
+
+
+================================================================================
+OPTION 3: RUN FRONTEND ONLY
+================================================================================
+
+Use this option if you only need to work on the frontend UI.
+Note: Some features may not work without backend running.
+
+Step 1: Start Frontend Server
+------------------------------
+Open terminal in frontend folder: C:\Users\tald1\Desktop\Food_delivery\frontend
+
+Command:
+```
+npm start
+```
+OR
+```
+ng serve
+```
+
+Frontend will start at: http://localhost:4200
+
+Step 2: Access Frontend
+------------------------
+Open browser: http://localhost:4200
+
+Note: Without backend running, API calls will fail. The UI will load but
+data-dependent features (login, orders, analytics) will show errors.
+
+
+================================================================================
+DEVELOPMENT WORKFLOW
+================================================================================
+
+For full development, keep both terminals open:
+
+Terminal 1 (Backend):
+```
+cd C:\Users\tald1\Desktop\Food_delivery
+python manage.py runserver
+```
+
+Terminal 2 (Frontend):
+```
+cd C:\Users\tald1\Desktop\Food_delivery\frontend
+npm start
+```
+
+Both servers support hot reload:
+- Backend: Automatically restarts when Python files change
+- Frontend: Automatically refreshes browser when TypeScript/HTML/CSS files change
+
+
+================================================================================
+STOPPING THE SERVERS
+================================================================================
+
+To stop either server:
+
+1. In the terminal where the server is running
+2. Press: Ctrl + C
+3. The server will stop gracefully
+
+
+================================================================================
+PRODUCTION DEPLOYMENT (ADVANCED)
+================================================================================
+
+For production deployment, do NOT use "python manage.py runserver" or "ng serve".
+
+Backend Production:
+-------------------
+1. Use Gunicorn or uWSGI:
+   ```
+   pip install gunicorn
+   gunicorn backend.wsgi:application
+   ```
+
+2. Set DEBUG = False in backend/settings.py
+3. Use production database (PostgreSQL recommended)
+4. Set ALLOWED_HOSTS to your domain
+5. Use environment variables for SECRET_KEY
+
+Frontend Production:
+--------------------
+1. Build for production:
+   ```
+   cd frontend
+   npm run build
+   ```
+
+2. Serve static files using Nginx or Apache
+3. Or deploy to platforms like Vercel, Netlify, AWS S3
+
+
+================================================================================
+COMMON ISSUES AND SOLUTIONS
+================================================================================
+
+Issue 1: Port Already in Use
+-----------------------------
+Error: "Port 8000 is already in use" or "Port 4200 is already in use"
+
+Solution:
+- Backend: Use different port: python manage.py runserver 8001
+- Frontend: Use different port: ng serve --port 4201
+
+Issue 2: Module Not Found
+--------------------------
+Error: "ModuleNotFoundError: No module named 'django'"
+
+Solution:
+```
+pip install django djangorestframework django-cors-headers
+```
+
+Issue 3: npm Command Not Found
+-------------------------------
+Error: "'npm' is not recognized as an internal or external command"
+
+Solution:
+- Install Node.js from https://nodejs.org/
+- Restart terminal after installation
+
+Issue 4: CORS Errors
+--------------------
+Error: "Access to XMLHttpRequest has been blocked by CORS policy"
+
+Solution:
+- Ensure backend is running on port 8000
+- Check backend/settings.py has correct CORS configuration:
+  ```
+  CORS_ALLOWED_ORIGINS = [
+      "http://localhost:4200",
+      "http://127.0.0.1:4200",
+  ]
+  ```
+
+Issue 5: Database Locked
+--------------------------
+Error: "database is locked" (SQLite)
+
+Solution:
+- Close all terminals running the backend
+- Delete db.sqlite3-shm and db.sqlite3-wal files
+- Restart backend server
+
+Issue 6: Authentication Token Issues
+-------------------------------------
+Error: "Invalid token" or "Authentication credentials were not provided"
+
+Solution:
+- Ensure you're logged in (token in localStorage)
+- Check Authorization header: "Token {your_token}"
+- Token may have expired (logout and login again)
+
+
+================================================================================
+USEFUL COMMANDS
+================================================================================
+
+Backend Commands:
+-----------------
+- python manage.py runserver          - Start development server
+- python manage.py migrate           - Apply database migrations
+- python manage.py makemigrations    - Create new migrations
+- python manage.py createsuperuser    - Create admin user
+- python manage.py shell             - Open Python shell
+- python manage.py check             - Check for issues
+
+Frontend Commands:
+-------------------
+- npm start                           - Start development server
+- ng serve                            - Start development server (same as npm start)
+- npm run build                       - Build for production
+- npm run watch                       - Build and watch for changes
+- ng test                             - Run tests
+- ng lint                             - Check code quality
+
+
+================================================================================
+QUICK START SUMMARY
+================================================================================
+
+First Time Setup:
+1. pip install django djangorestframework django-cors-headers
+2. python manage.py migrate
+3. python manage.py createsuperuser
+4. cd frontend && npm install
+
+Run Complete System:
+Terminal 1: python manage.py runserver
+Terminal 2: cd frontend && npm start
+
+Access: http://localhost:4200
+
+Admin Panel: http://localhost:8000/admin/
+
+API Root: http://localhost:8000/api/
+
+
+================================================================================

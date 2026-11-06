@@ -1,0 +1,77 @@
+.integration-container {
+  padding: 2rem;
+}
+
+.integration-container h1 {
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+}
+
+.loading, .error, .no-data {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.1rem;
+}
+
+.error {
+  color: #e74c3c;
+}
+
+.no-data {
+  color: #7f8c8d;
+}
+
+.integration-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.integration-table thead {
+  background: #2c3e50;
+  color: white;
+}
+
+.integration-table th,
+.integration-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.integration-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.status-active {
+  color: #27ae60;
+  font-weight: bold;
+}
+
+.status-inactive {
+  color: #95a5a6;
+  font-weight: bold;
+}
+
+.status-error {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.integration-table button {
+  padding: 0.5rem 1rem;
+  margin-right: 0.5rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.integration-table button:hover {
+  background: #2980b9;
+}
