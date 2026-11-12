@@ -5,8 +5,8 @@
         <span class="search-icon" aria-hidden="true"></span>
         <input
           type="search"
-          [placeholder]="i18n.t('searchFood')"
-          [attr.aria-label]="i18n.t('searchFood')"
+          [placeholder]="i18n.t(selectedRestaurant ? 'searchFood' : 'searchRestaurants')"
+          [attr.aria-label]="i18n.t(selectedRestaurant ? 'searchFood' : 'searchRestaurants')"
           [value]="searchTerm"
           (input)="searchTerm = $any($event.target).value"
         >
@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <div class="hero-section">
+    <div class="hero-section" *ngIf="!selectedRestaurant">
       <div>
         <p class="hero-eyebrow">JETFOOD</p>
         <h1>{{ i18n.t('welcomeFood') }} {{ currentUser?.username }}!</h1>
@@ -32,11 +32,46 @@
       </div>
     </div>
 
-    <section class="catalog-section" [attr.aria-label]="i18n.t('menu')">
+    <section class="restaurant-catalog" *ngIf="!selectedRestaurant" [attr.aria-label]="i18n.t('restaurants')">
       <div class="section-heading">
         <div>
-          <h2>{{ i18n.t('orderPrompt') }}</h2>
-          <p>{{ i18n.t('popularDishes') }}</p>
+          <h2>{{ i18n.t('restaurants') }}</h2>
+          <p>{{ i18n.t('restaurantsDescription') }}</p>
+        </div>
+        <span class="result-count">{{ filteredRestaurants.length }}</span>
+      </div>
+      <div *ngIf="restaurantsLoading" class="empty-menu" role="status">{{ i18n.t('loading') }}</div>
+      <div *ngIf="restaurantsError" class="empty-menu" role="alert">
+        {{ restaurantsError }}
+        <button type="button" class="add-to-cart-btn" (click)="loadRestaurants()">{{ i18n.t('retry') }}</button>
+      </div>
+      <div class="restaurant-grid" *ngIf="!restaurantsLoading && !restaurantsError && filteredRestaurants.length; else emptyRestaurants">
+        <button type="button" class="restaurant-card" *ngFor="let restaurant of filteredRestaurants"
+          (click)="selectRestaurant(restaurant)">
+          <img *ngIf="restaurant.image_url" [src]="restaurant.image_url" [alt]="i18n.catalogLabel(restaurant.name)" loading="lazy">
+          <span *ngIf="!restaurant.image_url" class="restaurant-image-placeholder" aria-hidden="true">JF</span>
+          <span class="restaurant-card-info">
+            <strong>{{ i18n.catalogLabel(restaurant.name) }}</strong>
+            <span>{{ i18n.catalogLabel(restaurant.description) }}</span>
+            <span>{{ i18n.catalogLabel(restaurant.address) }}</span>
+            <span>{{ restaurant.opening_time.slice(0, 5) }}–{{ restaurant.closing_time.slice(0, 5) }}</span>
+            <span class="restaurant-menu-link">{{ restaurantItemCount(restaurant) }} {{ i18n.t('dishes') }} · {{ i18n.t('viewMenu') }}</span>
+          </span>
+        </button>
+      </div>
+      <ng-template #emptyRestaurants>
+        <div *ngIf="!restaurantsLoading && !restaurantsError" class="empty-menu">
+          {{ restaurants.length ? i18n.t('noRestaurantsFound') : i18n.t('noRestaurants') }}
+        </div>
+      </ng-template>
+    </section>
+
+    <section class="catalog-section" *ngIf="selectedRestaurant" [attr.aria-label]="i18n.t('menu')">
+      <div class="section-heading">
+        <div>
+          <button type="button" class="back-to-restaurants" (click)="backToRestaurants()">{{ i18n.t('backToRestaurants') }}</button>
+          <h2>{{ i18n.catalogLabel(selectedRestaurant.name) }}</h2>
+          <p>{{ i18n.catalogLabel(selectedRestaurant.description) }} · {{ i18n.catalogLabel(selectedRestaurant.address) }}</p>
         </div>
         <span class="result-count">{{ filteredItems.length }} {{ i18n.t('dishes') }}</span>
       </div>

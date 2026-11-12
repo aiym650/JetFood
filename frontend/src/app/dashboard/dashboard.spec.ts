@@ -7,6 +7,7 @@ import { Dashboard } from './dashboard';
 import { Auth } from '../auth';
 import { OrderRecord, Orders } from '../orders';
 import { Menu } from '../menu';
+import { Restaurants } from '../restaurants';
 import { Addresses } from '../addresses';
 import { I18nService } from '../i18n/i18n.service';
 
@@ -17,9 +18,14 @@ describe('Dashboard', () => {
   beforeEach(async () => {
     localStorage.removeItem('jetfood-cart-45');
     const menuItems = [
-      { id: 1, name: 'Пицца Маргарита', description: 'Томаты, моцарелла, базилик', price: 890, image_url: '', category: 'Пицца', rating: 4.8 },
-      { id: 2, name: 'Бургер Классический', description: 'Говядина, сыр, овощи, соус', price: 650, image_url: '', category: 'Бургеры', rating: 4.7 },
-      { id: 3, name: 'Рамен с курицей', description: 'Куриный бульон, лапша, яйцо', price: 750, image_url: '', category: 'Супы', rating: 4.9 },
+      { id: 1, name: 'Пицца Маргарита', description: 'Томаты, моцарелла, базилик', price: 890, image_url: '', category: 'Пицца', rating: 4.8, restaurant: 1 },
+      { id: 2, name: 'Бургер Классический', description: 'Говядина, сыр, овощи, соус', price: 650, image_url: '', category: 'Бургеры', rating: 4.7, restaurant: 2 },
+      { id: 3, name: 'Рамен с курицей', description: 'Куриный бульон, лапша, яйцо', price: 750, image_url: '', category: 'Супы', rating: 4.9, restaurant: 3 },
+    ];
+    const restaurants = [
+      { id: 1, name: 'North Kitchen', description: 'Local meals', address: 'Main Street 1', phone: '', image_url: '', opening_time: '09:00:00', closing_time: '21:00:00', working_days: [0, 1, 2, 3, 4, 5, 6], is_active: true },
+      { id: 2, name: 'Grill House', description: 'Grilled food', address: 'Main Street 2', phone: '', image_url: '', opening_time: '10:00:00', closing_time: '22:00:00', working_days: [0, 1, 2, 3, 4, 5, 6], is_active: true },
+      { id: 3, name: 'Asian Kitchen', description: 'Soups and sushi', address: 'Main Street 3', phone: '', image_url: '', opening_time: '11:00:00', closing_time: '23:00:00', working_days: [0, 1, 2, 3, 4, 5, 6], is_active: true },
     ];
 
     await TestBed.configureTestingModule({
@@ -29,6 +35,7 @@ describe('Dashboard', () => {
         { provide: Auth, useValue: { getCurrentUser: () => ({ id: 45, username: 'test', role: 'customer' }), isLoggedIn: () => true } },
         { provide: Orders, useValue: { createOrder: () => of({}) } },
         { provide: Menu, useValue: { getItems: () => of(menuItems) } },
+        { provide: Restaurants, useValue: { getRestaurants: () => of(restaurants) } },
         { provide: Addresses, useValue: { getAddresses: () => of([]) } },
       ],
     }).compileComponents();
@@ -46,20 +53,27 @@ describe('Dashboard', () => {
   it('switches dashboard labels between English and Russian', () => {
     component.i18n.setLanguage('en');
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('What would you like to order?');
+    expect(fixture.nativeElement.textContent).toContain('Restaurants');
+    expect(fixture.nativeElement.textContent).toContain('North Kitchen');
+    expect(fixture.nativeElement.textContent).not.toContain('Margherita Pizza');
+    component.selectRestaurant(component.restaurants[0]);
+    fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Margherita Pizza');
     expect(fixture.nativeElement.textContent).toContain('Pizza');
 
     component.i18n.setLanguage('ru');
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Что будем заказывать?');
+    expect(fixture.nativeElement.textContent).toContain('К списку ресторанов');
   });
 
   it('filters menu items by category and search term', () => {
+    component.selectRestaurant(component.restaurants[0]);
     component.selectCategory('Пицца');
     expect(component.filteredItems.map(item => item.name)).toEqual(['Пицца Маргарита']);
 
+    component.selectRestaurant(component.restaurants[2]);
     component.selectCategory('Все');
+      component.selectRestaurant(component.restaurants[2]);
     component.searchTerm = 'рамэн';
     expect(component.filteredItems).toEqual([]);
     component.searchTerm = 'рамен';

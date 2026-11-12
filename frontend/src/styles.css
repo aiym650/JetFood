@@ -119,3 +119,142 @@ textarea {
   font-size: 13px;
   font-weight: 600;
 }
+
+app-dashboard .restaurant-catalog {
+  padding: 28px clamp(20px, 4vw, 56px) 40px;
+}
+
+app-dashboard .restaurant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 18px;
+}
+
+app-dashboard .restaurant-card {
+  display: grid;
+  grid-template-rows: 172px 1fr;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid #e6e8e4;
+  border-radius: 8px;
+  background: #fff;
+  color: #24292f;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+app-dashboard .restaurant-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(28, 35, 44, 0.1);
+}
+
+app-dashboard .restaurant-card img,
+app-dashboard .restaurant-image-placeholder {
+  display: grid;
+  width: 100%;
+  height: 172px;
+  place-items: center;
+  object-fit: cover;
+  background: #e8eee8;
+  color: #35654a;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+app-dashboard .restaurant-card-info {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  padding: 15px;
+}
+
+app-dashboard .restaurant-card-info strong {
+  color: #252a31;
+  font-size: 17px;
+}
+
+app-dashboard .restaurant-card-info > span {
+  color: #707984;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+app-dashboard .restaurant-card-info .restaurant-menu-link {
+  margin-top: 3px;
+  color: #b84d30;
+  font-weight: 700;
+}
+
+app-dashboard .back-to-restaurants {
+  margin: 0 0 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #b84d30;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+app-dashboard .back-to-restaurants:hover {
+  text-decoration: underline;
+}
+
+.restaurants-page .menu-browser {
+  margin-bottom: 24px;
+}
+
+.restaurants-page .back-to-list {
+  margin: 0 0 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #24734f;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.restaurants-page .back-to-list:hover {
+  text-decoration: underline;
+}
+
+.restaurants-page .menu-browser-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.restaurants-page .menu-browser-heading h2 {
+  margin: 0 0 6px;
+}
+
+.restaurants-page .menu-browser-heading p:last-child {
+  margin: 0;
+  color: #63716a;
+  font-size: 14px;
+}
+
+.restaurants-page .menu-browser .menu-list {
+  margin-top: 16px;
+}
+
+.restaurants-page .view-menu-label {
+  color: #24734f !important;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  app-dashboard .restaurant-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .restaurants-page .menu-browser-heading {
+    flex-direction: column;
+  }
+}

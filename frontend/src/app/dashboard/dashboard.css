@@ -175,6 +175,7 @@
   padding: 28px clamp(20px, 4vw, 56px) 40px;
 }
 
+
 .section-heading {
   display: flex;
   align-items: end;
@@ -235,6 +236,10 @@
   border-color: #252a31;
   background: #252a31;
   color: #fff;
+}
+
+.price-filters {
+  margin-bottom: 18px;
 }
 
 .food-grid {

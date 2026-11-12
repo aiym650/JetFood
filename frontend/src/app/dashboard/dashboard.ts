@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Auth } from '../auth';
 import { Orders } from '../orders';
 import { FoodItem, Menu } from '../menu';
+import { Restaurant, Restaurants } from '../restaurants';
 import { I18nService } from '../i18n/i18n.service';
 import { Addresses, DeliveryAddress } from '../addresses';
 
@@ -41,6 +42,10 @@ export class Dashboard implements OnInit {
   checkoutSuccess = '';
   cartNotice = '';
   submittingOrder = false;
+  restaurants: Restaurant[] = [];
+  selectedRestaurant: Restaurant | null = null;
+  restaurantsLoading = false;
+  restaurantsError = '';
   foodItems: FoodItem[] = [];
   menuLoading = false;
   menuError = '';
@@ -48,7 +53,7 @@ export class Dashboard implements OnInit {
   get categories(): string[] {
     return [
       this.i18n.t('allCategories'),
-      ...new Set(this.foodItems.map(item => this.i18n.catalogLabel(item.category))),
+      ...new Set(this.selectedRestaurantItems.map(item => this.i18n.catalogLabel(item.category))),
     ];
   }
   selectedCategory = 'Все';
@@ -59,6 +64,7 @@ export class Dashboard implements OnInit {
     private route: ActivatedRoute,
     private ordersService: Orders,
     private menuService: Menu,
+    private restaurantsService: Restaurants,
     private addressesService: Addresses,
     private changeDetector: ChangeDetectorRef,
     private destroyRef: DestroyRef,
@@ -84,8 +90,67 @@ export class Dashboard implements OnInit {
       return;
     }
 
+    this.loadRestaurants();
     this.loadMenu();
     this.loadSavedAddresses();
+  }
+
+  loadRestaurants(): void {
+    this.restaurantsLoading = true;
+    this.restaurantsError = '';
+    this.restaurantsService.getRestaurants().subscribe({
+      next: (restaurants) => {
+        this.restaurants = restaurants;
+        this.restaurantsLoading = false;
+        this.changeDetector.markForCheck();
+      },
+      error: () => {
+        this.restaurantsError = this.i18n.t('restaurantsLoadFailed');
+        this.restaurantsLoading = false;
+        this.changeDetector.markForCheck();
+      },
+    });
+  }
+
+  selectRestaurant(restaurant: Restaurant): void {
+    this.selectedRestaurant = restaurant;
+    this.selectedCategory = this.i18n.t('allCategories');
+    this.searchTerm = '';
+    this.minPrice = null;
+    this.maxPrice = null;
+  }
+
+  backToRestaurants(): void {
+    this.selectedRestaurant = null;
+    this.selectedCategory = this.i18n.t('allCategories');
+    this.searchTerm = '';
+  }
+
+  get filteredRestaurants(): Restaurant[] {
+    const query = this.searchTerm.trim().toLocaleLowerCase('ru');
+    return this.restaurants.filter(restaurant =>
+      !query || [
+        restaurant.name,
+        this.i18n.catalogLabel(restaurant.name),
+        restaurant.description,
+        this.i18n.catalogLabel(restaurant.description),
+        restaurant.address,
+        this.i18n.catalogLabel(restaurant.address),
+      ]
+        .join(' ')
+        .toLocaleLowerCase('ru')
+        .includes(query),
+    );
+  }
+
+  restaurantItemCount(restaurant: Restaurant): number {
+    return this.foodItems.filter(item => item.restaurant === restaurant.id && item.is_active !== false).length;
+  }
+
+  private get selectedRestaurantItems(): FoodItem[] {
+    return this.selectedRestaurant
+      ? this.foodItems.filter(item => item.restaurant === this.selectedRestaurant?.id)
+      : [];
   }
 
   loadSavedAddresses(): void {
@@ -176,7 +241,7 @@ export class Dashboard implements OnInit {
 
   get filteredItems(): FoodItem[] {
     const query = this.searchTerm.trim().toLocaleLowerCase('ru');
-    return this.foodItems.filter(item => {
+    return this.selectedRestaurantItems.filter(item => {
       const matchesCategory = this.allCategoriesSelected || this.categoryLabel(item.category) === this.selectedCategory;
       const searchableText = [
         item.name,
