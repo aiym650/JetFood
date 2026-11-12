@@ -36,6 +36,7 @@ class OrderTestCase(TestCase):
         self.assertEqual(len(response.data), 8)
         self.assertEqual(response.data[0]['name'], 'Пицца Маргарита')
         self.assertEqual(response.data[0]['price'], '890.00')
+        self.assertTrue(all(item['restaurant'] and item['restaurant_name'] for item in response.data))
 
         self.pizza.is_active = False
         self.pizza.save()
@@ -112,6 +113,7 @@ class OrderTestCase(TestCase):
             name='Дешёвый тестовый товар',
             category='Тест',
             price='5.00',
+            restaurant=self.pizza.restaurant,
         )
         self.client.force_authenticate(user=self.customer)
         response = self.client.post('/api/orders/', {

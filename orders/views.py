@@ -95,9 +95,7 @@ class MenuItemListCreateView(generics.ListCreateAPIView):
         user = self.request.user
         queryset = MenuItem.objects.select_related('restaurant')
         if user.role not in ['admin', 'manager']:
-            queryset = queryset.filter(is_active=True).filter(
-                Q(restaurant__is_active=True) | Q(restaurant__isnull=True)
-            )
+            queryset = queryset.filter(is_active=True, restaurant__is_active=True)
         restaurant_id = self.request.query_params.get('restaurant')
         if restaurant_id:
             queryset = queryset.filter(restaurant_id=restaurant_id)
@@ -117,9 +115,7 @@ class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
         user = self.request.user
         queryset = MenuItem.objects.select_related('restaurant')
         if user.role not in ['admin', 'manager']:
-            queryset = queryset.filter(is_active=True).filter(
-                Q(restaurant__is_active=True) | Q(restaurant__isnull=True)
-            )
+            queryset = queryset.filter(is_active=True, restaurant__is_active=True)
         return queryset
 
     def perform_update(self, serializer):

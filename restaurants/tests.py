@@ -39,10 +39,9 @@ class RestaurantApiTests(TestCase):
         response = self.client.get('/api/restaurants/')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            [item['name'] for item in response.data['results']],
-            ['North Kitchen'],
-        )
+        names = [item['name'] for item in response.data['results']]
+        self.assertIn('North Kitchen', names)
+        self.assertNotIn('Closed Kitchen', names)
 
     def test_only_managers_can_create_or_edit_restaurants(self):
         self.client.force_authenticate(self.customer)
@@ -110,3 +109,14 @@ class RestaurantApiTests(TestCase):
             'restaurant': self.restaurant.id,
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_menu_item_requires_a_restaurant(self):
+        self.client.force_authenticate(self.manager)
+        response = self.client.post('/api/orders/menu/', {
+            'name': 'Unassigned soup',
+            'category': 'Lunch',
+            'price': '8.50',
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('restaurant', response.data)

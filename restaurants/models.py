@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import F
 
 
 def default_working_days():
@@ -20,6 +21,13 @@ class Restaurant(models.Model):
 
     class Meta:
         ordering = ['name']
+        constraints = [
+            # CHECK: opening and closing time cannot be the same moment
+            models.CheckConstraint(
+                condition=~models.Q(opening_time=F('closing_time')),
+                name='restaurant_opening_differs_from_closing',
+            ),
+        ]
 
     def __str__(self):
         return self.name

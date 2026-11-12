@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FoodItem, FoodItemInput, Menu } from '../menu';
 import { Restaurant, RestaurantInput, Restaurants } from '../restaurants';
 import { Auth } from '../auth';
@@ -49,11 +50,23 @@ export class RestaurantsPage implements OnInit {
     private menuService: Menu,
     private auth: Auth,
     private changeDetector: ChangeDetectorRef,
+    private route: ActivatedRoute,
+    private router: Router,
     public i18n: I18nService,
   ) {}
 
   ngOnInit(): void {
     this.currentUser = this.auth.getCurrentUser();
+    this.route.paramMap.subscribe(params => {
+      const restaurantId = Number(params.get('id'));
+      if (!restaurantId) {
+        this.selectedRestaurant = null;
+        this.menuItems = [];
+        return;
+      }
+      const restaurant = this.restaurants.find(item => item.id === restaurantId);
+      if (restaurant) this.activateRestaurant(restaurant);
+    });
     this.loadRestaurants();
   }
 
@@ -63,10 +76,10 @@ export class RestaurantsPage implements OnInit {
     this.restaurantsService.getRestaurants().subscribe({
       next: (restaurants) => {
         this.restaurants = restaurants;
-        if (this.selectedRestaurant) {
-          this.selectedRestaurant = restaurants.find(item => item.id === this.selectedRestaurant?.id) ?? null;
-          if (this.selectedRestaurant) this.loadMenu(this.selectedRestaurant);
-        }
+        const restaurantId = Number(this.route.snapshot.paramMap.get('id'));
+        const restaurant = restaurants.find(item => item.id === restaurantId) ?? null;
+        if (restaurant) this.activateRestaurant(restaurant);
+        else this.selectedRestaurant = null;
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -79,6 +92,14 @@ export class RestaurantsPage implements OnInit {
   }
 
   selectRestaurant(restaurant: Restaurant): void {
+    this.router.navigate(['/restaurants', restaurant.id]);
+  }
+
+  backToRestaurants(): void {
+    this.router.navigate(['/restaurants']);
+  }
+
+  private activateRestaurant(restaurant: Restaurant): void {
     this.selectedRestaurant = restaurant;
     this.resetMenuForm();
     this.loadMenu(restaurant);
@@ -87,6 +108,7 @@ export class RestaurantsPage implements OnInit {
   loadMenu(restaurant: Restaurant): void {
     this.menuLoading = true;
     this.menuError = '';
+    this.menuItems = [];
     this.menuService.getItems(restaurant.id).subscribe({
       next: (items) => {
         this.menuItems = items;
@@ -121,7 +143,6 @@ export class RestaurantsPage implements OnInit {
       : this.restaurantsService.createRestaurant(this.restaurantForm);
     request.subscribe({
       next: (restaurant) => {
-        this.selectedRestaurant = restaurant;
         this.resetRestaurantForm();
         this.loadRestaurants();
         this.saving = false;

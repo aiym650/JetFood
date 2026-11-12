@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.conf import settings
 
 class ExternalIntegration(models.Model):
@@ -28,7 +29,14 @@ class ExternalIntegration(models.Model):
     
     class Meta:
         ordering = ['name']
-    
+        constraints = [
+            # UNIQUE: integration names do not repeat
+            models.UniqueConstraint(fields=['name'], name='integration_name_unique'),
+            # CHECK: status only from the allowed list
+            models.CheckConstraint(
+                condition=Q(status__in=['active', 'inactive', 'error']), name='integration_status_valid',
+            ),
+        ]
     def __str__(self):
         return f"{self.name} ({self.integration_type})"
 
@@ -53,6 +61,13 @@ class IntegrationLog(models.Model):
         indexes = [
             models.Index(fields=['integration']),
             models.Index(fields=['timestamp']),
+        ]
+        constraints = [
+            # CHECK: HTTP status code is empty or between 100 and 599
+            models.CheckConstraint(
+                condition=Q(status_code__isnull=True) | (Q(status_code__gte=100) & Q(status_code__lte=599)),
+                name='integrationlog_status_code_http_range',
+            ),
         ]
     
     def __str__(self):

@@ -22,10 +22,6 @@
   border-bottom: 1px solid #e8ebee;
 }
 
-.app-toolbar app-search-bar {
-  width: min(100%, 500px);
-}
-
 .app-toolbar app-language-switcher {
   flex: 0 0 auto;
 }
