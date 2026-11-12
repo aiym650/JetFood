@@ -34,6 +34,7 @@ class GlobalSearchTests(TestCase):
             category='Pizza',
             price='800.00',
             is_active=False,
+            restaurant=self.menu_item.restaurant,
         )
         Order.objects.create(
             order_number='ORD-SEARCH-001',

@@ -28,6 +28,18 @@ const catalogTranslationKeys: Record<string, string> = {
   'Бекон, сливки, пармезан': 'menuDescriptions.carbonara',
   '3 тако, говядина, сальса': 'menuDescriptions.beefTacos',
   '300г, картофель, овощи': 'menuDescriptions.vealSteak',
+  'Джет Пицца': 'restaurantCatalog.jetPizza',
+  'Гриль Хаус': 'restaurantCatalog.grillHouse',
+  'Азиатская кухня': 'restaurantCatalog.asianKitchen',
+  'Свежий стол': 'restaurantCatalog.freshTable',
+  'Алматы, улица Абая, 10': 'restaurantCatalog.jetPizzaAddress',
+  'Алматы, улица Сатпаева, 25': 'restaurantCatalog.grillHouseAddress',
+  'Алматы, улица Панфилова, 8': 'restaurantCatalog.asianKitchenAddress',
+  'Алматы, проспект Достык, 14': 'restaurantCatalog.freshTableAddress',
+  'Пицца и паста': 'restaurantCatalog.jetPizzaDescription',
+  'Бургеры и блюда на гриле': 'restaurantCatalog.grillHouseDescription',
+  'Супы и суши': 'restaurantCatalog.asianKitchenDescription',
+  'Салаты и легкие блюда': 'restaurantCatalog.freshTableDescription',
 };
 
 @Injectable({

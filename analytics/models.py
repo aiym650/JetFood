@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import F, Q
 from django.conf import settings
 
 class AnalyticsEvent(models.Model):
@@ -59,6 +60,19 @@ class PerformanceReport(models.Model):
     
     class Meta:
         ordering = ['-start_date']
+        constraints = [
+            # CHECK: the period cannot end before it starts
+            models.CheckConstraint(condition=Q(end_date__gte=F('start_date')), name='perfreport_end_after_start'),
+            # CHECK: counters cannot be negative
+            models.CheckConstraint(
+                condition=Q(total_orders__gte=0) & Q(active_users__gte=0) & Q(total_revenue__gte=0),
+                name='perfreport_counters_not_negative',
+            ),
+            # UNIQUE: one report per period and dates
+            models.UniqueConstraint(
+                fields=['period', 'start_date', 'end_date'], name='perfreport_unique_period',
+            ),
+        ]
     
     def __str__(self):
         return f"{self.period} report: {self.start_date} to {self.end_date}"

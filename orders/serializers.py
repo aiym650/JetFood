@@ -22,9 +22,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
     menu_item_id = serializers.IntegerField(read_only=True, allow_null=True)
     item_id = serializers.PrimaryKeyRelatedField(
         source='menu_item',
-        queryset=MenuItem.objects.filter(is_active=True).filter(
-            Q(restaurant__isnull=True) | Q(restaurant__is_active=True)
-        ),
+        queryset=MenuItem.objects.filter(is_active=True, restaurant__is_active=True),
         write_only=True,
     )
     item_name = serializers.CharField(read_only=True)
@@ -87,9 +85,7 @@ class OrderStatusUpdateSerializer(serializers.Serializer):
 
 class OrderModificationItemSerializer(serializers.Serializer):
     item_id = serializers.PrimaryKeyRelatedField(
-        queryset=MenuItem.objects.filter(is_active=True).filter(
-            Q(restaurant__isnull=True) | Q(restaurant__is_active=True)
-        )
+        queryset=MenuItem.objects.filter(is_active=True, restaurant__is_active=True)
     )
     quantity = serializers.IntegerField(min_value=1)
 

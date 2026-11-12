@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { LanguageSwitcher } from '../shared/language-switcher/language-switcher';
 import { I18nService } from '../i18n/i18n.service';
 
 @Component({
   selector: 'app-landing',
-  imports: [CommonModule, LanguageSwitcher],
+  imports: [CommonModule, RouterLink, LanguageSwitcher],
   templateUrl: './landing.html',
   styleUrl: './landing.css',
 })

@@ -11,7 +11,7 @@ export interface FoodItem {
   image_url: string;
   category: string;
   rating: number;
-  restaurant?: number | null;
+  restaurant: number;
   restaurant_name?: string | null;
   is_active?: boolean;
 }

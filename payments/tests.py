@@ -27,6 +27,7 @@ class PaymentApiTests(TestCase):
             name='Payment test meal',
             category='Test',
             price='25.00',
+            restaurant=MenuItem.objects.get(name='Пицца Маргарита').restaurant,
         )
         self.client = APIClient()
 

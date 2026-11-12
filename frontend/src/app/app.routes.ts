@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { Login } from './auth/login/login';
 import { Register } from './auth/register/register';
 import { Dashboard } from './dashboard/dashboard';
+import { InfoPage } from './info-page/info-page';
 import { LandingComponent } from './landing/landing';
 import { AppShell } from './layout/app-shell';
 import { authGuard, roleGuard } from './auth.guard';
@@ -10,6 +11,12 @@ export const routes: Routes = [
   { path: 'landing', component: LandingComponent },
   { path: 'login', component: Login },
   { path: 'register', component: Register },
+  { path: 'about', component: InfoPage, data: { titleKey: 'aboutUs', descriptionKey: 'aboutUsPageDescription' } },
+  { path: 'careers', component: InfoPage, data: { titleKey: 'careers', descriptionKey: 'careersPageDescription' } },
+  { path: 'blog', component: InfoPage, data: { titleKey: 'blog', descriptionKey: 'blogPageDescription' } },
+  { path: 'faq', component: InfoPage, data: { titleKey: 'faq', descriptionKey: 'faqPageDescription' } },
+  { path: 'contacts', component: InfoPage, data: { titleKey: 'contacts', descriptionKey: 'contactsPageDescription' } },
+  { path: 'support', component: InfoPage, data: { titleKey: 'support', descriptionKey: 'supportPageDescription' } },
   { path: '', redirectTo: '/landing', pathMatch: 'full' },
   {
     path: '',
@@ -28,6 +35,10 @@ export const routes: Routes = [
       {
         path: 'payments',
         loadComponent: () => import('./payment-history/payment-history').then(module => module.PaymentHistoryPage),
+      },
+      {
+        path: 'restaurants/:id',
+        loadComponent: () => import('./restaurants/restaurants').then(module => module.RestaurantsPage),
       },
       {
         path: 'restaurants',
