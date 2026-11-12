@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
 from .models import DeliveryRoute, MenuItem, Order, OrderItem
+from users.models import Notification
 
 User = get_user_model()
 
@@ -75,6 +76,10 @@ class OrderTestCase(TestCase):
         self.assertEqual(str(response.data['total_amount']), '1780.00')
         order_item = OrderItem.objects.get(order_id=response.data['id'])
         self.assertEqual(order_item.menu_item, self.pizza)
+        self.assertTrue(Notification.objects.filter(
+            user=self.customer,
+            notification_type='order_created',
+        ).exists())
 
     def test_order_rejects_non_positive_quantity_or_unknown_menu_item(self):
         self.client.force_authenticate(user=self.customer)
@@ -185,6 +190,12 @@ class OrderTestCase(TestCase):
         
         order.refresh_from_db()
         self.assertEqual(order.status, 'cancelled')
+        notification = Notification.objects.filter(
+            user=self.customer,
+            notification_type='order_status',
+        ).latest('created_at')
+        self.assertIn('Cancelled', notification.message)
+        self.assertEqual(notification.link, f'/orders?orderId={order.id}')
 
     def test_customer_cannot_cancel_another_customers_order(self):
         other_customer = User.objects.create_user(
@@ -237,8 +248,25 @@ class OrderTestCase(TestCase):
         order.refresh_from_db()
         self.assertEqual(order.status, 'confirmed')
 
-        order.status = 'preparing'
+        order.status = 'ready_for_pickup'
         order.save()
+        response = self.client.post(f'/api/orders/{order.id}/status/', {
+            'status': 'delivering'
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Order.objects.get(id=order.id).status, 'ready_for_pickup')
+
+        DeliveryRoute.objects.create(
+            order=order,
+            origin_address='Restaurant',
+            origin_latitude=43.2389,
+            origin_longitude=76.8897,
+            destination_latitude=43.2511,
+            destination_longitude=76.9142,
+            route_distance_meters=4200,
+            estimated_duration_seconds=420,
+            updated_by=delivery_person,
+        )
         response = self.client.post(f'/api/orders/{order.id}/status/', {
             'status': 'delivering'
         })
@@ -251,7 +279,237 @@ class OrderTestCase(TestCase):
 
         order.refresh_from_db()
         self.assertEqual(order.status, 'delivered')
+        self.assertIsNotNone(order.delivery_started_at)
+        self.assertIsNotNone(order.estimated_arrival_time)
         self.assertIsNotNone(order.actual_delivery_time)
+        self.assertLessEqual(order.delivery_started_at, order.actual_delivery_time)
+        self.assertTrue(Notification.objects.filter(
+            user=self.customer,
+            notification_type='order_status',
+            message__icontains='delivered',
+        ).exists())
+        self.assertTrue(Notification.objects.filter(
+            user=delivery_person,
+            notification_type='order_status',
+            message__icontains='delivered',
+        ).exists())
+
+    def test_manager_confirms_then_prepares_order_and_notifies_customer(self):
+        manager = User.objects.create_user(
+            username='workflow-manager',
+            email='workflow-manager@example.com',
+            password='pass123',
+            role='manager',
+        )
+        order = Order.objects.create(
+            order_number='ORD-WORKFLOW-001',
+            customer=self.customer,
+            status='pending',
+            priority='normal',
+            total_amount=50.00,
+            delivery_address='123 Test St',
+        )
+        self.client.force_authenticate(user=manager)
+
+        response = self.client.post(f'/api/orders/{order.id}/status/', {'status': 'preparing'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Order.objects.get(id=order.id).status, 'pending')
+
+        response = self.client.post(f'/api/orders/{order.id}/status/', {'status': 'confirmed'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Notification.objects.filter(
+            user=self.customer,
+            notification_type='order_status',
+            message__icontains='Confirmed',
+        ).exists())
+
+        response = self.client.post(f'/api/orders/{order.id}/status/', {'status': 'preparing'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Order.objects.get(id=order.id).status, 'preparing')
+        self.assertTrue(Notification.objects.filter(
+            user=self.customer,
+            notification_type='order_status',
+            message__icontains='Preparing',
+        ).exists())
+
+        response = self.client.post(f'/api/orders/{order.id}/status/', {'status': 'ready_for_pickup'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Order.objects.get(id=order.id).status, 'ready_for_pickup')
+        self.assertTrue(Notification.objects.filter(
+            user=self.customer,
+            notification_type='order_status',
+            message__icontains='Ready for pickup',
+        ).exists())
+
+        response = self.client.post(f'/api/orders/{order.id}/status/', {'status': 'delivered'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_manager_assignment_notifies_customer_and_courier(self):
+        manager = User.objects.create_user(
+            username='restaurant-manager',
+            email='manager@example.com',
+            password='pass123',
+            role='manager',
+        )
+        courier = User.objects.create_user(
+            username='assigned-courier',
+            email='assigned-courier@example.com',
+            password='pass123',
+            role='delivery',
+        )
+        order = Order.objects.create(
+            order_number='ORD-ASSIGN-NOTIFY',
+            customer=self.customer,
+            status='pending',
+            priority='normal',
+            total_amount=50.00,
+            delivery_address='123 Test St',
+        )
+
+        self.client.force_authenticate(user=manager)
+        response = self.client.post(
+            f'/api/orders/{order.id}/assign/',
+            {'delivery_person_id': courier.id},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        order.refresh_from_db()
+        self.assertEqual(order.delivery_person, courier)
+        self.assertEqual(order.status, 'pending')
+        self.assertTrue(Notification.objects.filter(
+            user=self.customer,
+            title='Courier assigned',
+        ).exists())
+        self.assertTrue(Notification.objects.filter(
+            user=courier,
+            title='Courier assigned',
+        ).exists())
+
+    def test_manager_cannot_assign_missing_or_inactive_non_courier_accounts(self):
+        manager = User.objects.create_user(
+            username='assignment-manager',
+            email='assignment-manager@example.com',
+            password='pass123',
+            role='manager',
+        )
+        order = Order.objects.create(
+            order_number='ORD-ASSIGN-INVALID',
+            customer=self.customer,
+            status='pending',
+            priority='normal',
+            total_amount=50.00,
+            delivery_address='123 Test St',
+        )
+        self.client.force_authenticate(user=manager)
+
+        response = self.client.post(
+            f'/api/orders/{order.id}/assign/',
+            {'delivery_person_id': 'not-a-number'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.post(
+            f'/api/orders/{order.id}/assign/',
+            {'delivery_person_id': self.customer.id},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        order.refresh_from_db()
+        self.assertIsNone(order.delivery_person)
+        self.assertEqual(order.status, 'pending')
+
+    def test_complete_order_assignment_route_delivery_and_customer_notifications(self):
+        manager = User.objects.create_user(
+            username='e2e-manager',
+            email='e2e-manager@example.com',
+            password='pass123',
+            role='manager',
+        )
+        courier = User.objects.create_user(
+            username='e2e-courier',
+            email='e2e-courier@example.com',
+            password='pass123',
+            role='delivery',
+        )
+        order = Order.objects.create(
+            order_number='ORD-E2E-DELIVERY',
+            customer=self.customer,
+            status='pending',
+            priority='normal',
+            total_amount=50.00,
+            delivery_address='123 Customer Street, Almaty',
+        )
+
+        self.client.force_authenticate(user=manager)
+        response = self.client.post(
+            f'/api/orders/{order.id}/assign/',
+            {'delivery_person_id': courier.id},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        order.refresh_from_db()
+        self.assertEqual(order.status, 'pending')
+        self.assertEqual(order.delivery_person, courier)
+        for next_status in ['confirmed', 'preparing', 'ready_for_pickup']:
+            response = self.client.post(
+                f'/api/orders/{order.id}/status/',
+                {'status': next_status},
+                format='json',
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        response = self.client.put(
+            f'/api/orders/{order.id}/route/',
+            {
+                'origin_address': 'Restaurant, Almaty',
+                'origin_latitude': 43.2389,
+                'origin_longitude': 76.8897,
+                'destination_latitude': 43.2511,
+                'destination_longitude': 76.9142,
+                'route_distance_meters': 4200,
+                'estimated_duration_seconds': 420,
+                'notes': 'Main entrance',
+            },
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        self.client.force_authenticate(user=courier)
+        response = self.client.get(f'/api/orders/{order.id}/route/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertAlmostEqual(response.data['origin_latitude'], 43.2389)
+        self.assertAlmostEqual(response.data['destination_latitude'], 43.2511)
+        self.assertEqual(response.data['route_distance_meters'], 4200)
+        self.assertEqual(response.data['estimated_duration_seconds'], 420)
+
+        for next_status in ['delivering', 'delivered']:
+            response = self.client.post(
+                f'/api/orders/{order.id}/status/',
+                {'status': next_status},
+                format='json',
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        order.refresh_from_db()
+        self.assertEqual(order.status, 'delivered')
+        self.assertIsNotNone(order.delivery_started_at)
+        self.assertIsNotNone(order.estimated_arrival_time)
+        self.assertGreaterEqual(
+            order.estimated_arrival_time,
+            order.delivery_started_at,
+        )
+        self.assertIsNotNone(order.actual_delivery_time)
+        self.assertLess(order.actual_delivery_time, order.estimated_arrival_time)
+        for expected_status in ['Confirmed', 'Preparing', 'Ready for pickup', 'Delivering', 'Delivered']:
+            self.assertTrue(
+                Notification.objects.filter(
+                    user=self.customer,
+                    notification_type='order_status',
+                    message__icontains=expected_status,
+                ).exists(),
+                f'Missing customer notification for {expected_status}',
+            )
 
     def test_customer_can_confirm_receipt_only_after_delivery(self):
         order = Order.objects.create(
@@ -307,13 +565,25 @@ class OrderTestCase(TestCase):
         self.client.force_authenticate(user=courier)
         response = self.client.put(
             f'/api/orders/{order.id}/route/',
-            {'origin_address': 'JetFood Kitchen, Almaty', 'notes': 'Use the side entrance'},
+            {
+                'origin_address': 'JetFood Kitchen, Almaty',
+                'origin_latitude': 43.2389,
+                'origin_longitude': 76.8897,
+                'destination_latitude': 43.2511,
+                'destination_longitude': 76.9142,
+                'route_distance_meters': 4200,
+                'estimated_duration_seconds': 420,
+                'notes': 'Use the side entrance',
+            },
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['origin_address'], 'JetFood Kitchen, Almaty')
         self.assertEqual(response.data['destination_address'], order.delivery_address)
-        self.assertIn('origin=JetFood+Kitchen', response.data['directions_url'])
+        self.assertAlmostEqual(response.data['origin_latitude'], 43.2389)
+        self.assertEqual(response.data['route_distance_meters'], 4200)
+        self.assertEqual(response.data['estimated_duration_seconds'], 420)
+        self.assertIn('openstreetmap.org/directions', response.data['directions_url'])
 
         self.client.force_authenticate(user=self.customer)
         response = self.client.get(f'/api/orders/{order.id}/route/')
@@ -354,6 +624,58 @@ class OrderTestCase(TestCase):
         response = self.client.patch(
             f'/api/orders/{order.id}/route/',
             {'notes': 'Missing origin'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(DeliveryRoute.objects.filter(order=order).exists())
+
+    def test_delivery_route_rejects_partial_or_out_of_range_coordinates(self):
+        courier = User.objects.create_user(
+            username='route-coordinate-courier',
+            email='route-coordinate-courier@example.com',
+            password='pass123',
+            role='delivery',
+        )
+        order = Order.objects.create(
+            order_number='ORD-ROUTE-COORDS',
+            customer=self.customer,
+            delivery_person=courier,
+            status='confirmed',
+            priority='normal',
+            total_amount=50.00,
+            delivery_address='123 Customer Street, Almaty',
+        )
+        self.client.force_authenticate(user=courier)
+        payload = {
+            'origin_address': 'Kitchen',
+            'origin_latitude': 43.2389,
+            'origin_longitude': 76.8897,
+            'destination_latitude': 43.2511,
+            'destination_longitude': 76.9142,
+            'route_distance_meters': 4200,
+            'estimated_duration_seconds': 420,
+        }
+        response = self.client.put(
+            f'/api/orders/{order.id}/route/',
+            {**payload, 'destination_latitude': 91},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.put(
+            f'/api/orders/{order.id}/route/',
+            {key: value for key, value in payload.items() if key != 'destination_longitude'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.put(
+            f'/api/orders/{order.id}/route/',
+            {key: value for key, value in payload.items() if key != 'estimated_duration_seconds'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.put(
+            f'/api/orders/{order.id}/route/',
+            {**payload, 'route_distance_meters': 1_000_001},
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

@@ -38,6 +38,8 @@ export interface OrderRecord {
   delivery_address: string;
   delivery_notes: string;
   estimated_delivery_time: string | null;
+  delivery_started_at: string | null;
+  estimated_arrival_time: string | null;
   actual_delivery_time: string | null;
   delivery_confirmed_at: string | null;
   created_at: string;
@@ -51,10 +53,22 @@ export interface DeliveryRoute {
   origin_address: string;
   destination_address: string;
   notes: string;
+  origin_latitude: number | null;
+  origin_longitude: number | null;
+  destination_latitude: number | null;
+  destination_longitude: number | null;
+  route_distance_meters: number | null;
+  estimated_duration_seconds: number | null;
   directions_url: string;
   updated_by: number | null;
   updated_by_name: string | null;
   updated_at: string;
+}
+
+export interface DeliveryCourier {
+  id: number;
+  username: string;
+  role: string;
 }
 
 @Injectable({
@@ -117,7 +131,16 @@ export class Orders {
     });
   }
 
-  saveDeliveryRoute(orderId: number, route: { origin_address: string; notes: string }): Observable<DeliveryRoute> {
+  saveDeliveryRoute(orderId: number, route: {
+    origin_address: string;
+    notes: string;
+    origin_latitude: number | null;
+    origin_longitude: number | null;
+    destination_latitude: number | null;
+    destination_longitude: number | null;
+    route_distance_meters: number;
+    estimated_duration_seconds: number;
+  }): Observable<DeliveryRoute> {
     return this.http.put<DeliveryRoute>(`${this.apiUrl}/${orderId}/route/`, route, {
       headers: this.getHeaders(),
     });
@@ -127,6 +150,15 @@ export class Orders {
     return this.http.post(`${this.apiUrl}/${orderId}/assign/`, 
       { delivery_person_id: deliveryPersonId }, 
       { headers: this.getHeaders() }
+    );
+  }
+
+  getDeliveryCouriers(): Observable<DeliveryCourier[]> {
+    return this.http.get<ApiListResponse<DeliveryCourier>>(
+      'http://localhost:8000/api/auth/users/',
+      { headers: this.getHeaders() },
+    ).pipe(
+      map(response => getApiListResults(response).filter(user => user.role === 'delivery')),
     );
   }
 

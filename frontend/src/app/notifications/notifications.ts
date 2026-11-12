@@ -1,10 +1,11 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs';
 import { ApiListResponse, getApiListResults } from '../shared/api-list';
 import { I18nService } from '../i18n/i18n.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { timer } from 'rxjs';
 
 @Component({
   selector: 'app-notifications',
@@ -22,6 +23,7 @@ export class NotificationsComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private changeDetector: ChangeDetectorRef,
+    private destroyRef: DestroyRef,
     public i18n: I18nService
   ) {
     this.i18n.currentLang$.pipe(takeUntilDestroyed()).subscribe(() => this.changeDetector.markForCheck());
@@ -29,6 +31,11 @@ export class NotificationsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadNotifications();
+    timer(30_000, 30_000)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        if (!this.loading && !this.updating) this.loadNotifications();
+      });
   }
 
   loadNotifications(): void {

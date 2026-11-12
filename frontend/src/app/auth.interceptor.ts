@@ -8,6 +8,8 @@ import { Observable, TimeoutError, catchError, throwError, timeout } from 'rxjs'
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 
+const BACKEND_API_PREFIX = 'http://localhost:8000/api/';
+
 export function authInterceptor(
   request: HttpRequest<unknown>,
   next: HttpHandlerFn
@@ -15,7 +17,7 @@ export function authInterceptor(
   const router = inject(Router);
   const token = localStorage.getItem('token');
 
-  if (token) {
+  if (token && request.url.startsWith(BACKEND_API_PREFIX)) {
     request = request.clone({
       setHeaders: {
         Authorization: `Token ${token}`

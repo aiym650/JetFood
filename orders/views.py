@@ -1,3 +1,4 @@
+from datetime import timedelta
 from rest_framework import generics, status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -13,6 +14,7 @@ from .serializers import (
     OrderSerializer,
     OrderItemSerializer,
     OrderStatusUpdateSerializer,
+    CourierAssignmentSerializer,
     OrderModificationSerializer,
     DeliveryRouteSerializer,
     DeliveryRouteInputSerializer,
@@ -79,6 +81,9 @@ class OrderListCreateView(generics.ListCreateAPIView):
                 delivery_person=None,
             )
             create_order_payment(order, payment_method)
+            from users.notifications import notify_order_created
+
+            notify_order_created(order)
 
 
 class MenuItemListCreateView(generics.ListCreateAPIView):
@@ -175,26 +180,58 @@ def update_order_status(request, order_id):
     order = get_object_or_404(queryset, id=order_id)
 
     if user.role == 'customer':
-        if order.status not in ['pending'] or serializer.validated_data['status'] != 'cancelled':
-            return Response({'error': 'You can only cancel pending orders'}, 
+        if order.status not in ['pending', 'confirmed'] or serializer.validated_data['status'] != 'cancelled':
+            return Response({'error': 'You can only cancel orders before preparation starts'},
                           status=status.HTTP_403_FORBIDDEN)
     elif user.role == 'delivery':
         allowed_transition = (
-            (order.status == 'preparing' and serializer.validated_data['status'] == 'delivering')
+            (order.status == 'ready_for_pickup' and serializer.validated_data['status'] == 'delivering')
             or (order.status == 'delivering' and serializer.validated_data['status'] == 'delivered')
         )
         if not allowed_transition:
             return Response(
-                {'error': 'Delivery persons must move orders from preparing to delivering, then delivered'},
+                {'error': 'Delivery persons must move orders from ready for pickup to delivering, then delivered'},
                 status=status.HTTP_403_FORBIDDEN,
             )
+        if order.status == 'ready_for_pickup' and serializer.validated_data['status'] == 'delivering':
+            route = DeliveryRoute.objects.filter(order=order).first()
+            if route is None or any(getattr(route, field) is None for field in (
+                'origin_latitude', 'origin_longitude',
+                'destination_latitude', 'destination_longitude',
+                'route_distance_meters', 'estimated_duration_seconds',
+            )):
+                return Response(
+                    {'detail': 'Plan and save the delivery route before starting delivery.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+    else:
+        allowed_transition = (
+            (order.status == 'pending' and serializer.validated_data['status'] == 'confirmed')
+            or (order.status == 'confirmed' and serializer.validated_data['status'] == 'preparing')
+            or (order.status == 'preparing' and serializer.validated_data['status'] == 'ready_for_pickup')
+        )
+        if not allowed_transition:
+            return Response(
+                {'detail': 'Orders must be confirmed, prepared, then marked ready for courier pickup.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
+    previous_status = order.status
     order.status = serializer.validated_data['status']
 
+    update_fields = ['status', 'updated_at']
+    if order.status == 'delivering':
+        route = DeliveryRoute.objects.get(order=order)
+        order.delivery_started_at = timezone.now()
+        order.estimated_arrival_time = order.delivery_started_at + timedelta(
+            seconds=route.estimated_duration_seconds,
+        )
+        update_fields.extend(['delivery_started_at', 'estimated_arrival_time'])
     if order.status == 'delivered':
         order.actual_delivery_time = timezone.now()
+        update_fields.append('actual_delivery_time')
 
-    order.save()
+    order.save(update_fields=update_fields)
     if order.status == 'cancelled':
         from payments.models import Payment
 
@@ -205,6 +242,10 @@ def update_order_status(request, order_id):
             elif payment.status == 'pending':
                 payment.status = 'cancelled'
             payment.save(update_fields=['status', 'updated_at'])
+    if previous_status != order.status:
+        from users.notifications import notify_order_status
+
+        notify_order_status(order)
     return Response({'message': f'Order status updated to {order.status}'})
 
 
@@ -254,22 +295,39 @@ def delivery_route(request, order_id):
         user.role == 'delivery' and order.delivery_person_id == user.id
     ):
         raise PermissionDenied('Only the assigned courier, a manager, or an admin can manage the route.')
+    if order.status == 'delivering' or order.status in ['delivered', 'cancelled']:
+        return Response(
+            {'detail': 'The route cannot be changed after delivery starts or the order is closed.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     serializer = DeliveryRouteInputSerializer(data=request.data, partial=request.method == 'PATCH')
     serializer.is_valid(raise_exception=True)
     with transaction.atomic():
         route = DeliveryRoute.objects.select_for_update().filter(order=order).first()
         if route is None:
-            if not serializer.validated_data.get('origin_address'):
-                raise DRFValidationError({'origin_address': 'This field is required to plan a route.'})
+            required_fields = [
+                'origin_address',
+                'origin_latitude', 'origin_longitude',
+                'destination_latitude', 'destination_longitude',
+                'route_distance_meters', 'estimated_duration_seconds',
+            ]
+            missing_fields = [field for field in required_fields if field not in serializer.validated_data]
+            if missing_fields:
+                raise DRFValidationError({
+                    field: 'Select both route points on the map.' for field in missing_fields
+                })
             route = DeliveryRoute.objects.create(
                 order=order,
-                origin_address=serializer.validated_data['origin_address'],
-                notes=serializer.validated_data.get('notes', ''),
-                updated_by=user,
+                **serializer.validated_data,
+                updated_by=user
             )
         else:
-            for field in ['origin_address', 'notes']:
+            for field in [
+                'origin_address', 'origin_latitude', 'origin_longitude',
+                'destination_latitude', 'destination_longitude', 'notes',
+                'route_distance_meters', 'estimated_duration_seconds',
+            ]:
                 if field in serializer.validated_data:
                     setattr(route, field, serializer.validated_data[field])
             route.updated_by = user
@@ -349,23 +407,29 @@ def assign_delivery_person(request, order_id):
     user = request.user
     if user.role not in ['admin', 'manager']:
         return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
-    
+
+    serializer = CourierAssignmentSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    delivery_person = serializer.validated_data['delivery_person']
+
     try:
-        order = Order.objects.get(id=order_id)
-        delivery_person_id = request.data.get('delivery_person_id')
-        
-        from users.models import User
-        delivery_person = User.objects.get(id=delivery_person_id, role='delivery')
-        
-        order.delivery_person = delivery_person
-        order.status = 'confirmed'
-        order.save()
+        with transaction.atomic():
+            order = Order.objects.select_for_update().get(id=order_id)
+            if order.status in ['delivering', 'delivered', 'cancelled']:
+                return Response(
+                    {'detail': 'A courier cannot be assigned after delivery has started or the order is closed.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            assignment_changed = order.delivery_person_id != delivery_person.id
+            order.delivery_person = delivery_person
+            order.save(update_fields=['delivery_person', 'updated_at'])
+            if assignment_changed:
+                from users.notifications import notify_courier_assignment
+                notify_courier_assignment(order)
         
         return Response({'message': f'Delivery person {delivery_person.username} assigned'})
     except Order.DoesNotExist:
         return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
-    except User.DoesNotExist:
-        return Response({'error': 'Delivery person not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['GET'])

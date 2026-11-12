@@ -62,7 +62,7 @@ export class Register {
       },
       error: (error) => {
         this.loading = false;
-        this.errorMessage = this.i18n.t('registrationFailed');
+        this.errorMessage = this.i18n.t(this.auth.getRegistrationErrorKey(error));
         this.changeDetector.markForCheck();
       }
     });

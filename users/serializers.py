@@ -9,6 +9,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
+    email = serializers.EmailField()
 
     class Meta:
         model = User
@@ -19,6 +20,11 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         validated_data.pop('role', None)
         user = User.objects.create_user(**validated_data)
         return user
+
+    def validate_email(self, value):
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError('A user with this email already exists.')
+        return value
 
 
 class AdminUserCreateSerializer(UserRegistrationSerializer):

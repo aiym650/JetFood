@@ -1,5 +1,51 @@
 <div class="integration-container">
-  <h1>{{ i18n.t('externalIntegrations') }}</h1>
+  <div class="integration-heading">
+    <h1>{{ i18n.t('externalIntegrations') }}</h1>
+    <div class="integration-heading-actions">
+      <button *ngIf="canManage" type="button" class="primary-button" (click)="beginCreate()">
+        {{ i18n.t('addIntegration') }}
+      </button>
+      <button type="button" (click)="toggleLogs()">
+        {{ logsVisible ? i18n.t('hideIntegrationLogs') : i18n.t('showIntegrationLogs') }}
+      </button>
+    </div>
+  </div>
+  <p *ngIf="actionError" class="error" role="alert">{{ actionError }}</p>
+  <form *ngIf="formOpen && canManage" class="integration-form" (ngSubmit)="saveIntegration()">
+    <h2>{{ editingId === null ? i18n.t('addIntegration') : i18n.t('editIntegration') }}</h2>
+    <label>{{ i18n.t('integrationName') }}
+      <input name="name" [(ngModel)]="form.name" required maxlength="100">
+    </label>
+    <label>{{ i18n.t('integrationType') }}
+      <select name="integration_type" [ngModel]="form.integration_type" (ngModelChange)="setIntegrationType($event)">
+        <option value="payment_gateway">{{ i18n.t('integrationTypes.payment_gateway') }}</option>
+        <option value="mapping_service">{{ i18n.t('integrationTypes.mapping_service') }}</option>
+        <option value="notification_service">{{ i18n.t('integrationTypes.notification_service') }}</option>
+        <option value="analytics_service">{{ i18n.t('integrationTypes.analytics_service') }}</option>
+        <option value="inventory_system">{{ i18n.t('integrationTypes.inventory_system') }}</option>
+      </select>
+    </label>
+    <label>{{ i18n.t('integrationEndpoint') }}
+      <input name="api_endpoint" type="url" [(ngModel)]="form.api_endpoint" required>
+    </label>
+    <label>{{ i18n.t('integrationApiKey') }}
+      <input name="api_key" type="password" [(ngModel)]="form.api_key" autocomplete="new-password">
+    </label>
+    <label>{{ i18n.t('integrationStatus') }}
+      <select name="status" [(ngModel)]="form.status">
+        <option value="active">{{ i18n.t('integrationStatuses.active') }}</option>
+        <option value="inactive">{{ i18n.t('integrationStatuses.inactive') }}</option>
+        <option value="error">{{ i18n.t('integrationStatuses.error') }}</option>
+      </select>
+    </label>
+    <p class="form-hint">{{ i18n.t('integrationSecretHint') }}</p>
+    <div class="form-actions">
+      <button type="submit" class="primary-button" [disabled]="saving">
+        {{ saving ? i18n.t('saving') : i18n.t('saveChanges') }}
+      </button>
+      <button type="button" (click)="formOpen = false" [disabled]="saving">{{ i18n.t('cancel') }}</button>
+    </div>
+  </form>
   <div *ngIf="loading" class="loading">{{ i18n.t('loadingIntegrations') }}</div>
   <div *ngIf="error" class="error">{{ error }}</div>
   <div *ngIf="!loading && integrations.length === 0" class="no-data">{{ i18n.t('noIntegrations') }}</div>
@@ -25,8 +71,32 @@
         <td>
           <button (click)="testIntegration(integration.id)">{{ i18n.t('test') }}</button>
           <button (click)="syncIntegration(integration.id)">{{ i18n.t('sync') }}</button>
+          <button *ngIf="canManage" (click)="beginEdit(integration)">{{ i18n.t('edit') }}</button>
+          <button *ngIf="canDelete" class="delete-button" (click)="deleteIntegration(integration)">{{ i18n.t('delete') }}</button>
         </td>
       </tr>
     </tbody>
   </table>
+  <section *ngIf="logsVisible" class="integration-logs">
+    <h2>{{ i18n.t('integrationLogs') }}</h2>
+    <p *ngIf="logs.length === 0" class="no-data">{{ i18n.t('noIntegrationLogs') }}</p>
+    <table *ngIf="logs.length > 0" class="integration-table">
+      <thead>
+        <tr>
+          <th>{{ i18n.t('integrationName') }}</th>
+          <th>{{ i18n.t('status') }}</th>
+          <th>{{ i18n.t('message') }}</th>
+          <th>{{ i18n.t('date') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let log of logs">
+          <td>{{ log.integration_name }}</td>
+          <td>{{ log.level }}{{ log.status_code ? ' · ' + log.status_code : '' }}</td>
+          <td>{{ log.message }}</td>
+          <td>{{ log.timestamp | date:'short' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
 </div>

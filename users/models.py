@@ -34,6 +34,7 @@ class Notification(models.Model):
     NOTIFICATION_TYPES = [
         ('order_created', 'Order Created'),
         ('order_updated', 'Order Updated'),
+        ('order_status', 'Order Status Changed'),
         ('order_delivered', 'Order Delivered'),
         ('role_changed', 'Role Changed'),
         ('system', 'System Notification'),
