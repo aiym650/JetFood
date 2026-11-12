@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.conf import settings
 
 
@@ -13,13 +14,23 @@ class MenuItem(models.Model):
     restaurant = models.ForeignKey(
         'restaurants.Restaurant',
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         related_name='menu_items',
     )
 
     class Meta:
         ordering = ['id']
+        constraints = [
+            # CHECK: price must be positive
+            models.CheckConstraint(condition=Q(price__gt=0), name='menuitem_price_positive'),
+            # CHECK: rating is from 0 to 5
+            models.CheckConstraint(
+                condition=Q(rating__gte=0) & Q(rating__lte=5), name='menuitem_rating_0_5',
+            ),
+            # UNIQUE: no two dishes with the same name in one restaurant
+            models.UniqueConstraint(
+                fields=['restaurant', 'name'], name='menuitem_unique_name_per_restaurant',
+            ),
+        ]
 
     def __str__(self):
         return self.name
@@ -69,6 +80,19 @@ class Order(models.Model):
             models.Index(fields=['created_at']),
             models.Index(fields=['customer']),
         ]
+        constraints = [
+            # CHECK: total cannot be negative
+            models.CheckConstraint(condition=Q(total_amount__gte=0), name='order_total_not_negative'),
+            # CHECK: status and priority only from the allowed lists
+            models.CheckConstraint(
+                condition=Q(status__in=['pending', 'confirmed', 'preparing', 'delivering', 'delivered', 'cancelled']),
+                name='order_status_valid',
+            ),
+            models.CheckConstraint(
+                condition=Q(priority__in=['low', 'normal', 'high', 'urgent']),
+                name='order_priority_valid',
+            ),
+        ]
     
     def __str__(self):
         return f"Order {self.order_number} - {self.status}"
@@ -86,6 +110,14 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField()
     price_per_item = models.DecimalField(max_digits=10, decimal_places=2)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        constraints = [
+            # CHECK: quantity must be at least 1, money fields cannot be negative
+            models.CheckConstraint(condition=Q(quantity__gt=0), name='orderitem_quantity_positive'),
+            models.CheckConstraint(condition=Q(price_per_item__gte=0), name='orderitem_price_not_negative'),
+            models.CheckConstraint(condition=Q(subtotal__gte=0), name='orderitem_subtotal_not_negative'),
+        ]
     
     def save(self, *args, **kwargs):
         self.subtotal = self.quantity * self.price_per_item
