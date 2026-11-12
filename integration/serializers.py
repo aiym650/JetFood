@@ -3,11 +3,18 @@ from .models import ExternalIntegration, IntegrationLog
 
 
 class ExternalIntegrationSerializer(serializers.ModelSerializer):
+    api_key = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    api_key_present = serializers.SerializerMethodField()
+
     class Meta:
         model = ExternalIntegration
         fields = ['id', 'name', 'integration_type', 'status', 'api_endpoint',
-                  'api_key', 'config', 'last_sync', 'created_at', 'updated_at']
+                  'api_key', 'api_key_present', 'config', 'last_sync',
+                  'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at', 'last_sync']
+
+    def get_api_key_present(self, integration):
+        return bool(integration.api_key)
 
 
 class IntegrationLogSerializer(serializers.ModelSerializer):

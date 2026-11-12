@@ -1,0 +1,68 @@
+JETFOOD — UI/UX ACCEPTANCE TEST REPORT
+Date: 2026-11-09
+
+Scope
+Twenty acceptance checks cover role workflows, checkout/payment, delivery
+route mapping, notifications, serializer contracts, language, and error
+feedback. Automated status refers to backend or Angular tests; external map
+service and visual checks are explicitly marked manual because a successful
+unit test cannot verify public tile/router availability or real-device layout.
+
+No. | Scenario | Verification | Result
+01 | Customer login and token-backed requests | Django auth tests; Angular interceptor tests | Automated
+02 | Registration cannot self-assign staff role | users registration API test | Automated
+03 | Checkout rejects invalid/unavailable items | orders API tests | Automated
+04 | Checkout persists order and selected method | orders-api.spec.ts; payment API tests | Automated
+05 | Online checkout creates simulated paid payment | payments API test | Automated
+06 | Cash remains pending until delivery | payments API test | Automated
+07 | Payment history reflects saved backend data | payments.spec.ts; payment API tests | Automated
+08 | Manager assigns a courier to an order | orders API assignment test | Automated
+09 | Courier only sees assigned deliveries | orders permission tests | Automated
+10 | Courier status progression records delivery time | orders status transition test | Automated
+11 | Customer sees a notification when order status changes | orders notification API test | Automated
+12 | Assignment notifies customer and courier | orders assignment notification test | Automated
+13 | Notification page displays status and order link | notifications.spec.ts | Automated
+14 | Notification actions report request errors | notifications.spec.ts | Automated
+15 | Courier chooses map point A and point B | delivery-route-map.spec.ts | Automated
+16 | Invalid coordinates are rejected | map component and route API tests | Automated
+17 | Route and points are persisted for later retrieval | orders route API test | Automated
+18 | Non-assigned courier/customer cannot edit a route | orders route permission tests | Automated
+19 | Serializer hides API keys; interceptor does not send session tokens to OSRM | integration and interceptor tests | Automated
+20 | Responsive layout and external map/router | Browser smoke at 360px: integration form has no horizontal overflow; live route tiles/OSRM not exercised | PARTIAL PASS
+
+Automated test execution
+Actual final results:
+  python manage.py test — PASS, 62 tests
+  python manage.py check — PASS
+  python manage.py makemigrations --check --dry-run — PASS, no changes
+  npm test -- --watch=false — PASS, 71 tests in 28 files
+  npm run build — PASS, initial bundle 497.40 kB
+
+The public OSRM endpoint is not asserted by the unit suite; the 360px
+integration-form overflow was found and corrected in a browser smoke test.
+Scenario 20 remains partial until the real route map is checked. Angular build reports existing
+dashboard and landing component CSS budget warnings; the build succeeds.
+
+Validation commands:
+  python manage.py test
+  python manage.py check
+  python manage.py makemigrations --check --dry-run
+  cd frontend
+  npm test -- --watch=false
+  npm run build
+
+Manual check procedure for item 20
+1. Start Django and Angular using HOW_TO_RUN.txt.
+2. Log in with a manager/courier account created by
+   python manage.py create_demo_roles.
+3. Open an assigned order, plan A and B points, and confirm the route line,
+   distance, estimated time, and OpenStreetMap directions link.
+4. Repeat with a narrow/mobile viewport and test marker drag, map attribution,
+   notification refresh, and payment history.
+5. Repeat with network access disabled; verify the UI reports that external
+   route geometry is unavailable while saved points remain visible.
+
+Limits
+This report is an acceptance checklist, not evidence that the remote OSRM
+service is always available. The project does not provide live courier GPS,
+traffic-aware ETAs, email/SMS/push notifications, or actual bank processing.

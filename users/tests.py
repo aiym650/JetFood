@@ -3,6 +3,9 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from django.core.management import call_command
+from django.core.management.base import CommandError
+from io import StringIO
 from orders.models import Order
 from .models import DeliveryAddress, Notification, User
 
@@ -29,6 +32,34 @@ class UserTestCase(TestCase):
         """Test user creation"""
         self.assertEqual(self.user.username, 'testuser')
         self.assertEqual(self.user.role, 'customer')
+
+    def test_create_demo_roles_command_generates_role_accounts_once(self):
+        output = StringIO()
+        call_command('create_demo_roles', stdout=output)
+        demo_admin = User.objects.get(username='demo_admin')
+        demo_manager = User.objects.get(username='demo_manager')
+        demo_courier = User.objects.get(username='demo_courier')
+
+        self.assertEqual(demo_admin.role, 'admin')
+        self.assertTrue(demo_admin.is_superuser)
+        self.assertEqual(demo_manager.role, 'manager')
+        self.assertEqual(demo_courier.role, 'delivery')
+        self.assertTrue(demo_admin.check_password(output.getvalue().split('demo_admin / ')[1].splitlines()[0]))
+
+        repeated_output = StringIO()
+        call_command('create_demo_roles', stdout=repeated_output)
+        self.assertIn('already exist', repeated_output.getvalue())
+
+    def test_create_demo_roles_command_does_not_elevate_existing_user(self):
+        User.objects.create_user(
+            username='demo_manager',
+            email='existing@example.com',
+            password='safe-password',
+            role='customer',
+        )
+        with self.assertRaises(CommandError):
+            call_command('create_demo_roles', stdout=StringIO())
+        self.assertEqual(User.objects.get(username='demo_manager').role, 'customer')
 
     def test_user_login(self):
         """Test user login endpoint"""
@@ -58,6 +89,36 @@ class UserTestCase(TestCase):
         })
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(User.objects.get(username='newuser').role, 'customer')
+
+    def test_registration_reports_duplicate_username_and_email(self):
+        duplicate_username = self.client.post('/api/auth/register/', {
+            'username': 'testuser',
+            'email': 'new@example.com',
+            'password': 'newpass123',
+        }, format='json')
+        self.assertEqual(duplicate_username.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('username', duplicate_username.data)
+
+        duplicate_email = self.client.post('/api/auth/register/', {
+            'username': 'anotheruser',
+            'email': 'TEST@example.com',
+            'password': 'newpass123',
+        }, format='json')
+        self.assertEqual(duplicate_email.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('email', duplicate_email.data)
+
+    def test_logout_revokes_token(self):
+        token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
+
+        response = self.client.post('/api/auth/logout/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(Token.objects.filter(user=self.user).exists())
+        self.assertEqual(
+            self.client.get('/api/auth/profile/').status_code,
+            status.HTTP_403_FORBIDDEN,
+        )
 
     def test_users_cannot_change_their_own_role(self):
         self.client.force_authenticate(user=self.user)

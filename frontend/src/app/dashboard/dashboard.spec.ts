@@ -210,6 +210,8 @@ describe('Dashboard', () => {
       delivery_address: 'Test address',
       delivery_notes: '',
       estimated_delivery_time: null,
+      delivery_started_at: null,
+      estimated_arrival_time: null,
       actual_delivery_time: null,
       delivery_confirmed_at: null,
       created_at: '',

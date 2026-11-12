@@ -1,0 +1,37 @@
+JETFOOD — FRONTEND, BACKEND, DATABASE, AND PAYMENTS
+
+Architecture
+Angular is the user interface. It sends authenticated HTTP requests to Django
+REST Framework endpoints; DRF serializers validate and shape JSON; Django
+models persist data in SQLite. The Angular HTTP interceptor adds the token
+and handles expired sessions.
+
+Checkout and payment flow
+1. The dashboard sends delivery address, menu item IDs, quantities, and the
+   chosen payment_method to POST /api/orders/.
+2. Django verifies item availability, quantity limits, and prices, then saves
+   the order and its payment inside a database transaction.
+3. For online simulation, a paid Payment record with a SIM transaction ID is
+   saved. Cash payments remain pending until confirmed after delivery.
+4. GET /api/orders/ and GET /api/payments/ return persisted data. Customer
+   payment history is scoped to the signed-in customer; managers/admins can
+   monitor all payments.
+5. A manager/admin can issue a refund with a reason; this is a database state
+   transition, not a transfer from a real bank.
+
+Main files
+- frontend/src/app/dashboard/: checkout and payment method selection.
+- frontend/src/app/orders.ts: typed order HTTP service.
+- frontend/src/app/payments.ts: typed payment HTTP service.
+- frontend/src/app/auth.interceptor.ts: bearer-token-style DRF Token header.
+- orders/views.py and orders/serializers.py: order API and server validation.
+- payments/models.py, payments/services.py, payments/views.py: payment flow.
+- backend/settings.py: SQLite database configuration.
+
+Tests
+  python manage.py test orders payments
+  cd frontend
+  npm test -- --watch=false
+
+The online method is intentionally a local simulation. No bank credentials,
+card numbers, or real payment-provider requests are processed.

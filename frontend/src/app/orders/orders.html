@@ -60,7 +60,7 @@
               {{ i18n.t('editOrder') }}
             </button>
             <button
-              *ngIf="order.status === 'pending'"
+              *ngIf="order.status === 'pending' || order.status === 'confirmed'"
               type="button"
               class="cancel-button"
               [disabled]="cancellingOrderId === order.id"
@@ -68,7 +68,7 @@
             >
               {{ cancellingOrderId === order.id ? i18n.t('cancelling') : i18n.t('cancelOrderButton') }}
             </button>
-            <span *ngIf="order.status !== 'pending'" class="no-order-action">—</span>
+            <span *ngIf="order.status !== 'pending' && order.status !== 'confirmed'" class="no-order-action">—</span>
           </td>
         </tr>
         <tr class="details-row" [hidden]="expandedOrderId !== order.id">
@@ -78,6 +78,21 @@
                 <h2>{{ i18n.t('orderDetails') }} {{ order.order_number }}</h2>
                 <span>{{ order.items.length }} {{ i18n.t('positions') }}</span>
               </div>
+              <section *ngIf="order.status !== 'cancelled'" class="order-progress" [attr.aria-label]="i18n.t('orderProgress')">
+                <ol>
+                  <li
+                    *ngFor="let step of statusProgress; let stepIndex = index"
+                    [class.current]="order.status === step"
+                    [class.completed]="stepIndex < statusStepIndex(order.status)"
+                  >
+                    <span class="progress-marker">{{ stepIndex + 1 }}</span>
+                    <span>{{ statusLabel(step) }}</span>
+                  </li>
+                </ol>
+              </section>
+              <p *ngIf="order.status === 'cancelled'" class="order-cancelled" role="status">
+                {{ i18n.t('orderCancelledNotice') }}
+              </p>
               <ul class="order-items">
                 <li *ngFor="let item of order.items">
                   <span>{{ i18n.catalogLabel(item.item_name) }} <span class="item-quantity">× {{ item.quantity }}</span></span>
@@ -88,9 +103,86 @@
                 <div><span>{{ i18n.t('deliveryAddress') }}</span><strong>{{ order.delivery_address }}</strong></div>
                 <div *ngIf="order.delivery_notes"><span>{{ i18n.t('comment') }}</span><strong>{{ order.delivery_notes }}</strong></div>
                 <div *ngIf="order.estimated_delivery_time"><span>{{ i18n.t('expectedTime') }}</span><strong>{{ order.estimated_delivery_time | date:'dd.MM.yyyy HH:mm' }}</strong></div>
+                <div *ngIf="order.estimated_arrival_time"><span>{{ i18n.t('estimatedArrival') }}</span><strong>{{ order.estimated_arrival_time | date:'dd.MM.yyyy HH:mm' }}</strong></div>
                 <div *ngIf="order.actual_delivery_time"><span>{{ i18n.t('deliveredAt') }}</span><strong>{{ order.actual_delivery_time | date:'dd.MM.yyyy HH:mm' }}</strong></div>
                 <div *ngIf="order.delivery_confirmed_at"><span>{{ i18n.t('deliveryConfirmedAt') }}</span><strong>{{ order.delivery_confirmed_at | date:'dd.MM.yyyy HH:mm' }}</strong></div>
               </div>
+              <section *ngIf="canManageOrderFlow() || canUpdateDeliveryStatus(order)" class="order-workflow">
+                <h3>{{ i18n.t('orderWorkflow') }}</h3>
+                <p *ngIf="canManageOrderFlow() && order.status === 'pending'">
+                  {{ i18n.t('workflowAwaitingConfirmation') }}
+                </p>
+                <button
+                  *ngIf="canManageOrderFlow() && order.status === 'pending'"
+                  type="button"
+                  class="checkout-button"
+                  [disabled]="updatingStatusOrderId === order.id"
+                  (click)="advanceOrderStatus(order, 'confirmed')"
+                >
+                  {{ i18n.t('confirmOrder') }}
+                </button>
+                <button
+                  *ngIf="canManageOrderFlow() && order.status === 'confirmed'"
+                  type="button"
+                  class="checkout-button"
+                  [disabled]="updatingStatusOrderId === order.id"
+                  (click)="advanceOrderStatus(order, 'preparing')"
+                >
+                  {{ i18n.t('startPreparing') }}
+                </button>
+                <button
+                  *ngIf="canManageOrderFlow() && order.status === 'preparing'"
+                  type="button"
+                  class="checkout-button"
+                  [disabled]="updatingStatusOrderId === order.id"
+                  (click)="advanceOrderStatus(order, 'ready_for_pickup')"
+                >
+                  {{ i18n.t('markReadyForPickup') }}
+                </button>
+                <div *ngIf="canAssignCourier(order)" class="courier-assignment">
+                  <label>{{ i18n.t('assignCourier') }}
+                    <select
+                      [value]="selectedCourierIds[order.id] ?? order.delivery_person ?? ''"
+                      (change)="selectCourier(order.id, $any($event.target).value)"
+                    >
+                      <option value="">{{ i18n.t('selectCourier') }}</option>
+                      <option *ngFor="let courier of couriers" [value]="courier.id">{{ courier.username }}</option>
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    class="details-button"
+                    [disabled]="!couriers.length"
+                    (click)="assignCourier(order)"
+                  >
+                    {{ order.delivery_person ? i18n.t('changeCourier') : i18n.t('assignCourierButton') }}
+                  </button>
+                  <p *ngIf="courierLoadError" class="error" role="alert">{{ courierLoadError }}</p>
+                  <p *ngIf="assignmentErrors[order.id]" class="error" role="alert">{{ assignmentErrors[order.id] }}</p>
+                </div>
+                <button
+                  *ngIf="canUpdateDeliveryStatus(order) && order.status === 'ready_for_pickup'"
+                  type="button"
+                  class="checkout-button"
+                  [disabled]="updatingStatusOrderId === order.id || !canStartDelivery(order.id)"
+                  (click)="advanceOrderStatus(order, 'delivering')"
+                >
+                  {{ i18n.t('startDelivery') }}
+                </button>
+                <p *ngIf="canUpdateDeliveryStatus(order) && order.status === 'ready_for_pickup' && !canStartDelivery(order.id)">
+                  {{ i18n.t('routeRequiredBeforeDelivery') }}
+                </p>
+                <button
+                  *ngIf="canUpdateDeliveryStatus(order) && order.status === 'delivering'"
+                  type="button"
+                  class="checkout-button"
+                  [disabled]="updatingStatusOrderId === order.id"
+                  (click)="advanceOrderStatus(order, 'delivered')"
+                >
+                  {{ i18n.t('markDelivered') }}
+                </button>
+                <p *ngIf="statusActionErrors[order.id]" class="error" role="alert">{{ statusActionErrors[order.id] }}</p>
+              </section>
               <section class="delivery-route">
                 <div class="details-heading">
                   <h3>{{ i18n.t('deliveryRoute') }}</h3>
@@ -111,8 +203,19 @@
                   <p><strong>{{ i18n.t('routeTo') }}:</strong> {{ deliveryRoute.destination_address }}</p>
                   <p *ngIf="deliveryRoute.notes"><strong>{{ i18n.t('routeNotes') }}:</strong> {{ deliveryRoute.notes }}</p>
                   <a [href]="deliveryRoute.directions_url" target="_blank" rel="noopener noreferrer">
-                    {{ i18n.t('openDirections') }}
+                    {{ i18n.t('openOsmDirections') }}
                   </a>
+                  <app-delivery-route-map
+                    *ngIf="deliveryRoute.origin_latitude !== null && deliveryRoute.destination_latitude !== null"
+                    [originLatitude]="deliveryRoute.origin_latitude"
+                    [originLongitude]="deliveryRoute.origin_longitude"
+                    [destinationLatitude]="deliveryRoute.destination_latitude"
+                    [destinationLongitude]="deliveryRoute.destination_longitude"
+                    [estimatedDurationSeconds]="deliveryRoute.estimated_duration_seconds"
+                    [deliveryStartedAt]="order.delivery_started_at"
+                    [estimatedArrivalTime]="order.estimated_arrival_time"
+                    [orderStatus]="order.status"
+                  />
                 </div>
                 <p *ngIf="!routeLoading && deliveryRoutes[order.id] === null">{{ i18n.t('deliveryRouteNotPlanned') }}</p>
                 <div *ngIf="routeEditingOrderId === order.id" class="route-edit">
@@ -122,6 +225,14 @@
                   <label>{{ i18n.t('routeNotes') }}
                     <textarea [value]="routeNotes" (input)="routeNotes = $any($event.target).value"></textarea>
                   </label>
+                  <app-delivery-route-map
+                    [originLatitude]="routeCoordinates.origin_latitude"
+                    [originLongitude]="routeCoordinates.origin_longitude"
+                    [destinationLatitude]="routeCoordinates.destination_latitude"
+                    [destinationLongitude]="routeCoordinates.destination_longitude"
+                    (pointsChange)="updateRouteCoordinates($event)"
+                    (routeMetricsChange)="updateRouteMetrics($event)"
+                  />
                   <p *ngIf="routeSaveError" class="error" role="alert">{{ routeSaveError }}</p>
                   <div class="edit-actions">
                     <button type="button" class="checkout-button" [disabled]="savingRoute" (click)="saveDeliveryRoute(order.id)">

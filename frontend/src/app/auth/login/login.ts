@@ -42,7 +42,7 @@ export class Login {
       },
       error: (error) => {
         this.loading = false;
-        this.errorMessage = this.i18n.t('invalidCredentials');
+        this.errorMessage = this.i18n.t(this.auth.getLoginErrorKey(error));
         this.changeDetector.markForCheck();
       }
     });

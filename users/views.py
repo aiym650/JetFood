@@ -39,12 +39,9 @@ class LogoutView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        try:
-            request.user.auth_token.delete()
-            logout(request)
-            return Response({'message': 'Successfully logged out'})
-        except:
-            return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
+        Token.objects.filter(user=request.user).delete()
+        logout(request)
+        return Response({'message': 'Successfully logged out'})
 
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
@@ -143,7 +140,7 @@ class DeleteAccountView(generics.GenericAPIView):
 
         active_orders = Order.objects.filter(
             customer=user,
-            status__in=['pending', 'confirmed', 'preparing', 'delivering'],
+            status__in=['pending', 'confirmed', 'preparing', 'ready_for_pickup', 'delivering'],
         )
         if active_orders.exists():
             return Response(

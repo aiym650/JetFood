@@ -208,8 +208,13 @@ export class Dashboard implements OnInit {
   }
 
   logout(): void {
-    this.auth.logout();
-    this.router.navigate(['/landing']);
+    this.auth.logout().subscribe({
+      next: () => this.router.navigate(['/landing']),
+      error: (error) => {
+        console.error('Server logout failed; local session was cleared.', error);
+        this.router.navigate(['/landing']);
+      },
+    });
   }
 
   selectCategory(category: string): void {

@@ -45,4 +45,21 @@ describe('NotificationsComponent', () => {
     expect(component.notifications).toEqual([]);
     httpTesting.expectNone('http://localhost:8000/api/auth/notifications/clear-all/');
   });
+
+  it('renders a delivery status notification with a link to the order', () => {
+    httpTesting.expectOne('http://localhost:8000/api/auth/notifications/').flush([{
+      id: 17,
+      notification_type: 'order_status',
+      title: 'Delivery status updated',
+      message: 'Order ORD-17 status is now On the way.',
+      is_read: false,
+      link: '/orders?orderId=17',
+      created_at: '2026-11-09T10:00:00Z',
+    }]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Delivery status updated');
+    expect(fixture.nativeElement.textContent).toContain('On the way');
+    expect(fixture.nativeElement.querySelector('a')?.getAttribute('href')).toBe('/orders?orderId=17');
+  });
 });

@@ -138,13 +138,101 @@
   font-weight: 600;
 }
 
+.order-progress {
+  margin: 18px 0;
+  overflow-x: auto;
+}
+
+.order-progress ol {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 520px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.order-progress li {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  color: #858d97;
+  font-size: 12px;
+}
+
+.progress-marker {
+  display: grid;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid #dfe5e2;
+  border-radius: 50%;
+  background: #fff;
+  font-weight: 700;
+}
+
+.order-progress li.completed,
+.order-progress li.current {
+  color: #176b4d;
+  font-weight: 700;
+}
+
+.order-progress li.completed .progress-marker,
+.order-progress li.current .progress-marker {
+  border-color: #21845b;
+  background: #21845b;
+  color: #fff;
+}
+
+.order-workflow,
+.courier-assignment {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.order-workflow h3,
+.order-workflow p,
+.courier-assignment p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.courier-assignment label {
+  display: grid;
+  gap: 6px;
+  color: #59636f;
+  font-size: 13px;
+}
+
+.courier-assignment select {
+  min-width: 210px;
+  padding: 9px;
+  border: 1px solid #dfe5e2;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.order-cancelled {
+  padding: 12px;
+  border-radius: 8px;
+  background: #fff0ef;
+  color: #a33b35;
+}
+
 .status-pending {
   background: #fff3dc;
   color: #805600;
 }
 
 .status-confirmed,
-.status-preparing {
+.status-preparing,
+.status-ready_for_pickup {
   background: #eaf1ff;
   color: #315b9b;
 }

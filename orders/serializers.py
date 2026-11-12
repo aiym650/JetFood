@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 from django.db.models import Q
 from .models import DeliveryRoute, MenuItem, Order, OrderItem
 from django.conf import settings
@@ -53,7 +54,8 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = ['id', 'order_number', 'customer', 'customer_name', 'delivery_person',
                   'delivery_person_name', 'status', 'priority', 'total_amount',
                   'delivery_address', 'delivery_notes', 'estimated_delivery_time',
-                  'actual_delivery_time', 'delivery_confirmed_at', 'created_at',
+                  'delivery_started_at', 'estimated_arrival_time', 'actual_delivery_time',
+                  'delivery_confirmed_at', 'created_at',
                   'updated_at', 'items',
                   'payment_method']
         read_only_fields = [
@@ -83,6 +85,13 @@ class OrderStatusUpdateSerializer(serializers.Serializer):
     notes = serializers.CharField(required=False, allow_blank=True)
 
 
+class CourierAssignmentSerializer(serializers.Serializer):
+    delivery_person_id = serializers.PrimaryKeyRelatedField(
+        source='delivery_person',
+        queryset=get_user_model().objects.filter(role='delivery', is_active=True),
+    )
+
+
 class OrderModificationItemSerializer(serializers.Serializer):
     item_id = serializers.PrimaryKeyRelatedField(
         queryset=MenuItem.objects.filter(is_active=True, restaurant__is_active=True)
@@ -107,27 +116,75 @@ class DeliveryRouteSerializer(serializers.ModelSerializer):
     destination_address = serializers.CharField(source='order.delivery_address', read_only=True)
     updated_by_name = serializers.CharField(source='updated_by.username', read_only=True)
     directions_url = serializers.SerializerMethodField()
+    origin_latitude = serializers.FloatField(read_only=True, allow_null=True)
+    origin_longitude = serializers.FloatField(read_only=True, allow_null=True)
+    destination_latitude = serializers.FloatField(read_only=True, allow_null=True)
+    destination_longitude = serializers.FloatField(read_only=True, allow_null=True)
 
     class Meta:
         model = DeliveryRoute
         fields = [
             'id', 'order', 'origin_address', 'destination_address', 'notes',
+            'origin_latitude', 'origin_longitude',
+            'destination_latitude', 'destination_longitude',
+            'route_distance_meters', 'estimated_duration_seconds',
             'directions_url', 'updated_by', 'updated_by_name', 'updated_at',
         ]
         read_only_fields = ['id', 'order', 'destination_address', 'directions_url',
                             'updated_by', 'updated_by_name', 'updated_at']
+        read_only_fields += ['route_distance_meters', 'estimated_duration_seconds']
 
     def get_directions_url(self, route):
-        from urllib.parse import urlencode
-
-        query = urlencode({
-            'api': 1,
-            'origin': route.origin_address,
-            'destination': route.order.delivery_address,
-        })
-        return f'https://www.google.com/maps/dir/?{query}'
+        if all([
+            route.origin_latitude is not None,
+            route.origin_longitude is not None,
+            route.destination_latitude is not None,
+            route.destination_longitude is not None,
+        ]):
+            return (
+                'https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route='
+                f'{route.origin_latitude},{route.origin_longitude};'
+                f'{route.destination_latitude},{route.destination_longitude}'
+            )
+        return ''
 
 
 class DeliveryRouteInputSerializer(serializers.Serializer):
     origin_address = serializers.CharField(max_length=500, trim_whitespace=True)
+    origin_latitude = serializers.DecimalField(
+        max_digits=9, decimal_places=6, min_value=-90, max_value=90, required=False
+    )
+    origin_longitude = serializers.DecimalField(
+        max_digits=9, decimal_places=6, min_value=-180, max_value=180, required=False
+    )
+    destination_latitude = serializers.DecimalField(
+        max_digits=9, decimal_places=6, min_value=-90, max_value=90, required=False
+    )
+    destination_longitude = serializers.DecimalField(
+        max_digits=9, decimal_places=6, min_value=-180, max_value=180, required=False
+    )
+    route_distance_meters = serializers.IntegerField(min_value=1, max_value=1_000_000, required=False)
+    estimated_duration_seconds = serializers.IntegerField(min_value=1, max_value=86_400, required=False)
     notes = serializers.CharField(required=False, allow_blank=True, max_length=2000)
+
+    def validate(self, attrs):
+        coordinate_fields = [
+            'origin_latitude', 'origin_longitude',
+            'destination_latitude', 'destination_longitude',
+        ]
+        supplied = [field in attrs for field in coordinate_fields]
+        if any(supplied) and not all(supplied):
+            raise serializers.ValidationError(
+                'Provide all four coordinates to plan a map route.'
+            )
+        metric_fields = ['route_distance_meters', 'estimated_duration_seconds']
+        supplied_metrics = [field in attrs for field in metric_fields]
+        if any(supplied_metrics) and not all(supplied_metrics):
+            raise serializers.ValidationError(
+                'Provide both route distance and estimated duration.'
+            )
+        if any(supplied) and not all(supplied_metrics):
+            raise serializers.ValidationError(
+                'Recalculate the route distance and estimated duration after changing route points.'
+            )
+        return attrs

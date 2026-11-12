@@ -29,9 +29,15 @@ class ExternalIntegrationListCreateView(generics.ListCreateAPIView):
 
 
 class ExternalIntegrationDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = ExternalIntegration.objects.all()
     serializer_class = ExternalIntegrationSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = ExternalIntegration.objects.all()
+        if user.role not in ['admin', 'manager']:
+            queryset = queryset.filter(status='active')
+        return queryset
     
     def perform_update(self, serializer):
         validate_role_access(self.request.user, ['admin', 'manager'])

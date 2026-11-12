@@ -1,0 +1,36 @@
+JETFOOD — INTEGRATION API AND SERIALIZERS
+
+Frontend/API contract
+The Angular Integration service uses typed input, integration, and log
+interfaces. It calls the Django integration endpoints for listing, creating,
+reading, updating, deleting, testing, syncing, and viewing logs. API results
+are normalized from either paginated results or a plain list.
+
+Serializer behavior
+ExternalIntegrationSerializer validates incoming integration fields and
+serializes the response. api_key is write-only: managers/admins may submit or
+replace a key, but it is never returned in API responses. api_key_present
+reports only whether a key is configured. IntegrationLogSerializer describes
+the operation log returned by the backend.
+
+Access rules
+Admin and restaurant manager roles can configure and sync integrations.
+Other authenticated users can only list/read active integrations. Only admins
+can delete integrations. A user cannot read an inactive integration by using
+its detail URL.
+
+Main files
+- integration/models.py: integration configuration and operation logs.
+- integration/serializers.py: validated request/response contract.
+- integration/views.py and integration/urls.py: permission-checked API.
+- frontend/src/app/integration.ts: typed Angular API service.
+- frontend/src/app/integration/: integration screen and actions.
+
+Tests
+  python manage.py test integration
+  cd frontend
+  npm test -- --watch=false
+
+Testing/sync currently records simulated operations in the local log. It does
+not make a request to arbitrary configured URLs or perform a real external
+payment, mapping, or notification-provider sync.

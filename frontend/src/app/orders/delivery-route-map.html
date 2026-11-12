@@ -1,0 +1,26 @@
+<div class="route-map-tools">
+  <div class="route-point-actions">
+    <button type="button" [class.active]="activePoint === 'origin'" [attr.aria-pressed]="activePoint === 'origin'" (click)="selectPoint('origin')">
+      {{ i18n.t('selectPointA') }}
+    </button>
+    <button type="button" [class.active]="activePoint === 'destination'" [attr.aria-pressed]="activePoint === 'destination'" (click)="selectPoint('destination')">
+      {{ i18n.t('selectPointB') }}
+    </button>
+  </div>
+  <p>{{ i18n.t('mapClickToSetPoint') }}</p>
+  <div #mapHost class="route-map-host" role="application" [attr.aria-label]="i18n.t('deliveryRouteMap')"></div>
+  <div class="route-map-summary" aria-live="polite">
+    <span>{{ i18n.t('pointA') }}: {{ originLatitude ?? i18n.t('notSelected') }}, {{ originLongitude ?? i18n.t('notSelected') }}</span>
+    <span>{{ i18n.t('pointB') }}: {{ destinationLatitude ?? i18n.t('notSelected') }}, {{ destinationLongitude ?? i18n.t('notSelected') }}</span>
+    <span *ngIf="routeDistanceKm !== null">
+      {{ i18n.t('routeDistance') }}: {{ routeDistanceKm | number:'1.1-1' }} km ·
+      {{ i18n.t('routeDuration') }}: {{ routeDurationMinutes | number:'1.0-0' }} min
+    </span>
+    <span *ngIf="orderStatus === 'delivering' && deliveryStartedAt && hasDeliveryTimer" [class.route-late]="deliveryIsLate">
+      {{ deliveryIsLate ? i18n.t('deliveryOverdue') : i18n.t('deliveryTimeRemaining') }}:
+      {{ remainingTimeLabel }}
+    </span>
+    <span *ngIf="orderStatus === 'delivered'">{{ i18n.t('deliveryCompletedEarlyAllowed') }}</span>
+    <span *ngIf="routeError" class="route-map-error" role="status">{{ routeError }}</span>
+  </div>
+</div>

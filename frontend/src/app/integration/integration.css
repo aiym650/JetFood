@@ -7,6 +7,101 @@
   margin-bottom: 1.5rem;
 }
 
+.integration-heading,
+.integration-heading-actions,
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.integration-heading h1 {
+  margin: 0 0 1.5rem;
+}
+
+.integration-heading-actions {
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.integration-heading-actions button,
+.integration-form button,
+.integration-table button {
+  padding: 0.55rem 0.8rem;
+  border: 0;
+  border-radius: 6px;
+  background: #e8edf0;
+  color: #263340;
+  cursor: pointer;
+}
+
+.integration-heading-actions .primary-button,
+.integration-form .primary-button {
+  background: #24734f;
+  color: #fff;
+}
+
+.integration-table .delete-button {
+  background: #fff0ef;
+  color: #a33b35;
+}
+
+.integration-form {
+  display: grid;
+  gap: 12px;
+  max-width: 680px;
+  margin: 0 0 24px;
+  padding: 20px;
+  border: 1px solid #e1e6e8;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.integration-form h2,
+.integration-logs h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.integration-form label {
+  display: grid;
+  gap: 6px;
+  color: #56616b;
+  font-size: 13px;
+}
+
+.integration-form input,
+.integration-form select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #dfe3e7;
+  border-radius: 7px;
+}
+
+.form-hint {
+  margin: 0;
+  color: #69727e;
+  font-size: 12px;
+}
+
+.form-actions {
+  justify-content: flex-start;
+}
+
+.integration-logs {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.error {
+  padding: 10px;
+  border-radius: 8px;
+  background: #fff3f1;
+  color: #a33b35;
+}
+
 .loading, .error, .no-data {
   text-align: center;
   padding: 2rem;
@@ -74,4 +169,31 @@
 
 .integration-table button:hover {
   background: #2980b9;
+}
+
+@media (max-width: 600px) {
+  .integration-container {
+    padding: 1rem;
+  }
+
+  .integration-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .integration-heading-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  .integration-form {
+    padding: 14px;
+  }
+
+  .integration-table {
+    display: block;
+    overflow-x: auto;
+  }
 }

@@ -1,0 +1,42 @@
+JETFOOD — DELIVERY STATUS NOTIFICATIONS
+
+What it does
+The backend creates an in-app notification when an order is placed, a courier
+is assigned, or an order status changes. Status notifications go to the
+customer and, when assigned, the courier. Notifications contain a link to the
+order details. The notifications page reloads periodically while open, and
+users can mark one or all as read or clear their own list.
+
+Order status flow
+pending -> confirmed -> preparing -> ready_for_pickup -> delivering -> delivered
+
+The restaurant manager/admin confirms the order, starts preparation, then
+marks it ready for the courier. The assigned courier plans and saves the route
+before starting delivery, then marks the order delivered at the destination.
+Customers see the translated status timeline in order details; the orders page
+refreshes active orders every 30 seconds. Customers may cancel before
+preparation starts.
+
+How it works
+1. Order create, assign, and status API operations call the notification
+   helpers in users/notifications.py.
+2. Notification rows are saved in the same SQLite database as users and
+   orders. The order and payment test cases verify these workflows.
+3. GET /api/auth/notifications/ returns only the signed-in user's notices.
+   PUT /api/auth/notifications/<id>/ marks an owned notice as read.
+4. Angular displays notifications and follows the supplied /orders link.
+
+Main files
+- users/models.py: Notification type and storage.
+- users/notifications.py: order notification creation.
+- orders/views.py: invokes notifications for order events.
+- users/views.py and users/urls.py: authenticated notification API.
+- frontend/src/app/notifications/: notification list and actions.
+
+Test
+  python manage.py test orders users
+  cd frontend
+  npm test -- --watch=false
+
+Notifications are in-app and refreshed on a timer; email, SMS, push delivery,
+and WebSocket real-time transport are not configured.

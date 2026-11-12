@@ -56,6 +56,19 @@ class PaymentApiTests(TestCase):
         response = self.client.get('/api/payments/')
         self.assertEqual(response.data['results'], [])
 
+    def test_order_and_payment_appear_in_customer_api_after_checkout(self):
+        order = self.create_order('online')
+        order_response = self.client.get('/api/orders/')
+        payment_response = self.client.get('/api/payments/')
+
+        self.assertEqual(order_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(payment_response.status_code, status.HTTP_200_OK)
+        saved_order = next(row for row in order_response.data['results'] if row['id'] == order.id)
+        saved_payment = next(row for row in payment_response.data['results'] if row['order'] == order.id)
+        self.assertEqual(saved_order['order_number'], saved_payment['order_number'])
+        self.assertEqual(saved_payment['status'], 'paid')
+        self.assertEqual(saved_payment['amount'], '25.00')
+
     def test_cash_payment_requires_delivery_confirmation(self):
         order = self.create_order('cash')
         payment = Payment.objects.get(order=order)

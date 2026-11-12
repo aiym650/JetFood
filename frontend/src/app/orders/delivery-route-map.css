@@ -1,0 +1,68 @@
+.route-map-tools {
+  display: grid;
+  gap: 8px;
+}
+
+.route-map-tools p {
+  margin: 0;
+  color: #68717b;
+  font-size: 13px;
+}
+
+.route-point-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.route-point-actions button {
+  padding: 8px 11px;
+  border: 1px solid #dfe5e2;
+  border-radius: 8px;
+  background: #fff;
+  color: #303943;
+  cursor: pointer;
+}
+
+.route-point-actions button.active {
+  border-color: #24734f;
+  background: #eaf5ee;
+  color: #176b4d;
+}
+
+.route-map-host {
+  width: 100%;
+  min-height: 300px;
+  border: 1px solid #dfe5e2;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.route-map-summary {
+  display: grid;
+  gap: 4px;
+  overflow-wrap: anywhere;
+  color: #4a535d;
+  font-size: 12px;
+}
+
+.route-map-error {
+  color: #a33b35;
+}
+
+.route-late {
+  color: #a33b35;
+  font-weight: 700;
+}
+
+.delivery-map-courier span {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #315bdb;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+  color: #fff;
+  font-size: 15px;
+}

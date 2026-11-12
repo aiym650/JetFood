@@ -62,7 +62,7 @@ def validate_user_pending_orders(user):
     from orders.models import Order
     pending_count = Order.objects.filter(
         customer=user,
-        status__in=['pending', 'confirmed', 'preparing', 'delivering']
+        status__in=['pending', 'confirmed', 'preparing', 'ready_for_pickup', 'delivering']
     ).count()
     
     if pending_count >= BusinessConstraints.MAX_PENDING_ORDERS_PER_USER:

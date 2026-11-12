@@ -41,6 +41,7 @@ class Order(models.Model):
         ('pending', 'Pending'),
         ('confirmed', 'Confirmed'),
         ('preparing', 'Preparing'),
+        ('ready_for_pickup', 'Ready for pickup'),
         ('delivering', 'Delivering'),
         ('delivered', 'Delivered'),
         ('cancelled', 'Cancelled'),
@@ -68,6 +69,8 @@ class Order(models.Model):
     delivery_address = models.TextField()
     delivery_notes = models.TextField(blank=True)
     estimated_delivery_time = models.DateTimeField(null=True, blank=True)
+    delivery_started_at = models.DateTimeField(null=True, blank=True)
+    estimated_arrival_time = models.DateTimeField(null=True, blank=True)
     actual_delivery_time = models.DateTimeField(null=True, blank=True)
     delivery_confirmed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -134,6 +137,12 @@ class DeliveryRoute(models.Model):
         related_name='delivery_route',
     )
     origin_address = models.CharField(max_length=500)
+    origin_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    origin_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    destination_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    destination_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    route_distance_meters = models.PositiveIntegerField(null=True, blank=True)
+    estimated_duration_seconds = models.PositiveIntegerField(null=True, blank=True)
     notes = models.TextField(blank=True)
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

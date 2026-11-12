@@ -1,0 +1,49 @@
+JETFOOD — DEMONSTRATION ROLE ACCOUNTS
+
+The project has role-based workflows for admin, restaurant manager, courier,
+and customer. To create the three requested staff/demo roles locally, run
+from the project root:
+
+  python manage.py migrate
+  python manage.py create_demo_roles
+
+The command creates:
+- demo_admin — admin and Django superuser.
+- demo_manager — restaurant manager (role: manager).
+- demo_courier — courier (role: delivery).
+
+For each newly created account, the command prints a random password once.
+Save those credentials securely. Passwords are not hard-coded in the source
+or documentation. Running the command again does not reset or reveal existing
+passwords. If a username already exists with an incompatible role, the
+command stops rather than elevating that account.
+
+Workflows
+- Admin: Django admin, user/role administration, restaurants, orders, reports,
+  integrations, payment monitoring, and refunds.
+- Restaurant manager: restaurant/menu work, order monitoring, courier
+  assignment, delivery route planning, and order progression from confirmation
+  through preparation to ready-for-pickup.
+- Courier: sees assigned orders, saves an A-to-B route before starting
+  delivery, then marks the order delivered.
+- Customer: sees the order timeline and in-app status notifications, and can
+  confirm receipt after delivery.
+
+Order workflow
+1. A new customer order starts as pending. The manager/admin confirms it.
+2. The manager/admin starts preparation and marks the food ready for pickup.
+3. The manager/admin assigns a courier. Assignment does not change order
+   status; the restaurant separately confirms the order.
+4. The assigned courier opens order details, saves the route, starts delivery,
+   and marks it delivered.
+5. The customer sees each status in the order timeline. Active order lists
+   refresh every 30 seconds; in-app notices are available on Notifications.
+
+The manager and courier login screens are the same as the customer login.
+The available page actions are determined by the authenticated role.
+
+Verification
+  python manage.py test users orders payments
+
+These are local demo identities, not production credentials. Do not reuse
+generated demo passwords outside a local development environment.
