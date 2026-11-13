@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../auth';
 import { LanguageSwitcher } from '../../shared/language-switcher/language-switcher';
 import { I18nService } from '../../i18n/i18n.service';
@@ -9,7 +9,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-register',
-  imports: [CommonModule, FormsModule, LanguageSwitcher],
+  imports: [CommonModule, FormsModule, RouterLink, LanguageSwitcher],
   templateUrl: './register.html',
   styleUrl: './register.css',
 })

@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 
@@ -25,6 +26,17 @@ class User(AbstractUser):
         db_table = 'auth_user'
         verbose_name = 'User'
         verbose_name_plural = 'Users'
+        constraints = [
+            # UNIQUE: one account per e-mail (empty e-mail is allowed many times)
+            models.UniqueConstraint(
+                fields=['email'], condition=~Q(email=''), name='user_email_unique_if_set',
+            ),
+            # CHECK: role must be one of the five known roles
+            models.CheckConstraint(
+                condition=Q(role__in=['admin', 'manager', 'analyst', 'delivery', 'customer']),
+                name='user_role_valid',
+            ),
+        ]
     
     def __str__(self):
         return f"{self.username} ({self.role})"
@@ -74,6 +86,13 @@ class DeliveryAddress(models.Model):
 
     class Meta:
         ordering = ['-is_default', 'id']
+        constraints = [
+            # UNIQUE (partial): a user can have only ONE default address
+            models.UniqueConstraint(
+                fields=['user'], condition=Q(is_default=True),
+                name='deliveryaddress_one_default_per_user',
+            ),
+        ]
 
     def __str__(self):
         return f'{self.label}: {self.address_line}, {self.city}'

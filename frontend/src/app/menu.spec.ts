@@ -37,6 +37,8 @@ describe('Menu', () => {
         image_url: '',
         category: 'Пицца',
         rating: '4.8',
+        restaurant: 1,
+        restaurant_name: 'Джет Пицца',
       }],
     });
 

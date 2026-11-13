@@ -1,0 +1,16 @@
+<div class="info-page">
+  <header class="info-header">
+    <a class="brand" routerLink="/landing">
+      <span class="brand-icon" aria-hidden="true">J</span>
+      <span>JetFood</span>
+    </a>
+    <app-language-switcher></app-language-switcher>
+  </header>
+
+  <main class="info-content">
+    <p class="eyebrow">JetFood</p>
+    <h1>{{ i18n.t(titleKey) }}</h1>
+    <p class="description">{{ i18n.t(descriptionKey) }}</p>
+    <a class="back-link" routerLink="/landing">← {{ i18n.t('backToHome') }}</a>
+  </main>
+</div>
