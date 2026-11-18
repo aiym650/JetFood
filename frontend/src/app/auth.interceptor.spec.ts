@@ -9,6 +9,7 @@ describe('authInterceptor', () => {
   let httpTesting: HttpTestingController;
 
   beforeEach(() => {
+    localStorage.clear();
     localStorage.setItem('token', 'private-api-token');
     TestBed.configureTestingModule({
       providers: [
@@ -23,7 +24,7 @@ describe('authInterceptor', () => {
 
   afterEach(() => {
     httpTesting.verify();
-    localStorage.removeItem('token');
+    localStorage.clear();
   });
 
   it('attaches the session token to JetFood backend requests', () => {

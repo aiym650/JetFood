@@ -6,6 +6,7 @@ import { vi } from 'vitest';
 import { Dashboard } from './dashboard';
 import { Auth } from '../auth';
 import { OrderRecord, Orders } from '../orders';
+import { CardPaymentResult, Payments } from '../payments';
 import { Menu } from '../menu';
 import { Restaurants } from '../restaurants';
 import { Addresses } from '../addresses';
@@ -34,6 +35,7 @@ describe('Dashboard', () => {
         provideRouter([]),
         { provide: Auth, useValue: { getCurrentUser: () => ({ id: 45, username: 'test', role: 'customer' }), isLoggedIn: () => true } },
         { provide: Orders, useValue: { createOrder: () => of({}) } },
+        { provide: Payments, useValue: { payOrder: () => of({}) } },
         { provide: Menu, useValue: { getItems: () => of(menuItems) } },
         { provide: Restaurants, useValue: { getRestaurants: () => of(restaurants) } },
         { provide: Addresses, useValue: { getAddresses: () => of([]) } },
@@ -56,8 +58,9 @@ describe('Dashboard', () => {
     expect(fixture.nativeElement.textContent).toContain('Restaurants');
     expect(fixture.nativeElement.textContent).toContain('North Kitchen');
     expect(fixture.nativeElement.textContent).not.toContain('Margherita Pizza');
-    component.selectRestaurant(component.restaurants[0]);
-    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.restaurant-card') as HTMLButtonElement).click();
+    fixture.detectChanges(false);
+    expect(component.selectedRestaurant?.name).toBe('North Kitchen');
     expect(fixture.nativeElement.textContent).toContain('Margherita Pizza');
     expect(fixture.nativeElement.textContent).toContain('Pizza');
 
@@ -81,6 +84,7 @@ describe('Dashboard', () => {
   });
 
   it('filters menu items by minimum and maximum price', () => {
+    component.selectRestaurant(component.restaurants[2]);
     component.setPriceFilter('min', '700');
     component.setPriceFilter('max', '800');
 
@@ -124,6 +128,197 @@ describe('Dashboard', () => {
     expect(component.paymentMethod).toBe('online');
     component.setPaymentMethod('bank_transfer');
     expect(component.paymentMethod).toBe('online');
+  });
+
+  it('shows the payment confirmation action in the open online cart', () => {
+    (fixture.nativeElement.querySelector('.restaurant-card') as HTMLButtonElement).click();
+    fixture.detectChanges(false);
+    (fixture.nativeElement.querySelector('.food-card .add-to-cart-btn') as HTMLButtonElement).click();
+    fixture.detectChanges(false);
+    const paymentSelect = fixture.nativeElement.querySelector('.cart-footer select') as HTMLSelectElement;
+    paymentSelect.value = 'online';
+    paymentSelect.dispatchEvent(new Event('change'));
+    fixture.detectChanges(false);
+
+    const checkoutButton = fixture.nativeElement.querySelector('.checkout-btn') as HTMLButtonElement;
+    expect(checkoutButton.textContent).toContain(component.i18n.t('placeOrderAndPay'));
+  });
+
+  it('validates card details before creating an online order', () => {
+    const createOrder = vi.spyOn(TestBed.inject(Orders), 'createOrder');
+    component.formatCardNumber('4242424242424242');
+    component.formatCardExpiry('1299');
+    expect(component.cardNumber).toBe('4242 4242 4242 4242');
+    expect(component.cardExpiry).toBe('12/99');
+
+    component.addToCart(component.foodItems[0]);
+    component.deliveryAddress = 'Test address';
+    component.setPaymentMethod('online');
+    component.cardNumber = '4242 4242 4242 4243';
+    component.cardExpiry = '00/20';
+    component.cardCvv = '12';
+    component.cardholderName = '';
+
+    component.checkout();
+
+    expect(createOrder).not.toHaveBeenCalled();
+    expect(component.cardNumberError()).toBe(component.i18n.t('invalidCardNumber'));
+    expect(component.cardExpiryError()).toBe(component.i18n.t('invalidCardExpiry'));
+    expect(component.cardCvvError()).toBe(component.i18n.t('invalidCvv'));
+    expect(component.cardholderError()).toBe(component.i18n.t('cardholderRequired'));
+  });
+
+  it('shows a success receipt and clears card details after payment', () => {
+    const createdOrder: OrderRecord = {
+      id: 77,
+      order_number: 'ORD-77',
+      customer: 45,
+      customer_name: 'test',
+      delivery_person: null,
+      delivery_person_name: null,
+      status: 'pending',
+      priority: 'normal',
+      total_amount: 890,
+      delivery_address: 'Test address',
+      delivery_notes: '',
+      estimated_delivery_time: null,
+      delivery_started_at: null,
+      estimated_arrival_time: null,
+      actual_delivery_time: null,
+      delivery_confirmed_at: null,
+      created_at: '',
+      updated_at: '',
+      items: [],
+    };
+    const paidPayment: CardPaymentResult = {
+      id: 1,
+      order: 77,
+      order_number: 'ORD-77',
+      order_status: 'confirmed',
+      customer_name: 'test',
+      method: 'online',
+      status: 'paid',
+      amount: '890.00',
+      transaction_id: 'SIM-ABC123',
+      card_brand: 'visa',
+      card_last4: '4242',
+      failure_reason: '',
+      refund_reason: '',
+      created_at: '',
+      paid_at: '2026-11-18T10:00:00Z',
+      refunded_at: null,
+      message: 'Payment approved.',
+    };
+    const createOrder = vi.spyOn(TestBed.inject(Orders), 'createOrder')
+      .mockReturnValue(of(createdOrder));
+    const payOrder = vi.spyOn(TestBed.inject(Payments), 'payOrder')
+      .mockReturnValue(of(paidPayment));
+    component.addToCart(component.foodItems[0]);
+    component.deliveryAddress = 'Test address';
+    component.setPaymentMethod('online');
+    component.cardNumber = '4242 4242 4242 4242';
+    component.cardExpiry = '12/99';
+    component.cardCvv = '123';
+    component.cardholderName = 'Test Customer';
+
+    component.checkout();
+    fixture.detectChanges();
+
+    expect(createOrder).toHaveBeenCalledOnce();
+    expect(payOrder).toHaveBeenCalledWith(77, {
+      card_number: '4242424242424242',
+      expiry: '12/99',
+      cvv: '123',
+      cardholder_name: 'Test Customer',
+    });
+    expect(component.cardNumber).toBe('');
+    expect(component.cardExpiry).toBe('');
+    expect(component.cardCvv).toBe('');
+    expect(component.cardholderName).toBe('');
+    expect(component.paymentResult?.status).toBe('paid');
+    expect(fixture.nativeElement.textContent).toContain('Visa **** 4242');
+  });
+
+  it('retries a declined payment on the same order', () => {
+    const createdOrder: OrderRecord = {
+      id: 78,
+      order_number: 'ORD-78',
+      customer: 45,
+      customer_name: 'test',
+      delivery_person: null,
+      delivery_person_name: null,
+      status: 'pending',
+      priority: 'normal',
+      total_amount: 890,
+      delivery_address: 'Test address',
+      delivery_notes: '',
+      estimated_delivery_time: null,
+      delivery_started_at: null,
+      estimated_arrival_time: null,
+      actual_delivery_time: null,
+      delivery_confirmed_at: null,
+      created_at: '',
+      updated_at: '',
+      items: [],
+    };
+    const failedPayment: CardPaymentResult = {
+      id: 1,
+      order: 78,
+      order_number: 'ORD-78',
+      order_status: 'pending',
+      customer_name: 'test',
+      method: 'online',
+      status: 'failed',
+      amount: '890.00',
+      transaction_id: '',
+      card_brand: 'visa',
+      card_last4: '0002',
+      failure_reason: 'Card declined',
+      refund_reason: '',
+      created_at: '',
+      paid_at: null,
+      refunded_at: null,
+      message: 'Card declined',
+    };
+    const paidPayment: CardPaymentResult = {
+      ...failedPayment,
+      status: 'paid',
+      order_status: 'confirmed',
+      transaction_id: 'SIM-ABC123',
+      card_last4: '4242',
+      failure_reason: '',
+      paid_at: '2026-11-18T10:00:00Z',
+      message: 'Payment approved.',
+    };
+    const createOrder = vi.spyOn(TestBed.inject(Orders), 'createOrder')
+      .mockReturnValue(of(createdOrder));
+    const payOrder = vi.spyOn(TestBed.inject(Payments), 'payOrder')
+      .mockReturnValueOnce(of(failedPayment))
+      .mockReturnValueOnce(of(paidPayment));
+    component.addToCart(component.foodItems[0]);
+    component.deliveryAddress = 'Test address';
+    component.setPaymentMethod('online');
+    component.cardNumber = '4000 0000 0000 0002';
+    component.cardExpiry = '12/99';
+    component.cardCvv = '123';
+    component.cardholderName = 'Test Customer';
+
+    component.checkout();
+    expect(component.paymentError).toBe(component.i18n.t('cardDeclined'));
+    expect(component.cardNumber).toBe('');
+    expect(component.pendingPaymentOrderId).toBe(78);
+
+    component.retryPayment();
+    component.cardNumber = '4242 4242 4242 4242';
+    component.cardExpiry = '12/99';
+    component.cardCvv = '123';
+    component.cardholderName = 'Test Customer';
+    component.checkout();
+
+    expect(createOrder).toHaveBeenCalledOnce();
+    expect(payOrder).toHaveBeenCalledTimes(2);
+    expect(component.paymentResult?.status).toBe('paid');
+    expect(component.pendingPaymentOrderId).toBeNull();
   });
 
   it('uses the saved default address for checkout', () => {
@@ -210,6 +405,8 @@ describe('Dashboard', () => {
       delivery_address: 'Test address',
       delivery_notes: '',
       estimated_delivery_time: null,
+      delivery_started_at: null,
+      estimated_arrival_time: null,
       actual_delivery_time: null,
       delivery_confirmed_at: null,
       created_at: '',

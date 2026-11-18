@@ -67,7 +67,7 @@ describe('IntegrationComponent', () => {
     component.beginCreate();
     component.saveIntegration();
 
-    expect(component.actionError).toContain('Enter the name');
+    expect(component.actionError).toBe(component.i18n.t('integrationRequiredFields'));
     expect(service.createIntegration).not.toHaveBeenCalled();
   });
 

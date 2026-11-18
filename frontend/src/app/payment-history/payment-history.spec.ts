@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
+import { vi } from 'vitest';
 
 import { Auth } from '../auth';
 import { I18nService } from '../i18n/i18n.service';
@@ -18,6 +19,9 @@ describe('PaymentHistoryPage', () => {
     status: 'paid',
     amount: '25.00',
     transaction_id: 'SIM-ABC123',
+    card_brand: 'visa',
+    card_last4: '4242',
+    failure_reason: '',
     refund_reason: '',
     created_at: '2026-11-05T10:00:00Z',
     paid_at: '2026-11-05T10:00:00Z',
@@ -50,6 +54,25 @@ describe('PaymentHistoryPage', () => {
     expect(component.payments).toHaveLength(1);
     expect(component.canManage).toBe(true);
     expect(fixture.nativeElement.textContent).toContain('ORD-10');
+    expect(fixture.nativeElement.textContent).toContain('Visa **** 4242');
+    expect(fixture.nativeElement.textContent).toContain('Payment receipt');
     expect(fixture.nativeElement.textContent).toContain('Issue refund');
+  });
+
+  it('shows a failed badge and decline reason without revealing card details', () => {
+    const failedPayment: PaymentRecord = {
+      ...payment,
+      status: 'failed',
+      card_last4: '0002',
+      failure_reason: 'Card declined',
+      paid_at: null,
+    };
+    vi.spyOn(TestBed.inject(Payments), 'getPayments').mockReturnValue(of([failedPayment]));
+    component.loadPayments();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Failed');
+    expect(fixture.nativeElement.textContent).toContain('Card declined.');
+    expect(fixture.nativeElement.textContent).not.toContain('4000000000000002');
   });
 });

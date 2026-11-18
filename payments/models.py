@@ -10,6 +10,7 @@ class Payment(models.Model):
     ]
     STATUS_CHOICES = [
         ('pending', 'Pending'),
+        ('failed', 'Failed'),
         ('paid', 'Paid'),
         ('refund_requested', 'Refund requested'),
         ('refunded', 'Refunded'),
@@ -25,6 +26,9 @@ class Payment(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     transaction_id = models.CharField(max_length=32, blank=True)
+    card_brand = models.CharField(max_length=20, null=True, blank=True)
+    card_last4 = models.CharField(max_length=4, null=True, blank=True)
+    failure_reason = models.TextField(null=True, blank=True)
     refund_reason = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -39,7 +43,7 @@ class Payment(models.Model):
             # CHECK: method and status only from the allowed lists
             models.CheckConstraint(condition=Q(method__in=['online', 'cash']), name='payment_method_valid'),
             models.CheckConstraint(
-                condition=Q(status__in=['pending', 'paid', 'refund_requested', 'refunded', 'cancelled']),
+                condition=Q(status__in=['pending', 'failed', 'paid', 'refund_requested', 'refunded', 'cancelled']),
                 name='payment_status_valid',
             ),
             # CHECK: a paid payment must have the payment time

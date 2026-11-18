@@ -25,7 +25,6 @@ describe('Register', () => {
       providers: [
         provideRouter([]),
         { provide: Auth, useValue: authMock },
-        { provide: Auth, useValue: { register: () => of({}) } },
         { provide: I18nService, useValue: { currentLang$: of('en'), t: (key: string) => key } },
       ],
     }).compileComponents();
@@ -60,6 +59,8 @@ describe('Register', () => {
     component.onSubmit();
 
     expect(component.errorMessage).toBe(TestBed.inject(I18nService).t('backendUnavailable'));
+  });
+
   it('should render working navigation links', () => {
     const links = fixture.nativeElement.querySelectorAll('a');
 

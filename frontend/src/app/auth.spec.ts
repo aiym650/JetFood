@@ -96,7 +96,6 @@ describe('Auth', () => {
     window.dispatchEvent(new StorageEvent('storage', {
       key: 'token',
       newValue: 'customer-token',
-      storageArea: localStorage,
     }));
 
     expect(service.getToken()).toBe('customer-token');
