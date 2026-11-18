@@ -178,11 +178,21 @@ def update_order_status(request, order_id):
         queryset = Order.objects.filter(customer=user)
 
     order = get_object_or_404(queryset, id=order_id)
+    target_status = serializer.validated_data["status"]
+    if target_status != "cancelled":
+        from payments.models import Payment
+
+        payment = Payment.objects.filter(order=order, method="online").first()
+        if payment and payment.status != "paid":
+            return Response(
+                {"detail": "Online payment must succeed before the order can proceed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     if user.role == "customer":
         if (
             order.status not in ["pending"]
-            or serializer.validated_data["status"] != "cancelled"
+            or target_status != "cancelled"
         ):
             return Response(
                 {"error": "You can only cancel pending orders"},
@@ -204,7 +214,7 @@ def update_order_status(request, order_id):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-    order.status = serializer.validated_data["status"]
+    order.status = target_status
 
     if order.status == "delivered":
         order.actual_delivery_time = timezone.now()
@@ -396,7 +406,11 @@ def assign_delivery_person(request, order_id):
         delivery_person = User.objects.get(id=delivery_person_id, role="delivery")
 
         order.delivery_person = delivery_person
-        order.status = "confirmed"
+        from payments.models import Payment
+
+        payment = Payment.objects.filter(order=order, method="online").first()
+        if not payment or payment.status == "paid":
+            order.status = "confirmed"
         order.save()
 
         return Response(

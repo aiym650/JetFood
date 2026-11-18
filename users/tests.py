@@ -117,7 +117,7 @@ class UserTestCase(TestCase):
         self.assertFalse(Token.objects.filter(user=self.user).exists())
         self.assertEqual(
             self.client.get('/api/auth/profile/').status_code,
-            status.HTTP_403_FORBIDDEN,
+            status.HTTP_401_UNAUTHORIZED,
         )
 
     def test_users_cannot_change_their_own_role(self):

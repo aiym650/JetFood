@@ -104,7 +104,7 @@ describe('OrdersPage', () => {
   });
 
   it('shows translated order statuses', () => {
-    expect(component.statusLabel('pending')).toBe('Ожидает подтверждения ресторана');
+    expect(component.statusLabel('pending')).toBe('Ожидает подтверждения');
     expect(component.statusLabel('delivered')).toBe('Доставлен');
   });
 
@@ -163,7 +163,7 @@ describe('OrdersPage', () => {
 
     component.saveDeliveryRoute(32);
 
-    expect(component.routeSaveError).toBe('Отметьте на карте точки A и B.');
+    expect(component.routeSaveError).toBe(component.i18n.t('routePointsRequired'));
     expect(ordersService.saveDeliveryRoute).not.toHaveBeenCalled();
   });
 
@@ -251,7 +251,7 @@ describe('OrdersPage', () => {
     component.advanceOrderStatus(order, 'delivering');
 
     expect(ordersService.updateOrderStatus).not.toHaveBeenCalled();
-    expect(component.statusActionErrors[36]).toBe('Перед началом доставки постройте и сохраните маршрут.');
+    expect(component.statusActionErrors[36]).toBe(component.i18n.t('routeRequiredBeforeDelivery'));
   });
 
   it('shows the backend reason when route saving fails', () => {

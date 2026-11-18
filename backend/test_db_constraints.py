@@ -211,6 +211,12 @@ class DbConstraintTests(TestCase):
             )
         )
 
+    def test_check_payment_failed_status_accepted(self):
+        payment = Payment.objects.create(
+            order=self.order, method="online", amount=10, status="failed"
+        )
+        self.assertEqual(payment.status, "failed")
+
     def test_check_paid_payment_needs_paid_at(self):
         self.rejected(
             lambda: Payment.objects.create(

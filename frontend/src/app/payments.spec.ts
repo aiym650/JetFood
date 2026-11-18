@@ -31,6 +31,9 @@ describe('Payments API integration', () => {
         status: 'paid',
         amount: '1600.00',
         transaction_id: 'SIM-test',
+        card_brand: 'visa',
+        card_last4: '4242',
+        failure_reason: '',
         refund_reason: '',
         created_at: '',
         paid_at: '',
@@ -56,5 +59,26 @@ describe('Payments API integration', () => {
 
     expect(confirmed).toBe(true);
     expect(refunded).toBe(true);
+  });
+
+  it('submits card details only to the order payment endpoint', () => {
+    let resultStatus = '';
+    service.payOrder(12, {
+      card_number: '4242424242424242',
+      expiry: '12/99',
+      cvv: '123',
+      cardholder_name: 'Test Customer',
+    }).subscribe(result => resultStatus = result.status);
+    const request = httpTesting.expectOne('http://localhost:8000/api/payments/12/pay/');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      card_number: '4242424242424242',
+      expiry: '12/99',
+      cvv: '123',
+      cardholder_name: 'Test Customer',
+    });
+    request.flush({ status: 'paid' });
+
+    expect(resultStatus).toBe('paid');
   });
 });

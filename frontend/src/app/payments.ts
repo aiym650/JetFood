@@ -7,15 +7,30 @@ export interface PaymentRecord {
   id: number;
   order: number;
   order_number: string;
+  order_status?: string;
   customer_name: string;
   method: 'online' | 'cash';
-  status: 'pending' | 'paid' | 'refund_requested' | 'refunded' | 'cancelled';
+  status: 'pending' | 'failed' | 'paid' | 'refund_requested' | 'refunded' | 'cancelled';
   amount: string;
   transaction_id: string;
+  card_brand: string | null;
+  card_last4: string | null;
+  failure_reason: string | null;
   refund_reason: string;
   created_at: string;
   paid_at: string | null;
   refunded_at: string | null;
+}
+
+export interface CardPaymentInput {
+  card_number: string;
+  expiry: string;
+  cvv: string;
+  cardholder_name: string;
+}
+
+export interface CardPaymentResult extends PaymentRecord {
+  message: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -27,6 +42,14 @@ export class Payments {
   getPayments(): Observable<PaymentRecord[]> {
     return this.http.get<ApiListResponse<PaymentRecord>>(this.apiUrl)
       .pipe(map(getApiListResults));
+  }
+
+  payOrder(orderId: number, card: CardPaymentInput): Observable<CardPaymentResult> {
+    return this.http.post<CardPaymentResult>(`${this.apiUrl}${orderId}/pay/`, card);
+  }
+
+  getReceipt(paymentId: number): Observable<PaymentRecord> {
+    return this.http.get<PaymentRecord>(`${this.apiUrl}${paymentId}/receipt/`);
   }
 
   confirmCashPayment(id: number): Observable<PaymentRecord> {

@@ -109,4 +109,20 @@ export class PaymentHistoryPage implements OnInit {
   paymentStatusLabel(status: string): string {
     return this.i18n.t(`paymentStatuses.${status}`);
   }
+
+  paymentCardLabel(payment: PaymentRecord): string {
+    if (!payment.card_brand || !payment.card_last4) return '';
+    const brand = payment.card_brand === 'visa'
+      ? 'Visa'
+      : payment.card_brand === 'mastercard'
+        ? 'Mastercard'
+        : this.i18n.t('otherCard');
+    return `${brand} **** ${payment.card_last4}`;
+  }
+
+  paymentFailureLabel(reason: string | null): string {
+    if (reason === 'Card declined') return this.i18n.t('cardDeclined');
+    if (reason === 'Insufficient funds') return this.i18n.t('insufficientFunds');
+    return reason ?? '';
+  }
 }

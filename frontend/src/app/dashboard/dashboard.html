@@ -120,7 +120,7 @@
           <p class="food-description">{{ itemDescription(item) }}</p>
           <div class="food-footer">
             <div class="food-price">{{ item.price }} ₸</div>
-            <button type="button" (click)="addToCart(item)" class="add-to-cart-btn" [disabled]="submittingOrder || cartItemCount >= 50" [attr.aria-label]="i18n.t('addToCart') + ' ' + itemName(item)">
+            <button type="button" (click)="addToCart(item)" class="add-to-cart-btn" [disabled]="submittingOrder || pendingPaymentOrderId !== null || cartItemCount >= 50" [attr.aria-label]="i18n.t('addToCart') + ' ' + itemName(item)">
               {{ i18n.t('addToCart') }}
             </button>
           </div>
@@ -140,7 +140,7 @@
     <div class="cart-sidebar" *ngIf="cart.length > 0 && cartOpen">
       <div class="cart-header">
         <h3>{{ i18n.t('cart') }}</h3>
-        <button type="button" (click)="clearCart()" class="clear-cart" [disabled]="submittingOrder">{{ i18n.t('clearCart') }}</button>
+        <button type="button" (click)="clearCart()" class="clear-cart" [disabled]="submittingOrder || pendingPaymentOrderId !== null">{{ i18n.t('clearCart') }}</button>
         <button type="button" (click)="cartOpen = false" class="close-cart" [attr.aria-label]="i18n.t('closeCart')">×</button>
       </div>
       <div class="cart-items">
@@ -150,9 +150,9 @@
             <span class="cart-item-price">{{ line.item.price * line.quantity }} ₸</span>
           </div>
           <div class="quantity-control">
-            <button type="button" (click)="changeQuantity(line, -1)" [disabled]="submittingOrder" [attr.aria-label]="i18n.t('decreaseQuantity') + ': ' + itemName(line.item)">−</button>
+            <button type="button" (click)="changeQuantity(line, -1)" [disabled]="submittingOrder || pendingPaymentOrderId !== null" [attr.aria-label]="i18n.t('decreaseQuantity') + ': ' + itemName(line.item)">−</button>
             <span>{{ line.quantity }}</span>
-            <button type="button" (click)="changeQuantity(line, 1)" [disabled]="submittingOrder || cartItemCount >= 50" [attr.aria-label]="i18n.t('increaseQuantity') + ': ' + itemName(line.item)">+</button>
+            <button type="button" (click)="changeQuantity(line, 1)" [disabled]="submittingOrder || pendingPaymentOrderId !== null || cartItemCount >= 50" [attr.aria-label]="i18n.t('increaseQuantity') + ': ' + itemName(line.item)">+</button>
           </div>
         </div>
       </div>
@@ -171,11 +171,52 @@
         </label>
         <label class="address-field">
           {{ i18n.t('paymentMethod') }}
-          <select [value]="paymentMethod" (change)="setPaymentMethod($any($event.target).value)">
+          <select [value]="paymentMethod" [disabled]="submittingOrder || pendingPaymentOrderId !== null"
+            (change)="setPaymentMethod($any($event.target).value)">
             <option value="online">{{ i18n.t('onlinePaymentSimulation') }}</option>
             <option value="cash">{{ i18n.t('cashOnDelivery') }}</option>
           </select>
         </label>
+        <section *ngIf="paymentMethod === 'online'" class="card-payment-form" [attr.aria-label]="i18n.t('cardDetails')">
+          <h4>{{ i18n.t('cardDetails') }}</h4>
+          <label class="address-field">
+            {{ i18n.t('cardNumber') }}
+            <input type="text" inputmode="numeric" autocomplete="off" maxlength="23"
+              [value]="cardNumber" [disabled]="submittingOrder"
+              (input)="formatCardNumber($any($event.target).value)"
+              [attr.aria-invalid]="!!cardNumberError()">
+          </label>
+          <p *ngIf="cardNumberError()" class="checkout-message checkout-error">{{ cardNumberError() }}</p>
+          <label class="address-field">
+            {{ i18n.t('cardExpiry') }}
+            <input type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="MM/YY"
+              [value]="cardExpiry" [disabled]="submittingOrder"
+              (input)="formatCardExpiry($any($event.target).value)"
+              [attr.aria-invalid]="!!cardExpiryError()">
+          </label>
+          <p *ngIf="cardExpiryError()" class="checkout-message checkout-error">{{ cardExpiryError() }}</p>
+          <label class="address-field">
+            {{ i18n.t('cardCvv') }}
+            <input type="password" inputmode="numeric" autocomplete="off" maxlength="4"
+              [value]="cardCvv" [disabled]="submittingOrder"
+              (input)="formatCardCvv($any($event.target).value)"
+              [attr.aria-invalid]="!!cardCvvError()">
+          </label>
+          <p *ngIf="cardCvvError()" class="checkout-message checkout-error">{{ cardCvvError() }}</p>
+          <label class="address-field">
+            {{ i18n.t('cardholderName') }}
+            <input type="text" autocomplete="off" maxlength="120" [value]="cardholderName"
+              [disabled]="submittingOrder" (input)="cardholderName = $any($event.target).value"
+              [attr.aria-invalid]="!!cardholderError()">
+          </label>
+          <p *ngIf="cardholderError()" class="checkout-message checkout-error">{{ cardholderError() }}</p>
+        </section>
+        <div *ngIf="paymentError" class="checkout-message checkout-error" role="alert">
+          <p>{{ paymentError }}</p>
+          <button type="button" class="retry-payment-btn" (click)="retryPayment()">
+            {{ i18n.t('tryAgain') }}
+          </button>
+        </div>
         <p *ngIf="savedAddressError" class="checkout-message checkout-error" role="alert">{{ savedAddressError }}</p>
         <a routerLink="/profile" class="manage-addresses">{{ i18n.t('manageAddresses') }}</a>
         <p *ngIf="checkoutError" class="checkout-message checkout-error">{{ checkoutError }}</p>
@@ -184,11 +225,25 @@
           <span>{{ cartTotal }} ₸</span>
         </div>
         <button type="button" class="checkout-btn" [disabled]="submittingOrder" (click)="checkout()">
-          {{ submittingOrder ? i18n.t('placingOrder') : i18n.t('checkout') }}
+          {{ submittingOrder
+            ? i18n.t(paymentMethod === 'online' ? 'processingPayment' : 'placingOrder')
+            : i18n.t(paymentMethod === 'online'
+              ? (pendingPaymentOrderId === null ? 'placeOrderAndPay' : 'payAgain')
+              : 'checkout') }}
         </button>
       </div>
     </div>
     <div *ngIf="cartNotice && cart.length === 0" class="checkout-message" role="status">{{ cartNotice }}</div>
     <div *ngIf="checkoutSuccess" class="checkout-success" role="status">{{ checkoutSuccess }}</div>
+    <section *ngIf="paymentResult?.status === 'paid'" class="checkout-success payment-receipt" aria-live="polite">
+      <strong>{{ i18n.t('receipt') }}</strong>
+      <p>{{ i18n.t('orderNumber') }}: {{ paymentResult?.order_number }}</p>
+      <p>{{ i18n.t('totalAmount') }}: {{ paymentResult?.amount }} ₸</p>
+      <p>{{ i18n.t('paymentMethod') }}: {{ i18n.t('onlinePaymentSimulation') }}</p>
+      <p>{{ paymentCardLabel(paymentResult?.card_brand ?? null, paymentResult?.card_last4 ?? null) }}</p>
+      <p>{{ i18n.t('transactionId') }}: {{ paymentResult?.transaction_id }}</p>
+      <p>{{ i18n.t('paymentStatus') }}: {{ i18n.t('paymentStatuses.paid') }}</p>
+      <p>{{ i18n.t('paidAt') }}: {{ paymentResult?.paid_at | date:'dd.MM.yyyy HH:mm' }}</p>
+    </section>
   </div>
 </div>

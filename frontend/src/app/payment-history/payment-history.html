@@ -21,11 +21,25 @@
       <dl>
         <div><dt>{{ i18n.t('paymentMethod') }}</dt><dd>{{ paymentMethodLabel(payment.method) }}</dd></div>
         <div><dt>{{ i18n.t('totalAmount') }}</dt><dd>{{ payment.amount }} ₸</dd></div>
+        <div *ngIf="payment.card_last4"><dt>{{ i18n.t('cardDetails') }}</dt><dd>{{ paymentCardLabel(payment) }}</dd></div>
         <div *ngIf="payment.transaction_id"><dt>{{ i18n.t('transactionId') }}</dt><dd>{{ payment.transaction_id }}</dd></div>
         <div><dt>{{ i18n.t('created') }}</dt><dd>{{ payment.created_at | date:'dd.MM.yyyy HH:mm' }}</dd></div>
         <div *ngIf="payment.paid_at"><dt>{{ i18n.t('paidAt') }}</dt><dd>{{ payment.paid_at | date:'dd.MM.yyyy HH:mm' }}</dd></div>
+        <div *ngIf="payment.failure_reason"><dt>{{ i18n.t('paymentFailure') }}</dt><dd>{{ paymentFailureLabel(payment.failure_reason) }}</dd></div>
         <div *ngIf="payment.refund_reason"><dt>{{ i18n.t('refundReason') }}</dt><dd>{{ payment.refund_reason }}</dd></div>
       </dl>
+      <details *ngIf="payment.status === 'paid' || payment.status === 'refunded'" class="receipt-view">
+        <summary>{{ i18n.t('receipt') }}</summary>
+        <dl>
+          <div><dt>{{ i18n.t('orderNumber') }}</dt><dd>{{ payment.order_number }}</dd></div>
+          <div><dt>{{ i18n.t('totalAmount') }}</dt><dd>{{ payment.amount }} ₸</dd></div>
+          <div><dt>{{ i18n.t('paymentMethod') }}</dt><dd>{{ paymentMethodLabel(payment.method) }}</dd></div>
+          <div *ngIf="payment.card_last4"><dt>{{ i18n.t('cardDetails') }}</dt><dd>{{ paymentCardLabel(payment) }}</dd></div>
+          <div><dt>{{ i18n.t('transactionId') }}</dt><dd>{{ payment.transaction_id }}</dd></div>
+          <div><dt>{{ i18n.t('paidAt') }}</dt><dd>{{ payment.paid_at | date:'dd.MM.yyyy HH:mm' }}</dd></div>
+          <div><dt>{{ i18n.t('paymentStatus') }}</dt><dd>{{ paymentStatusLabel(payment.status) }}</dd></div>
+        </dl>
+      </details>
       <div class="payment-actions">
         <button *ngIf="canConfirmCash && payment.method === 'cash' && payment.status === 'pending'"
           type="button" [disabled]="saving" (click)="confirmCash(payment)">
