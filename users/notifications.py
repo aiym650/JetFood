@@ -36,3 +36,13 @@ def notify_courier_assignment(order):
                 message=f'Courier {order.delivery_person.username} was assigned to order {order.order_number}.',
                 link=f'/orders?orderId={order.id}',
             )
+
+
+def notify_review_reminder(order):
+    Notification.objects.get_or_create(
+            user=order.customer,
+            notification_type='order_delivered',
+            title='Оцените ваш заказ',
+            message=f'Поделитесь впечатлением о заказе {order.order_number}.',
+            link=f'/orders?orderId={order.id}',
+    )

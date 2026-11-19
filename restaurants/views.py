@@ -22,7 +22,8 @@ class RestaurantListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         if not can_manage(self.request.user):
             raise PermissionDenied('Only admins and managers can register restaurants.')
-        serializer.save()
+        owner = self.request.user if self.request.user.role == 'manager' else None
+        serializer.save(owner=owner)
 
 
 class RestaurantDetailView(generics.RetrieveUpdateDestroyAPIView):

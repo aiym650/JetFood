@@ -1,0 +1,33 @@
+<div class="rating-row" [class.rating-row-invalid]="value === null">
+  <div class="rating-label">
+    <label [id]="name + '-label'" [for]="name + '-1'">{{ label }}</label>
+    <span class="rating-value">{{ valueLabel }}</span>
+  </div>
+  <div
+    class="stars"
+    role="radiogroup"
+    [attr.aria-labelledby]="name + '-label'"
+  >
+    <button
+      *ngFor="let star of stars"
+      type="button"
+      class="star"
+      [class.star-active]="displayValue !== null && star <= displayValue"
+      [attr.aria-label]="star + ' ' + i18n.t('ratingStars')"
+      [attr.aria-checked]="value === star"
+      role="radio"
+      [id]="name + '-' + star"
+      [tabindex]="value === star || (!value && star === 1) ? 0 : -1"
+      (mouseenter)="hoverValue = star"
+      (mouseleave)="hoverValue = null"
+      (focus)="hoverValue = star"
+      (blur)="hoverValue = null"
+      (click)="setValue(star)"
+      (keydown)="onKeydown($event, star)"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 2.4l2.82 5.72 6.32.92-4.57 4.45 1.08 6.29L12 17.81l-5.65 2.97 1.08-6.29-4.57-4.45 6.32-.92L12 2.4z"/>
+      </svg>
+    </button>
+  </div>
+</div>

@@ -204,7 +204,7 @@ export class Dashboard implements OnInit {
   }
 
   formatCardNumber(value: string): void {
-    const digits = value.replace(/\D/g, '').slice(0, 19);
+    const digits = value.replace(/\D/g, '').slice(0, 16);
     this.cardNumber = (digits.match(/.{1,4}/g) ?? []).join(' ');
   }
 
@@ -216,7 +216,15 @@ export class Dashboard implements OnInit {
   }
 
   formatCardCvv(value: string): void {
-    this.cardCvv = value.replace(/\D/g, '').slice(0, 4);
+    this.cardCvv = value.replace(/\D/g, '').slice(0, 3);
+  }
+
+  formatCardholderName(value: string): void {
+    this.cardholderName = value
+      .toUpperCase()
+      .replace(/[^A-Z\s-]/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .slice(0, 120);
   }
 
   cardNumberError(): string {
@@ -241,12 +249,14 @@ export class Dashboard implements OnInit {
 
   cardCvvError(): string {
     if (!this.cardValidationAttempted) return '';
-    return /^\d{3,4}$/.test(this.cardCvv) ? '' : this.i18n.t('invalidCvv');
+    return /^\d{3}$/.test(this.cardCvv) ? '' : this.i18n.t('invalidCvv');
   }
 
   cardholderError(): string {
     if (!this.cardValidationAttempted) return '';
-    return this.cardholderName.trim() ? '' : this.i18n.t('cardholderRequired');
+    return /^[A-Z]+(?:[ -][A-Z]+)*$/.test(this.cardholderName.trim())
+      ? ''
+      : this.i18n.t('cardholderRequired');
   }
 
   retryPayment(): void {
@@ -578,7 +588,7 @@ export class Dashboard implements OnInit {
   }
 
   private isLuhnValid(cardNumber: string): boolean {
-    if (!/^\d{13,19}$/.test(cardNumber)) return false;
+    if (!/^\d{16}$/.test(cardNumber)) return false;
     let sum = 0;
     let doubleDigit = false;
     for (let index = cardNumber.length - 1; index >= 0; index -= 1) {
@@ -610,7 +620,7 @@ export class Dashboard implements OnInit {
       'Enter a valid card number.': 'invalidCardNumber',
       'Enter expiry as MM/YY.': 'invalidCardExpiry',
       'Card expiry must be in the future.': 'expiredCard',
-      'Enter a 3 or 4 digit CVV.': 'invalidCvv',
+      'Enter a 3 digit CVV.': 'invalidCvv',
       'Enter the cardholder name.': 'cardholderRequired',
     };
     const translationKey = translations[message];

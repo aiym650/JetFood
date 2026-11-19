@@ -20,6 +20,7 @@ export class AdminComponent implements OnInit {
   showUserModal = false;
   loading = false;
   error = '';
+  moderationReviews: any[] = [];
 
   newUser = {
     username: '',
@@ -44,6 +45,22 @@ export class AdminComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUsers();
+    this.loadModeration();
+  }
+
+  loadModeration(): void {
+    this.http.get<any>('http://localhost:8000/api/admin/reviews?status=pending_moderation').subscribe({
+      next: (page) => {
+        this.moderationReviews = page.results ?? [];
+        this.changeDetector.markForCheck();
+      },
+    });
+  }
+
+  setReviewStatus(reviewId: number, reviewStatus: 'published' | 'hidden'): void {
+    this.http.patch(`http://localhost:8000/api/admin/reviews/${reviewId}/status`, { status: reviewStatus }).subscribe({
+      next: () => this.loadModeration(),
+    });
   }
 
   loadUsers(): void {

@@ -1,0 +1,30 @@
+<div class="photo-uploader">
+  <div
+    *ngIf="photos.length < 3"
+    class="drop-zone"
+    [class.drop-zone-active]="dragActive"
+    role="button"
+    tabindex="0"
+    (dragover)="dragActive = true; $event.preventDefault()"
+    (dragleave)="dragActive = false"
+    (drop)="onDrop($event)"
+    (click)="fileInput.click()"
+    (keydown.enter)="fileInput.click()"
+    (keydown.space)="fileInput.click(); $event.preventDefault()"
+  >
+    <input #fileInput type="file" accept="image/jpeg,image/png,image/webp" multiple hidden (change)="onFileInput($event)">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 002 2h10a2 2 0 002-2v-4"/>
+    </svg>
+    <strong>{{ i18n.t('reviewPhotoDrop') }}</strong>
+    <span>{{ i18n.t('reviewPhotoHint') }}</span>
+  </div>
+
+  <div *ngIf="photos.length" class="photo-previews" [attr.aria-label]="i18n.t('reviewPhotoPreviewLabel')">
+    <div *ngFor="let photo of photos; let index = index" class="photo-preview">
+      <img [src]="photo.preview" alt="Предпросмотр фотографии">
+      <button type="button" [attr.aria-label]="i18n.t('reviewPhotoRemove') + ' ' + (index + 1)" (click)="removePhoto(index)">×</button>
+    </div>
+  </div>
+  <p *ngIf="error" class="upload-error" role="alert">{{ error }}</p>
+</div>

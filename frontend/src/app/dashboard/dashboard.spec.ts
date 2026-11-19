@@ -219,7 +219,7 @@ describe('Dashboard', () => {
     component.cardNumber = '4242 4242 4242 4242';
     component.cardExpiry = '12/99';
     component.cardCvv = '123';
-    component.cardholderName = 'Test Customer';
+    component.cardholderName = 'TEST CUSTOMER';
 
     component.checkout();
     fixture.detectChanges();
@@ -229,7 +229,7 @@ describe('Dashboard', () => {
       card_number: '4242424242424242',
       expiry: '12/99',
       cvv: '123',
-      cardholder_name: 'Test Customer',
+      cardholder_name: 'TEST CUSTOMER',
     });
     expect(component.cardNumber).toBe('');
     expect(component.cardExpiry).toBe('');
@@ -301,7 +301,7 @@ describe('Dashboard', () => {
     component.cardNumber = '4000 0000 0000 0002';
     component.cardExpiry = '12/99';
     component.cardCvv = '123';
-    component.cardholderName = 'Test Customer';
+    component.cardholderName = 'TEST CUSTOMER';
 
     component.checkout();
     expect(component.paymentError).toBe(component.i18n.t('cardDeclined'));
@@ -312,7 +312,7 @@ describe('Dashboard', () => {
     component.cardNumber = '4242 4242 4242 4242';
     component.cardExpiry = '12/99';
     component.cardCvv = '123';
-    component.cardholderName = 'Test Customer';
+    component.cardholderName = 'TEST CUSTOMER';
     component.checkout();
 
     expect(createOrder).toHaveBeenCalledOnce();

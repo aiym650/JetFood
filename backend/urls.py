@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from backend import views as backend_views
 
 urlpatterns = [
@@ -27,5 +29,9 @@ urlpatterns = [
     path('api/analytics/', include('analytics.urls')),
     path('api/integration/', include('integration.urls')),
     path('api/reports/', include('reports.urls')),
+    path('api/support/', include('support.urls')),
+    path('api/', include('reviews.urls')),
     path('api/search/', backend_views.search),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

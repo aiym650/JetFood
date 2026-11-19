@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
+from math import asin, cos, radians, sin, sqrt
 from .models import DeliveryRoute, MenuItem, Order, OrderItem
 from .serializers import (
     MenuItemSerializer,
@@ -200,7 +201,7 @@ def update_order_status(request, order_id):
             )
     elif user.role == "delivery":
         allowed_transition = (
-            order.status == "preparing"
+            order.status == "ready_for_pickup"
             and serializer.validated_data["status"] == "delivering"
         ) or (
             order.status == "delivering"
@@ -218,6 +219,12 @@ def update_order_status(request, order_id):
 
     if order.status == "delivered":
         order.actual_delivery_time = timezone.now()
+        from datetime import timedelta
+        from reviews.models import ReviewReminder
+        ReviewReminder.objects.get_or_create(
+            order=order,
+            defaults={"due_at": timezone.now() + timedelta(minutes=45)},
+        )
 
     order.save()
     if order.status == "cancelled":
@@ -308,12 +315,36 @@ def delivery_route(request, order_id):
                 order=order,
                 origin_address=serializer.validated_data["origin_address"],
                 notes=serializer.validated_data.get("notes", ""),
+                origin_latitude=serializer.validated_data.get("origin_latitude"),
+                origin_longitude=serializer.validated_data.get("origin_longitude"),
+                destination_latitude=serializer.validated_data.get("destination_latitude"),
+                destination_longitude=serializer.validated_data.get("destination_longitude"),
+                route_distance_meters=serializer.validated_data.get("route_distance_meters"),
+                estimated_duration_seconds=serializer.validated_data.get("estimated_duration_seconds"),
                 updated_by=user,
             )
         else:
             for field in ["origin_address", "notes"]:
                 if field in serializer.validated_data:
                     setattr(route, field, serializer.validated_data[field])
+            for field in [
+                "origin_latitude",
+                "origin_longitude",
+                "destination_latitude",
+                "destination_longitude",
+                "route_distance_meters",
+                "estimated_duration_seconds",
+            ]:
+                if field in serializer.validated_data:
+                    setattr(route, field, serializer.validated_data[field])
+            if route.origin_latitude is not None and route.origin_longitude is not None and route.destination_latitude is not None and route.destination_longitude is not None:
+                lat1, lon1 = radians(route.origin_latitude), radians(route.origin_longitude)
+                lat2, lon2 = radians(route.destination_latitude), radians(route.destination_longitude)
+                haversine = 2 * 6371000 * asin(sqrt(sin((lat2 - lat1) / 2) ** 2 + cos(lat1) * cos(lat2) * sin((lon2 - lon1) / 2) ** 2))
+                if not route.route_distance_meters:
+                    route.route_distance_meters = round(haversine)
+                if not route.estimated_duration_seconds:
+                    route.estimated_duration_seconds = max(60, round(haversine / 8))
             route.updated_by = user
             route.save()
 

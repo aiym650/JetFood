@@ -7,7 +7,7 @@ from .models import Payment
 
 
 def luhn_is_valid(card_number):
-    if not 13 <= len(card_number) <= 19 or any(
+    if len(card_number) != 16 or any(
         character not in '0123456789' for character in card_number
     ):
         return False
@@ -42,14 +42,14 @@ class PaymentSerializer(serializers.ModelSerializer):
 class CardPaymentSerializer(serializers.Serializer):
     card_number = serializers.CharField(max_length=25, write_only=True)
     expiry = serializers.CharField(max_length=5, write_only=True)
-    cvv = serializers.CharField(max_length=4, write_only=True)
+    cvv = serializers.CharField(max_length=3, write_only=True)
     cardholder_name = serializers.CharField(max_length=120, trim_whitespace=True, write_only=True)
 
     def validate_card_number(self, value):
         card_number = value.replace(' ', '')
         if (
             not card_number.isdigit()
-            or not 13 <= len(card_number) <= 19
+            or len(card_number) != 16
             or not luhn_is_valid(card_number)
         ):
             raise serializers.ValidationError('Enter a valid card number.')
@@ -67,13 +67,13 @@ class CardPaymentSerializer(serializers.Serializer):
         return value
 
     def validate_cvv(self, value):
-        if not re.fullmatch(r'[0-9]{3,4}', value):
-            raise serializers.ValidationError('Enter a 3 or 4 digit CVV.')
+        if not re.fullmatch(r'[0-9]{3}', value):
+            raise serializers.ValidationError('Enter a 3 digit CVV.')
         return value
 
     def validate_cardholder_name(self, value):
-        if not value:
-            raise serializers.ValidationError('Enter the cardholder name.')
+        if not re.fullmatch(r'[A-Z]+(?:[ -][A-Z]+)*', value):
+            raise serializers.ValidationError('Enter the cardholder name in uppercase Latin letters.')
         return value
 
 

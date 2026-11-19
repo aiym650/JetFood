@@ -6,6 +6,7 @@ import { FoodItem, FoodItemInput, Menu } from '../menu';
 import { Restaurant, RestaurantInput, Restaurants } from '../restaurants';
 import { Auth } from '../auth';
 import { I18nService } from '../i18n/i18n.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-restaurants',
@@ -25,6 +26,10 @@ export class RestaurantsPage implements OnInit {
   menuError = '';
   restaurantFormError = '';
   menuFormError = '';
+  reviewRating: any = null;
+  reviews: any[] = [];
+  reviewsLoading = false;
+  replyText: Record<number, string> = {};
   editingRestaurantId: number | null = null;
   editingMenuItemId: number | null = null;
 
@@ -52,6 +57,7 @@ export class RestaurantsPage implements OnInit {
     private changeDetector: ChangeDetectorRef,
     private route: ActivatedRoute,
     private router: Router,
+    private http: HttpClient,
     public i18n: I18nService,
   ) {}
 
@@ -103,6 +109,30 @@ export class RestaurantsPage implements OnInit {
     this.selectedRestaurant = restaurant;
     this.resetMenuForm();
     this.loadMenu(restaurant);
+    this.loadReviews(restaurant.id);
+  }
+
+  loadReviews(restaurantId: number): void {
+    this.reviewsLoading = true;
+    this.http.get<any>(`http://localhost:8000/api/restaurants/${restaurantId}/rating`).subscribe({
+      next: (rating) => { this.reviewRating = rating; },
+    });
+    this.http.get<any>(`http://localhost:8000/api/restaurants/${restaurantId}/reviews`).subscribe({
+      next: (page) => {
+        this.reviews = page.results ?? [];
+        this.reviewsLoading = false;
+        this.changeDetector.markForCheck();
+      },
+      error: () => { this.reviewsLoading = false; },
+    });
+  }
+
+  submitReply(reviewId: number): void {
+    const text = (this.replyText[reviewId] ?? '').trim();
+    if (!text) return;
+    this.http.post<any>(`http://localhost:8000/api/reviews/${reviewId}/reply`, { text }).subscribe({
+      next: () => this.loadReviews(this.selectedRestaurant!.id),
+    });
   }
 
   loadMenu(restaurant: Restaurant): void {

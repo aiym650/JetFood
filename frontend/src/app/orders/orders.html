@@ -107,6 +107,17 @@
                 <div *ngIf="order.actual_delivery_time"><span>{{ i18n.t('deliveredAt') }}</span><strong>{{ order.actual_delivery_time | date:'dd.MM.yyyy HH:mm' }}</strong></div>
                 <div *ngIf="order.delivery_confirmed_at"><span>{{ i18n.t('deliveryConfirmedAt') }}</span><strong>{{ order.delivery_confirmed_at | date:'dd.MM.yyyy HH:mm' }}</strong></div>
               </div>
+              <section *ngIf="currentUser?.role === 'customer' && order.status === 'delivered'" class="review-section">
+                <button *ngIf="!reviewForm[order.id] && !reviewSuccess[order.id]" type="button" class="details-button" (click)="beginReview(order.id)">{{ i18n.t('leaveReview') }}</button>
+                <app-review-form
+                  *ngIf="reviewForm[order.id]"
+                  [value]="reviewForm[order.id]"
+                  [submitting]="reviewSubmitting[order.id]"
+                  [error]="reviewError[order.id]"
+                  [success]="reviewSuccess[order.id]"
+                  (submitted)="submitReview(order.id, $event)"
+                />
+              </section>
               <section *ngIf="canManageOrderFlow() || canUpdateDeliveryStatus(order)" class="order-workflow">
                 <h3>{{ i18n.t('orderWorkflow') }}</h3>
                 <p *ngIf="canManageOrderFlow() && order.status === 'pending'">

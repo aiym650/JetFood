@@ -194,3 +194,9 @@ class DeliveryRouteSerializer(serializers.ModelSerializer):
 class DeliveryRouteInputSerializer(serializers.Serializer):
     origin_address = serializers.CharField(max_length=500, trim_whitespace=True)
     notes = serializers.CharField(required=False, allow_blank=True, max_length=2000)
+    origin_latitude = serializers.FloatField(required=False, allow_null=True)
+    origin_longitude = serializers.FloatField(required=False, allow_null=True)
+    destination_latitude = serializers.FloatField(required=False, allow_null=True)
+    destination_longitude = serializers.FloatField(required=False, allow_null=True)
+    route_distance_meters = serializers.IntegerField(required=False, allow_null=True, min_value=0)
+    estimated_duration_seconds = serializers.IntegerField(required=False, allow_null=True, min_value=0)

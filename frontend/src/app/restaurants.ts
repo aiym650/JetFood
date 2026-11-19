@@ -14,6 +14,9 @@ export interface Restaurant {
   closing_time: string;
   working_days: number[];
   is_active: boolean;
+  owner?: number | null;
+  avg_rating?: number | string;
+  reviews_count?: number;
 }
 
 export type RestaurantInput = Omit<Restaurant, 'id'>;

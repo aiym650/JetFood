@@ -9,9 +9,9 @@ class RestaurantSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'description', 'address', 'phone', 'image_url',
             'opening_time', 'closing_time', 'working_days', 'is_active',
-            'created_at', 'updated_at',
+            'owner', 'avg_rating', 'reviews_count', 'created_at', 'updated_at',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'owner', 'avg_rating', 'reviews_count', 'created_at', 'updated_at']
 
     def validate_working_days(self, value):
         if not isinstance(value, list) or any(

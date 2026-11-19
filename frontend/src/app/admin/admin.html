@@ -44,6 +44,17 @@
     </table>
   </div>
 
+  <section class="moderation-section">
+    <h2>Review moderation</h2>
+    <p *ngIf="moderationReviews.length === 0">No reviews awaiting moderation.</p>
+    <article *ngFor="let review of moderationReviews" class="review-card">
+      <strong>{{ review.user_name }} · {{ review.overall_rating }} / 5</strong>
+      <p>{{ review.comment }}</p>
+      <button type="button" class="btn btn-primary" (click)="setReviewStatus(review.id, 'published')">Publish</button>
+      <button type="button" class="btn btn-danger" (click)="setReviewStatus(review.id, 'hidden')">Hide</button>
+    </article>
+  </section>
+
   <!-- User Modal -->
   <div *ngIf="showUserModal" class="modal-overlay" (click)="closeUserModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">

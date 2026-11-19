@@ -271,7 +271,7 @@ class OrderTestCase(TestCase):
         order.refresh_from_db()
         self.assertEqual(order.status, "confirmed")
 
-        order.status = "preparing"
+        order.status = "ready_for_pickup"
         order.save()
         response = self.client.post(
             f"/api/orders/{order.id}/status/", {"status": "delivering"}

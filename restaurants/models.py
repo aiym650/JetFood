@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import F
+from django.conf import settings
 
 
 def default_working_days():
@@ -7,6 +8,13 @@ def default_working_days():
 
 
 class Restaurant(models.Model):
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="owned_restaurants",
+    )
     name = models.CharField(max_length=200, unique=True)
     description = models.TextField(blank=True)
     address = models.CharField(max_length=500)
@@ -16,6 +24,8 @@ class Restaurant(models.Model):
     closing_time = models.TimeField()
     working_days = models.JSONField(default=default_working_days)
     is_active = models.BooleanField(default=True)
+    avg_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0)
+    reviews_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
