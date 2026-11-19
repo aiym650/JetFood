@@ -1,0 +1,75 @@
+<section class="review-card" aria-labelledby="review-title">
+  <div *ngIf="success" class="review-success" role="status">
+    <div class="success-icon" aria-hidden="true">✓</div>
+    <h2 id="review-title">{{ i18n.t('reviewSuccessTitle') }}</h2>
+    <p>{{ i18n.t('reviewSuccessSubtitle') }}</p>
+  </div>
+
+  <ng-container *ngIf="!success">
+    <header class="review-header">
+      <p class="review-eyebrow">{{ i18n.t('reviewEyebrow') }}</p>
+      <h2 id="review-title">{{ i18n.t('reviewTitle') }}</h2>
+      <p>{{ i18n.t('reviewSubtitle') }}</p>
+    </header>
+
+    <form (ngSubmit)="submit()" novalidate>
+      <div class="ratings" [class.ratings-attempted]="attempted && !complete">
+        <app-star-rating
+          [label]="i18n.t('restaurantRating')"
+          name="restaurant-rating"
+          [value]="value.restaurant_rating"
+          (valueChange)="value.restaurant_rating = $event"
+        />
+        <app-star-rating
+          [label]="i18n.t('foodRating')"
+          name="food-rating"
+          [value]="value.food_rating"
+          (valueChange)="value.food_rating = $event"
+        />
+        <app-star-rating
+          [label]="i18n.t('courierRating')"
+          name="courier-rating"
+          [value]="value.courier_rating"
+          (valueChange)="value.courier_rating = $event"
+        />
+        <app-star-rating
+          [label]="i18n.t('deliverySpeedRating')"
+          name="delivery-speed-rating"
+          [value]="value.delivery_speed_rating"
+          (valueChange)="value.delivery_speed_rating = $event"
+        />
+      </div>
+      <p *ngIf="attempted && !complete" class="validation-message" role="alert">
+        {{ i18n.t('ratingValidation') }}
+      </p>
+
+      <div class="review-field">
+        <div class="field-heading">
+          <label for="review-comment">{{ i18n.t('reviewCommentLabel') }}</label>
+          <span [class.counter-limit]="value.comment.length > 1000">{{ value.comment.length }} / 1000</span>
+        </div>
+        <textarea
+          id="review-comment"
+          name="reviewComment"
+          rows="4"
+          maxlength="1000"
+          [placeholder]="i18n.t('reviewCommentPlaceholder')"
+          [(ngModel)]="value.comment"
+          (input)="resizeTextarea($event)"
+        ></textarea>
+      </div>
+
+      <div class="review-field">
+        <label class="photo-label">{{ i18n.t('reviewPhotosLabel') }}</label>
+        <app-photo-uploader [photos]="value.photos" (photosChange)="setPhotos($event)" />
+      </div>
+
+      <p *ngIf="error" class="review-error" role="alert">{{ error }}</p>
+
+      <button type="submit" class="review-submit" [disabled]="submitting" [attr.aria-disabled]="submitting || !complete">
+        <span *ngIf="submitting" class="review-spinner" aria-hidden="true"></span>
+        {{ submitting ? i18n.t('reviewSubmitting') : i18n.t('reviewSubmit') }}
+      </button>
+    </form>
+  </ng-container>
+</section>

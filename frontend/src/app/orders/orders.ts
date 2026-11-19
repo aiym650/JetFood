@@ -1,15 +1,17 @@
 import { ChangeDetectorRef, Component, DestroyRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { DeliveryCourier, DeliveryRoute, Orders as OrdersService } from '../orders';
 import { OrderRecord } from '../orders';
 import { Auth } from '../auth';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { timeout, timer } from 'rxjs';
 import { I18nService } from '../i18n/i18n.service';
 import { Menu, FoodItem } from '../menu';
 import { DeliveryRouteMap, RouteCoordinates, RouteMetrics } from './delivery-route-map';
+import { ReviewForm, ReviewFormValue } from './review-form';
 
 interface EditableOrderItem {
   item_id: number | null;
@@ -20,7 +22,7 @@ interface EditableOrderItem {
 
 @Component({
   selector: 'app-orders',
-  imports: [CommonModule, DeliveryRouteMap],
+  imports: [CommonModule, FormsModule, DeliveryRouteMap, ReviewForm],
   templateUrl: './orders.html',
   styleUrl: './orders.css',
 })
@@ -64,6 +66,10 @@ export class OrdersPage implements OnInit {
   statusActionErrors: Record<number, string> = {};
   updatingStatusOrderId: number | null = null;
   courierLoadError = '';
+  reviewForm: Record<number, any> = {};
+  reviewSubmitting: Record<number, boolean> = {};
+  reviewError: Record<number, string> = {};
+  reviewSuccess: Record<number, string> = {};
   private sessionVerified = false;
   readonly statusProgress = ['pending', 'confirmed', 'preparing', 'ready_for_pickup', 'delivering', 'delivered'];
 
@@ -84,6 +90,7 @@ export class OrdersPage implements OnInit {
     private route: ActivatedRoute,
     private changeDetector: ChangeDetectorRef,
     private destroyRef: DestroyRef,
+    private http: HttpClient,
     public i18n: I18nService
   ) {
     this.i18n.currentLang$
@@ -276,9 +283,7 @@ export class OrdersPage implements OnInit {
       && route.origin_latitude !== null
       && route.origin_longitude !== null
       && route.destination_latitude !== null
-      && route.destination_longitude !== null
-      && route.route_distance_meters !== null
-      && route.estimated_duration_seconds !== null;
+      && route.destination_longitude !== null;
   }
 
   private loadCouriers(): void {
@@ -601,5 +606,46 @@ export class OrdersPage implements OnInit {
     this.editingOrderId = null;
     this.editError = '';
     this.itemsChanged = false;
+  }
+
+  beginReview(orderId: number): void {
+    this.reviewForm[orderId] = this.reviewForm[orderId] ?? {
+      restaurant_rating: null,
+      food_rating: null,
+      courier_rating: null,
+      delivery_speed_rating: null,
+      comment: '',
+      photos: [],
+    };
+  }
+
+  submitReview(orderId: number, form: ReviewFormValue): void {
+    if (!form || this.reviewSubmitting[orderId]) return;
+    this.reviewSubmitting[orderId] = true;
+    this.reviewError[orderId] = '';
+    this.reviewSuccess[orderId] = '';
+    this.reviewForm[orderId] = form;
+    const multipart = new FormData();
+    multipart.append('restaurant_rating', String(form.restaurant_rating));
+    multipart.append('food_rating', String(form.food_rating));
+    multipart.append('courier_rating', String(form.courier_rating));
+    multipart.append('delivery_speed_rating', String(form.delivery_speed_rating));
+    multipart.append('comment', String(form.comment ?? ''));
+    for (const photo of form.photos.slice(0, 3)) {
+      multipart.append('photos', photo.file);
+    }
+    this.http.post(`http://localhost:8000/api/orders/${orderId}/review`, multipart).subscribe({
+      next: () => {
+        this.reviewSubmitting[orderId] = false;
+        this.reviewSuccess[orderId] = 'success';
+        this.loadOrders();
+        this.changeDetector.markForCheck();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.reviewSubmitting[orderId] = false;
+        this.reviewError[orderId] = error.error?.detail ?? 'Could not submit review';
+        this.changeDetector.markForCheck();
+      },
+    });
   }
 }

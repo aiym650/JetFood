@@ -67,7 +67,7 @@ describe('Payments API integration', () => {
       card_number: '4242424242424242',
       expiry: '12/99',
       cvv: '123',
-      cardholder_name: 'Test Customer',
+      cardholder_name: 'TEST CUSTOMER',
     }).subscribe(result => resultStatus = result.status);
     const request = httpTesting.expectOne('http://localhost:8000/api/payments/12/pay/');
     expect(request.request.method).toBe('POST');
@@ -75,7 +75,7 @@ describe('Payments API integration', () => {
       card_number: '4242424242424242',
       expiry: '12/99',
       cvv: '123',
-      cardholder_name: 'Test Customer',
+      cardholder_name: 'TEST CUSTOMER',
     });
     request.flush({ status: 'paid' });
 

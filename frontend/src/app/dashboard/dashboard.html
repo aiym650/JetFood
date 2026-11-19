@@ -181,7 +181,7 @@
           <h4>{{ i18n.t('cardDetails') }}</h4>
           <label class="address-field">
             {{ i18n.t('cardNumber') }}
-            <input type="text" inputmode="numeric" autocomplete="off" maxlength="23"
+            <input type="text" inputmode="numeric" autocomplete="off" maxlength="19"
               [value]="cardNumber" [disabled]="submittingOrder"
               (input)="formatCardNumber($any($event.target).value)"
               [attr.aria-invalid]="!!cardNumberError()">
@@ -197,7 +197,7 @@
           <p *ngIf="cardExpiryError()" class="checkout-message checkout-error">{{ cardExpiryError() }}</p>
           <label class="address-field">
             {{ i18n.t('cardCvv') }}
-            <input type="password" inputmode="numeric" autocomplete="off" maxlength="4"
+            <input type="password" inputmode="numeric" autocomplete="off" maxlength="3"
               [value]="cardCvv" [disabled]="submittingOrder"
               (input)="formatCardCvv($any($event.target).value)"
               [attr.aria-invalid]="!!cardCvvError()">
@@ -206,7 +206,7 @@
           <label class="address-field">
             {{ i18n.t('cardholderName') }}
             <input type="text" autocomplete="off" maxlength="120" [value]="cardholderName"
-              [disabled]="submittingOrder" (input)="cardholderName = $any($event.target).value"
+              [disabled]="submittingOrder" (input)="formatCardholderName($any($event.target).value)"
               [attr.aria-invalid]="!!cardholderError()">
           </label>
           <p *ngIf="cardholderError()" class="checkout-message checkout-error">{{ cardholderError() }}</p>

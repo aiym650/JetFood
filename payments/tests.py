@@ -51,7 +51,7 @@ class PaymentApiTests(TestCase):
             "card_number": card_number,
             "expiry": "12/99",
             "cvv": "123",
-            "cardholder_name": "Test Customer",
+            "cardholder_name": "TEST USER",
         }
 
     def pay_order(self, order, card_number):
@@ -183,8 +183,8 @@ class PaymentApiTests(TestCase):
         order = self.create_order("online")
         card_number = "4242424242424242"
         card_data = self.card_data(card_number)
-        card_data["cvv"] = "9876"
-        card_data["cardholder_name"] = "Private Name"
+        card_data["cvv"] = "987"
+        card_data["cardholder_name"] = "PRIVATE NAME"
         response = self.client.post(
             f"/api/payments/{order.id}/pay/", card_data, format="json"
         )
@@ -195,10 +195,10 @@ class PaymentApiTests(TestCase):
         self.assertEqual(payment.card_last4, "4242")
         self.assertEqual(payment.card_brand, "visa")
         self.assertNotIn(card_number, repr(payment.__dict__))
-        self.assertNotIn("9876", response.content.decode())
-        self.assertNotIn("Private Name", repr(payment.__dict__))
-        self.assertNotIn("9876", repr(payment.__dict__))
-        self.assertNotIn("Private Name", response.content.decode())
+        self.assertNotIn("987", response.content.decode())
+        self.assertNotIn("PRIVATE NAME", repr(payment.__dict__))
+        self.assertNotIn("987", repr(payment.__dict__))
+        self.assertNotIn("PRIVATE NAME", response.content.decode())
 
     def test_receipt_permissions_and_masked_card_metadata(self):
         order = self.create_order("online")
