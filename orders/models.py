@@ -88,7 +88,10 @@ class Order(models.Model):
             models.CheckConstraint(condition=Q(total_amount__gte=0), name='order_total_not_negative'),
             # CHECK: status and priority only from the allowed lists
             models.CheckConstraint(
-                condition=Q(status__in=['pending', 'confirmed', 'preparing', 'delivering', 'delivered', 'cancelled']),
+                condition=Q(status__in=[
+                    'pending', 'confirmed', 'preparing', 'ready_for_pickup',
+                    'delivering', 'delivered', 'cancelled',
+                ]),
                 name='order_status_valid',
             ),
             models.CheckConstraint(

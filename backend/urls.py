@@ -27,5 +27,6 @@ urlpatterns = [
     path('api/analytics/', include('analytics.urls')),
     path('api/integration/', include('integration.urls')),
     path('api/reports/', include('reports.urls')),
+    path('api/support/', include('support.urls')),
     path('api/search/', backend_views.search),
 ]

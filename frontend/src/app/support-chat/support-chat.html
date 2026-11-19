@@ -1,0 +1,133 @@
+<ng-container *ngIf="canUseChat">
+  <button
+    type="button"
+    class="support-launcher"
+    [attr.aria-label]="i18n.t('supportChatTitle')"
+    [attr.aria-expanded]="isOpen"
+    (click)="toggleChat()"
+  >
+    <svg *ngIf="!isOpen" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 5.75A2.75 2.75 0 0 1 6.75 3h10.5A2.75 2.75 0 0 1 20 5.75v7.5A2.75 2.75 0 0 1 17.25 16H10l-5 4v-4.4a2.73 2.73 0 0 1-1-2.1z"></path>
+      <path d="M8 8h8M8 11.5h5"></path>
+    </svg>
+    <span *ngIf="isOpen" aria-hidden="true">×</span>
+  </button>
+
+  <section *ngIf="isOpen" class="support-panel" aria-live="polite">
+    <header class="support-header">
+      <div>
+        <strong>{{ i18n.t('supportChatTitle') }}</strong>
+        <span>{{ i18n.t('supportChatSubtitle') }}</span>
+      </div>
+      <button type="button" class="support-close" [attr.aria-label]="i18n.t('close')" (click)="toggleChat()">×</button>
+    </header>
+
+    <p *ngIf="error" class="support-error" role="alert">{{ error }}</p>
+    <p *ngIf="loading" class="support-loading" role="status">{{ i18n.t('loading') }}</p>
+
+    <div class="support-case-list" *ngIf="!loading && cases.length">
+      <button
+        type="button"
+        *ngFor="let supportCase of cases"
+        [class.selected]="selectedCase?.id === supportCase.id"
+        (click)="selectCase(supportCase)"
+      >
+        <span>#{{ supportCase.order_number || supportCase.id }}</span>
+        <small>{{ statusLabel(supportCase.status) }}</small>
+      </button>
+    </div>
+
+    <button
+      *ngIf="!selectedCase"
+      type="button"
+      class="support-new-case"
+      (click)="startNewCase()"
+    >{{ i18n.t('supportNewCase') }}</button>
+
+    <form *ngIf="!selectedCase" class="support-create-form" (ngSubmit)="openCase()">
+      <label>
+        {{ i18n.t('supportOrderNumber') }} ({{ i18n.t('optional') }})
+        <input
+          name="orderNumber"
+          [(ngModel)]="orderNumber"
+          [placeholder]="i18n.t('supportOrderPlaceholder')"
+          maxlength="50"
+        >
+      </label>
+      <label>
+        {{ i18n.t('supportProblemDescription') }}
+        <textarea
+          name="issueDescription"
+          [(ngModel)]="issueDescription"
+          [placeholder]="i18n.t('supportProblemPlaceholder')"
+          required
+          maxlength="4000"
+          rows="3"
+          [disabled]="saving"
+        ></textarea>
+      </label>
+      <button type="submit" [disabled]="saving || !issueDescription.trim()">
+        {{ i18n.t('supportSendRequest') }}
+      </button>
+      <p *ngIf="saving" class="support-thinking" role="status">
+        <span class="support-spinner" aria-hidden="true"></span>
+        {{ i18n.t('supportAiThinking') }}
+      </p>
+    </form>
+
+    <section *ngIf="selectedCase" class="support-conversation">
+      <div class="support-case-heading">
+        <button type="button" class="support-back" (click)="selectedCase = null">{{ i18n.t('supportBackToCases') }}</button>
+        <strong *ngIf="selectedCase.order_number">{{ i18n.t('supportOrderNumber') }}: {{ selectedCase.order_number }}</strong>
+        <strong *ngIf="!selectedCase.order_number">{{ i18n.t('supportNewCase') }} #{{ selectedCase.id }}</strong>
+        <span class="support-status" [attr.data-status]="selectedCase.status">{{ statusLabel(selectedCase.status) }}</span>
+      </div>
+
+      <div class="support-messages">
+        <article
+          *ngFor="let message of selectedCase.messages"
+          class="support-message"
+          [class.from-user]="message.sender === 'customer'"
+          [class.from-assistant]="message.sender === 'assistant'"
+          [class.from-staff]="message.sender === 'staff'"
+        >
+          <strong>{{ i18n.t('supportSender.' + message.sender) }}</strong>
+          <p>{{ message.body }}</p>
+          <time>{{ message.created_at | date:'short' }}</time>
+        </article>
+      </div>
+
+      <p *ngIf="selectedCase.resolution" class="support-resolution">
+        <strong>{{ i18n.t('supportResolution') }}:</strong> {{ selectedCase.resolution }}
+      </p>
+
+      <form
+        *ngIf="selectedCase.status !== 'resolved'"
+        class="support-reply-form"
+        (ngSubmit)="sendMessage()"
+      >
+        <textarea
+          name="messageDraft"
+          [(ngModel)]="messageDraft"
+          [placeholder]="i18n.t('supportMessagePlaceholder')"
+          required
+          maxlength="4000"
+          rows="2"
+          [disabled]="saving"
+        ></textarea>
+        <div>
+          <button type="submit" [disabled]="saving || !messageDraft.trim()">
+            {{ i18n.t('supportSendMessage') }}
+          </button>
+        </div>
+        <p *ngIf="saving" class="support-thinking" role="status">
+          <span class="support-spinner" aria-hidden="true"></span>
+          {{ i18n.t('supportAiThinking') }}
+        </p>
+      </form>
+      <p *ngIf="selectedCase.status === 'resolved'" class="support-resolved-note">
+        {{ i18n.t('supportCaseResolved') }}
+      </p>
+    </section>
+  </section>
+</ng-container>
