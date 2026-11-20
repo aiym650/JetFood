@@ -20,6 +20,7 @@ class RestaurantApiTests(TestCase):
         self.client = APIClient()
         self.restaurant = Restaurant.objects.create(
             name='North Kitchen',
+            owner=self.manager,
             address='Main Street 1',
             opening_time='09:00',
             closing_time='21:00',

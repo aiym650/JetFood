@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Auth } from '../auth';
-import { Orders } from '../orders';
+import { CartQuote, Orders } from '../orders';
 import { CardPaymentInput, CardPaymentResult, Payments } from '../payments';
 import { FoodItem, Menu } from '../menu';
 import { Restaurant, Restaurants } from '../restaurants';
@@ -28,6 +28,12 @@ interface StoredCartLine {
   styleUrl: './dashboard.css',
 })
 export class Dashboard implements OnInit {
+  promoDraft = '';
+  appliedPromo = '';
+  promoError = '';
+  quoteLoading = false;
+  cartQuote: CartQuote | null = null;
+  private quoteVersion = 0;
   currentUser: any = null;
   role = '';
   cart: CartLine[] = [];
@@ -143,6 +149,7 @@ export class Dashboard implements OnInit {
       !query || [
         restaurant.name,
         this.i18n.catalogLabel(restaurant.name),
+        restaurant.cuisine ?? "",
         restaurant.description,
         this.i18n.catalogLabel(restaurant.description),
         restaurant.address,
@@ -275,6 +282,12 @@ export class Dashboard implements OnInit {
           price: Number(item.price),
         }));
         this.restoreCart(this.foodItems);
+        const requested = Number(this.route.snapshot.queryParamMap.get('addItem'));
+        const dish = this.foodItems.find(item => item.id === requested);
+        if (dish) {
+          this.addToCart(dish);
+          this.router.navigate([], { queryParams: { addItem: null }, queryParamsHandling: 'merge', replaceUrl: true });
+        }
         this.menuLoading = false;
         this.changeDetector.markForCheck();
       },
@@ -340,10 +353,17 @@ export class Dashboard implements OnInit {
   }
 
   addToCart(item: FoodItem): void {
+    if (item.is_active === false) return;
     if (this.submittingOrder || this.pendingPaymentOrderId !== null) {
       return;
     }
 
+    if (this.cart.some(line => line.item.restaurant !== item.restaurant)) {
+      if (!confirm(this.i18n.t('confirmReplaceCart'))) return;
+      this.cart = [];
+      this.appliedPromo = '';
+      this.promoDraft = '';
+    }
     if (this.cartItemCount >= 50) {
       this.checkoutError = this.i18n.t('maxOrderItems');
       return;
@@ -393,6 +413,8 @@ export class Dashboard implements OnInit {
     }
 
     this.cart = [];
+    this.removePromo();
+    sessionStorage.removeItem(`jetfood-checkout-${this.currentUser?.id}`);
     this.cartOpen = false;
     this.checkoutError = '';
     this.cartNotice = '';
@@ -408,6 +430,7 @@ export class Dashboard implements OnInit {
   }
 
   private saveCart(): void {
+    this.refreshQuote();
     const storageKey = this.cartStorageKey();
     if (storageKey) {
       const storedCart: StoredCartLine[] = this.cart.map(({ item, quantity }) => ({
@@ -450,7 +473,7 @@ export class Dashboard implements OnInit {
     let totalQuantity = 0;
     this.cart = storedCart.reduce<CartLine[]>((restored, line) => {
       const item = items.find(menuItem => menuItem.id === line.itemId);
-      if (!item) {
+      if (!item || item.is_active === false) {
         unavailableItem = true;
         return restored;
       }
@@ -519,14 +542,22 @@ export class Dashboard implements OnInit {
     }
 
     this.submittingOrder = true;
-    this.ordersService.createOrder({
+    const input = {
       delivery_address: this.deliveryAddress.trim(),
       payment_method: this.paymentMethod,
+      promo_code: this.appliedPromo,
       items: this.cart.map(({ item, quantity }) => ({
         item_id: item.id,
         quantity,
       })),
-    }).subscribe({
+    };
+    const requestBody = JSON.stringify(input);
+    const requestStorageKey = `jetfood-checkout-${this.currentUser.id}`;
+    let saved: { body: string; key: string } | null = null;
+    try { saved = JSON.parse(sessionStorage.getItem(requestStorageKey) ?? 'null'); } catch { /* Replace invalid state. */ }
+    if (saved?.body !== requestBody) saved = { body: requestBody, key: crypto.randomUUID() };
+    sessionStorage.setItem(requestStorageKey, JSON.stringify(saved));
+    this.ordersService.createOrder(input, saved!.key).subscribe({
       next: (order) => {
         if (this.paymentMethod === 'online') {
           this.pendingPaymentOrderId = order.id;
@@ -539,10 +570,52 @@ export class Dashboard implements OnInit {
         this.checkoutSuccess = this.i18n.t('orderCreatedCash');
         this.changeDetector.markForCheck();
       },
-      error: () => {
-        this.checkoutError = this.i18n.t('orderCreateFailed');
+      error: (error) => {
+        this.checkoutError = error.error?.promo_error
+          ? this.promotionError(error) : this.i18n.t('orderCreateFailed');
         this.submittingOrder = false;
         this.clearCardDetails();
+        this.changeDetector.markForCheck();
+      },
+    });
+  }
+
+  applyPromo(): void {
+    this.appliedPromo = this.promoDraft.trim().toUpperCase();
+    this.promoDraft = this.appliedPromo;
+    this.refreshQuote();
+  }
+
+  removePromo(): void {
+    this.appliedPromo = '';
+    this.promoDraft = '';
+    this.refreshQuote();
+  }
+
+  private promotionError(error: any): string {
+    const reason = error.error?.promo_error;
+    const code = Array.isArray(reason) ? reason[0] : reason;
+    return this.i18n.t(code ? `promoErrors.${code}` : 'quoteFailed');
+  }
+
+  refreshQuote(): void {
+    const version = ++this.quoteVersion;
+    this.cartQuote = null;
+    this.promoError = '';
+    this.quoteLoading = false;
+    if (!this.cart.length) return;
+    this.quoteLoading = true;
+    this.ordersService.quote(this.cart.map(line => ({ item_id: line.item.id, quantity: line.quantity })), this.appliedPromo).subscribe({
+      next: quote => {
+        if (version !== this.quoteVersion) return;
+        this.cartQuote = quote;
+        this.quoteLoading = false;
+        this.changeDetector.markForCheck();
+      },
+      error: error => {
+        if (version !== this.quoteVersion) return;
+        this.promoError = this.promotionError(error);
+        this.quoteLoading = false;
         this.changeDetector.markForCheck();
       },
     });

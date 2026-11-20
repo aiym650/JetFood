@@ -14,6 +14,8 @@ export interface SupportMessage {
 }
 
 export interface SupportCase {
+  language?: 'ru' | 'kk' | 'en';
+  operator_requested?: boolean;
   id: number;
   customer: number;
   customer_name: string;
@@ -38,17 +40,34 @@ export class Support {
       .pipe(map(getApiListResults));
   }
 
-  openCase(orderNumber: string, issueDescription: string): Observable<SupportCase> {
+  getCase(caseId: number): Observable<SupportCase> {
+    return this.http.get<SupportCase>(`${this.apiUrl}${caseId}/`);
+  }
+
+  openCase(orderNumber: string, issueDescription: string, language: 'ru' | 'kk' | 'en' = 'en', operator_requested = false): Observable<SupportCase> {
     return this.http.post<SupportCase>(this.apiUrl, {
       order_number: orderNumber,
       issue_description: issueDescription,
+      language, operator_requested,
     });
   }
 
-  sendMessage(caseId: number, body: string): Observable<SupportCase> {
+  sendMessage(caseId: number, body: string, requestId: string = crypto.randomUUID()): Observable<SupportCase> {
     return this.http.post<SupportCase>(
       `${this.apiUrl}${caseId}/messages/`,
-      { body },
+      { body, request_id: requestId },
     );
+  }
+
+  updateCase(caseId: number, changes: object): Observable<SupportCase> {
+    return this.http.patch<SupportCase>(`${this.apiUrl}${caseId}/`, changes);
+  }
+
+  retry(caseId: number): Observable<SupportCase> {
+    return this.http.post<SupportCase>(`${this.apiUrl}${caseId}/retry/`, {});
+  }
+
+  faq(language: string): Observable<{ question: string; answer: string }[]> {
+    return this.http.get<{ question: string; answer: string }[]>(`http://localhost:8000/api/support/faq/`, { params: { language } });
   }
 }

@@ -3,6 +3,9 @@ from django.db import models
 
 
 class SupportCase(models.Model):
+    ai_busy_until = models.DateTimeField(null=True, blank=True, editable=False)
+    language = models.CharField(max_length=2, choices=[('ru', 'Русский'), ('kk', 'Қазақша'), ('en', 'English')], default='en')
+    operator_requested = models.BooleanField(default=False)
     STATUS_CHOICES = [
         ('open', 'Open'),
         ('in_progress', 'In progress'),
@@ -37,6 +40,7 @@ class SupportCase(models.Model):
 
 
 class SupportMessage(models.Model):
+    request_id = models.CharField(max_length=100, null=True, blank=True)
     SENDER_CHOICES = [
         ('customer', 'Customer'),
         ('assistant', 'Assistant'),
@@ -54,6 +58,21 @@ class SupportMessage(models.Model):
 
     class Meta:
         ordering = ['created_at', 'id']
+        constraints = [models.UniqueConstraint(fields=['support_case', 'request_id'], name='support_message_request_unique')]
 
     def __str__(self):
         return f'{self.sender} message for support case {self.support_case_id}'
+
+
+class FAQ(models.Model):
+    slug = models.SlugField(unique=True)
+    is_active = models.BooleanField(default=True)
+    question_ru = models.CharField(max_length=300)
+    answer_ru = models.TextField()
+    question_kk = models.CharField(max_length=300)
+    answer_kk = models.TextField()
+    question_en = models.CharField(max_length=300)
+    answer_en = models.TextField()
+
+    def __str__(self):
+        return self.question_en

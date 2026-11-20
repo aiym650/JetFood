@@ -8,23 +8,30 @@
   </header>
 
   <p *ngIf="loading" class="notice" role="status">{{ i18n.t('loading') }}</p>
+  <div *ngIf="!selectedRestaurant" class="catalog-filters">
+    <input class="ui-input" type="search" [(ngModel)]="search" [attr.aria-label]="i18n.t('searchRestaurants')" [placeholder]="i18n.t('searchRestaurants')">
+    <select class="ui-input" [(ngModel)]="cuisine" [attr.aria-label]="i18n.t('cuisine')"><option value="">{{ i18n.t('allCuisines') }}</option><option *ngFor="let value of cuisines">{{ value }}</option></select>
+  </div>
   <p *ngIf="error" class="notice error" role="alert">{{ error }}</p>
   <div *ngIf="!selectedRestaurant && !loading && !error && restaurants.length === 0" class="notice">{{ i18n.t('noRestaurants') }}</div>
 
+  <p *ngIf="!selectedRestaurant && !loading && restaurants.length && !filteredRestaurants.length" class="notice">{{ i18n.t('noRestaurants') }}</p>
   <section class="restaurant-grid" *ngIf="!selectedRestaurant && restaurants.length">
-    <article class="restaurant-card" *ngFor="let restaurant of restaurants">
+    <article class="restaurant-card" *ngFor="let restaurant of filteredRestaurants">
       <button type="button" class="restaurant-select" (click)="selectRestaurant(restaurant)">
         <img *ngIf="restaurant.image_url" [src]="restaurant.image_url" [alt]="i18n.catalogLabel(restaurant.name)">
         <span class="restaurant-placeholder" *ngIf="!restaurant.image_url" aria-hidden="true">JF</span>
         <span class="restaurant-info">
           <strong>{{ i18n.catalogLabel(restaurant.name) }}</strong>
+          <span>{{ restaurant.cuisine }}</span>
+          <span *ngIf="restaurant.demo_key">{{ i18n.t('demoNotice') }}</span>
           <span>{{ i18n.catalogLabel(restaurant.address) }}</span>
           <span>{{ restaurant.opening_time.slice(0, 5) }}–{{ restaurant.closing_time.slice(0, 5) }}</span>
           <span>{{ i18n.catalogLabel(restaurant.description) }}</span>
           <span class="view-menu-label">{{ i18n.t('viewMenu') }}</span>
         </span>
       </button>
-      <div class="restaurant-actions" *ngIf="canManage">
+      <div class="restaurant-actions" *ngIf="canManageRestaurant(restaurant)">
         <span class="availability" [class.closed]="!restaurant.is_active">
           {{ restaurant.is_active ? i18n.t('available') : i18n.t('unavailable') }}
         </span>
@@ -40,6 +47,7 @@
         <button type="button" class="back-to-list" (click)="backToRestaurants()">{{ i18n.t('backToRestaurants') }}</button>
         <p class="eyebrow">{{ i18n.t('menu') }}</p>
         <h2>{{ i18n.catalogLabel(selectedRestaurant.name) }}</h2>
+        <p *ngIf="selectedRestaurant.demo_key">{{ i18n.t('demoNotice') }}</p>
         <p>{{ i18n.catalogLabel(selectedRestaurant.description) }}</p>
       </div>
       <span class="availability" [class.closed]="!selectedRestaurant.is_active">
@@ -49,8 +57,11 @@
     <p *ngIf="menuLoading" class="notice" role="status">{{ i18n.t('loading') }}</p>
     <p *ngIf="menuError" class="notice error" role="alert">{{ menuError }}</p>
     <p *ngIf="!menuLoading && !menuError && menuItems.length === 0" class="notice">{{ i18n.t('restaurantMenuEmpty') }}</p>
+    <select class="ui-input menu-category-select" *ngIf="menuItems.length" [(ngModel)]="category" [attr.aria-label]="i18n.t('category')"><option value="">{{ i18n.t('allCategories') }}</option><option *ngFor="let value of categories">{{ value }}</option></select>
     <ul class="menu-list" *ngIf="menuItems.length">
-      <li *ngFor="let item of menuItems">
+      <li *ngFor="let item of filteredMenu">
+        <img *ngIf="item.image_url" class="dish-photo" [src]="item.image_url" [alt]="item.name" loading="lazy">
+        <span *ngIf="!item.image_url" class="dish-placeholder" aria-hidden="true">JF</span>
         <div>
           <strong>{{ item.name }}</strong>
           <span>{{ item.category }} · {{ item.price }} ₸</span>
@@ -59,6 +70,7 @@
             {{ item.is_active ? i18n.t('available') : i18n.t('unavailable') }}
           </span>
         </div>
+        <button type="button" class="ui-button ui-button-primary" (click)="addToCart(item)" [disabled]="item.is_active === false || !selectedRestaurant.is_active">{{ i18n.t('addToCart') }}</button>
         <div class="inline-actions" *ngIf="canManage">
           <button type="button" (click)="editMenuItem(item)">{{ i18n.t('edit') }}</button>
           <button type="button" class="danger" (click)="deleteMenuItem(item)">{{ i18n.t('delete') }}</button>
@@ -94,9 +106,10 @@
       <h2>{{ editingRestaurantId ? i18n.t('editRestaurant') : i18n.t('registerRestaurant') }}</h2>
       <label>{{ i18n.t('restaurantName') }}<input name="restaurantName" [(ngModel)]="restaurantForm.name" required maxlength="200"></label>
       <label>{{ i18n.t('description') }}<textarea name="restaurantDescription" [(ngModel)]="restaurantForm.description"></textarea></label>
+      <label>{{ i18n.t('cuisine') }}<input name="restaurantCuisine" [(ngModel)]="restaurantForm.cuisine" maxlength="100"></label>
       <label>{{ i18n.t('address') }}<input name="restaurantAddress" [(ngModel)]="restaurantForm.address" required maxlength="500"></label>
       <label>{{ i18n.t('phone') }}<input name="restaurantPhone" [(ngModel)]="restaurantForm.phone"></label>
-      <label>{{ i18n.t('imageUrl') }}<input name="restaurantImage" type="url" [(ngModel)]="restaurantForm.image_url"></label>
+      <label>{{ i18n.t('imageUrl') }}<input name="restaurantImage" type="text" [(ngModel)]="restaurantForm.image_url"></label>
       <div class="time-fields">
         <label>{{ i18n.t('opensAt') }}<input name="opensAt" type="time" [(ngModel)]="restaurantForm.opening_time" required></label>
         <label>{{ i18n.t('closesAt') }}<input name="closesAt" type="time" [(ngModel)]="restaurantForm.closing_time" required></label>
@@ -131,7 +144,7 @@
           <label>{{ i18n.t('category') }}<input name="dishCategory" [(ngModel)]="menuForm.category" required maxlength="100"></label>
           <label>{{ i18n.t('description') }}<textarea name="dishDescription" [(ngModel)]="menuForm.description"></textarea></label>
           <label>{{ i18n.t('price') }}<input name="dishPrice" type="number" min="0.01" step="0.01" [(ngModel)]="menuForm.price" required></label>
-          <label>{{ i18n.t('imageUrl') }}<input name="dishImage" type="url" [(ngModel)]="menuForm.image_url"></label>
+          <label>{{ i18n.t('imageUrl') }}<input name="dishImage" type="text" [(ngModel)]="menuForm.image_url"></label>
           <label class="checkbox-option">
             <input type="checkbox" name="dishActive" [(ngModel)]="menuForm.is_active">
             {{ i18n.t('dishAvailable') }}

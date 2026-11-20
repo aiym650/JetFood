@@ -91,7 +91,8 @@ WSGI_APPLICATION = "backend.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": os.environ.get('JETFOOD_DATABASE_NAME', BASE_DIR / "db.sqlite3"),
+        "OPTIONS": {"timeout": 20},
     }
 }
 
@@ -157,6 +158,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": "30/minute",
         "user": "120/minute",
+        "support": "10/minute",
     },
 }
 
@@ -176,3 +178,7 @@ SUPPORT_OLLAMA_BASE_URL = os.environ.get(
 )
 SUPPORT_OLLAMA_MODEL = os.environ.get("SUPPORT_OLLAMA_MODEL", "llama3.2:3b")
 SUPPORT_OLLAMA_TIMEOUT = int(os.environ.get("SUPPORT_OLLAMA_TIMEOUT", "60"))
+
+ORDER_DELIVERY_FEE = os.environ.get('ORDER_DELIVERY_FEE', '0.00')
+
+SUPPORT_OLLAMA_API_KEY = os.environ.get('SUPPORT_OLLAMA_API_KEY', '')

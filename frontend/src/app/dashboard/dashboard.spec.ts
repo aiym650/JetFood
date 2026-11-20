@@ -34,7 +34,7 @@ describe('Dashboard', () => {
       providers: [
         provideRouter([]),
         { provide: Auth, useValue: { getCurrentUser: () => ({ id: 45, username: 'test', role: 'customer' }), isLoggedIn: () => true } },
-        { provide: Orders, useValue: { createOrder: () => of({}) } },
+        { provide: Orders, useValue: { createOrder: () => of({}), quote: () => of({ items_amount: '890.00', discount_amount: '0.00', delivery_fee: '0.00', delivery_discount: '0.00', total_amount: '890.00', promo_code: '' }) } },
         { provide: Payments, useValue: { payOrder: () => of({}) } },
         { provide: Menu, useValue: { getItems: () => of(menuItems) } },
         { provide: Restaurants, useValue: { getRestaurants: () => of(restaurants) } },
@@ -118,7 +118,7 @@ describe('Dashboard', () => {
     expect(createOrder).toHaveBeenCalledWith(expect.objectContaining({
       payment_method: 'cash',
       items: [{ item_id: item.id, quantity: 1 }],
-    }));
+    }), expect.any(String));
     expect(createOrder.mock.calls[0][0].items[0]).not.toHaveProperty('price_per_item');
     expect(createOrder.mock.calls[0][0].items[0]).not.toHaveProperty('item_name');
   });
@@ -418,4 +418,29 @@ describe('Dashboard', () => {
     expect(component.submittingOrder).toBe(false);
     expect(localStorage.getItem('jetfood-cart-45')).toBeNull();
   });
+  it('requires confirmation before replacing a restaurant cart', () => {
+    component.addToCart(component.foodItems[0]);
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    component.addToCart(component.foodItems[1]);
+    expect(component.cart[0].item.id).toBe(1);
+    confirm.mockReturnValue(true);
+    component.addToCart(component.foodItems[1]);
+    expect(component.cart).toHaveLength(1);
+    expect(component.cart[0].item.id).toBe(2);
+    confirm.mockRestore();
+  });
+
+  it('recalculates the applied code after quantity changes and ignores stale quotes', () => {
+    const first = new Subject<any>();
+    const second = new Subject<any>();
+    const quote = vi.spyOn(TestBed.inject(Orders), 'quote').mockReturnValueOnce(first).mockReturnValueOnce(second);
+    component.appliedPromo = 'SAVE';
+    component.addToCart(component.foodItems[0]);
+    component.changeQuantity(component.cart[0], 1);
+    expect(quote).toHaveBeenLastCalledWith([{ item_id: 1, quantity: 2 }], 'SAVE');
+    second.next({ total_amount: '1602.00' });
+    first.next({ total_amount: '801.00' });
+    expect(component.cartQuote?.total_amount).toBe('1602.00');
+  });
+
 });

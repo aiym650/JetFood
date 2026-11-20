@@ -1,12 +1,15 @@
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 from django.db.models import Q
 from .models import DeliveryRoute, MenuItem, Order, OrderItem
+from restaurants.models import MenuCategory
 from django.conf import settings
+from decimal import Decimal
 
 
 class MenuItemSerializer(serializers.ModelSerializer):
     restaurant_name = serializers.CharField(source="restaurant.name", read_only=True)
-    price = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('0.01'))
 
     class Meta:
         model = MenuItem
@@ -14,7 +17,7 @@ class MenuItemSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "description",
-            "category",
+            "category", "menu_category",
             "price",
             "image_url",
             "rating",
@@ -23,6 +26,37 @@ class MenuItemSerializer(serializers.ModelSerializer):
             "is_active",
         ]
         read_only_fields = ["id", "rating", "restaurant_name"]
+        extra_kwargs = {'category': {'required': False}}
+
+    def validate(self, attrs):
+        restaurant = attrs.get('restaurant', getattr(self.instance, 'restaurant', None))
+        category = attrs.get('menu_category', getattr(self.instance, 'menu_category', None))
+        if not category and not attrs.get('category', getattr(self.instance, 'category', '')).strip():
+            raise serializers.ValidationError({'category': 'Choose or enter a category.'})
+        if category and category.restaurant_id != restaurant.pk:
+            raise serializers.ValidationError({'menu_category': 'Category belongs to another restaurant.'})
+        user = self.context['request'].user
+        if user.role not in ['admin', 'manager']:
+            raise PermissionDenied('Only admins and restaurant owners can manage menus.')
+        if user.role != 'admin' and restaurant.owner_id != user.pk:
+            raise PermissionDenied('You can only manage your own restaurant.')
+        return attrs
+
+    def _category(self, data):
+        category = data.get('menu_category')
+        restaurant = data.get('restaurant', getattr(self.instance, 'restaurant', None))
+        if 'category' in data and 'menu_category' not in data:
+            category, _ = MenuCategory.objects.get_or_create(restaurant=restaurant, name=data['category'])
+            data['menu_category'] = category
+        if category:
+            data['category'] = category.name
+        return data
+
+    def create(self, validated_data):
+        return super().create(self._category(validated_data))
+
+    def update(self, instance, validated_data):
+        return super().update(instance, self._category(validated_data))
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -53,6 +87,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    promo_code = serializers.CharField(max_length=50, required=False, allow_blank=True)
     items = OrderItemSerializer(many=True)
     payment_method = serializers.ChoiceField(
         choices=[("online", "Online simulation"), ("cash", "Cash on delivery")],
@@ -77,6 +112,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "status",
             "priority",
             "total_amount",
+            "items_amount", "discount_amount", "delivery_fee", "delivery_discount", "promo_code",
             "delivery_address",
             "delivery_notes",
             "estimated_delivery_time",
@@ -97,9 +133,15 @@ class OrderSerializer(serializers.ModelSerializer):
             "status",
             "priority",
             "total_amount",
+            "items_amount", "discount_amount", "delivery_fee", "delivery_discount",
             "created_at",
             "updated_at",
         ]
+
+    def validate(self, attrs):
+        if self.instance and ('items' in attrs or 'promo_code' in attrs):
+            raise serializers.ValidationError({'items': 'Use the order modification endpoint. Promo snapshots cannot be edited.'})
+        return attrs
 
     def create(self, validated_data):
         items_data = validated_data.pop("items")

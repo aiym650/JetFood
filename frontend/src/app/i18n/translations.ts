@@ -1,4 +1,5 @@
-export const translations = {
+import { featureTranslations } from './feature-translations';
+const baseTranslations = {
   en: {
     // Auth
     login: 'Login',
@@ -1179,4 +1180,10 @@ export const translations = {
       customer: 'Клиент'
     }
   }
+};
+
+export const translations = {
+ en: { ...baseTranslations.en, ...featureTranslations.en },
+ ru: { ...baseTranslations.ru, ...featureTranslations.ru },
+ kk: { ...baseTranslations.en, ...featureTranslations.kk },
 };

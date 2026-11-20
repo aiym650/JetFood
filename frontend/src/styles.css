@@ -1,3 +1,5 @@
+@import './app/shared/ui-controls.css';
+
 * {
   box-sizing: border-box;
 }
@@ -257,4 +259,11 @@ app-dashboard .back-to-restaurants:hover {
   .restaurants-page .menu-browser-heading {
     flex-direction: column;
   }
+}
+/* Keep the support launcher clear of checkout actions. */
+@media (min-width: 769px) {
+  body:has(.cart-sidebar) app-support-chat { right: 404px; }
+}
+@media (max-width: 768px) {
+  body:has(.cart-sidebar) app-support-chat:not(:has(.support-panel)) { visibility: hidden; }
 }

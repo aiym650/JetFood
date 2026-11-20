@@ -1,133 +1,415 @@
 <ng-container *ngIf="canUseChat">
   <button
+    #launcher
     type="button"
     class="support-launcher"
-    [attr.aria-label]="i18n.t('supportChatTitle')"
+    [class.open]="isOpen"
+    [attr.aria-label]="text('supportChatTitle')"
     [attr.aria-expanded]="isOpen"
+    aria-controls="jetfood-support"
     (click)="toggleChat()"
   >
-    <svg *ngIf="!isOpen" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 5.75A2.75 2.75 0 0 1 6.75 3h10.5A2.75 2.75 0 0 1 20 5.75v7.5A2.75 2.75 0 0 1 17.25 16H10l-5 4v-4.4a2.73 2.73 0 0 1-1-2.1z"></path>
-      <path d="M8 8h8M8 11.5h5"></path>
-    </svg>
-    <span *ngIf="isOpen" aria-hidden="true">×</span>
+    <ng-container
+      *ngTemplateOutlet="icon; context: { $implicit: isOpen ? 'close' : 'message' }"
+    ></ng-container>
+    <span *ngIf="!isOpen">{{ text('chatLauncher') }}</span>
   </button>
 
-  <section *ngIf="isOpen" class="support-panel" aria-live="polite">
+  <section
+    *ngIf="isOpen"
+    id="jetfood-support"
+    class="support-panel"
+    role="dialog"
+    aria-labelledby="support-title"
+    [attr.lang]="activeLanguage"
+    (keydown)="onPanelKeydown($event)"
+  >
     <header class="support-header">
-      <div>
-        <strong>{{ i18n.t('supportChatTitle') }}</strong>
-        <span>{{ i18n.t('supportChatSubtitle') }}</span>
+      <span class="assistant-avatar"
+        ><ng-container *ngTemplateOutlet="icon; context: { $implicit: 'spark' }"></ng-container
+      ></span>
+      <div class="header-title">
+        <h2 id="support-title">{{ text('chatAssistantName') }}</h2>
+        <p>{{ text('chatAssistantSubtitle') }}</p>
       </div>
-      <button type="button" class="support-close" [attr.aria-label]="i18n.t('close')" (click)="toggleChat()">×</button>
+      <button
+        type="button"
+        class="icon-button"
+        [attr.aria-label]="text('chatLanguage')"
+        [attr.aria-expanded]="settingsOpen"
+        (click)="settingsOpen = !settingsOpen"
+      >
+        <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'globe' }"></ng-container>
+      </button>
+      <button
+        type="button"
+        class="icon-button"
+        [attr.aria-label]="text('close')"
+        (click)="toggleChat()"
+      >
+        <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'close' }"></ng-container>
+      </button>
     </header>
 
-    <p *ngIf="error" class="support-error" role="alert">{{ error }}</p>
-    <p *ngIf="loading" class="support-loading" role="status">{{ i18n.t('loading') }}</p>
+    <div *ngIf="settingsOpen" class="language-settings">
+      <span>{{ text('chatLanguage') }}</span>
+      <div class="language-options">
+        <button
+          type="button"
+          (click)="chooseLanguage('ru')"
+          [attr.aria-pressed]="activeLanguage === 'ru'"
+          [disabled]="saving || loading"
+        >
+          Русский
+        </button>
+        <button
+          type="button"
+          (click)="chooseLanguage('kk')"
+          [attr.aria-pressed]="activeLanguage === 'kk'"
+          [disabled]="saving || loading"
+        >
+          Қазақша
+        </button>
+        <button
+          type="button"
+          (click)="chooseLanguage('en')"
+          [attr.aria-pressed]="activeLanguage === 'en'"
+          [disabled]="saving || loading"
+        >
+          English
+        </button>
+      </div>
+    </div>
 
-    <div class="support-case-list" *ngIf="!loading && cases.length">
+    <nav class="chat-navigation" [attr.aria-label]="text('chatNavigation')">
+      <button
+        type="button"
+        [class.active]="view === 'chat'"
+        [attr.aria-pressed]="view === 'chat'"
+        (click)="showView('chat')"
+      >
+        {{ text('chatTab') }}
+      </button>
+      <button
+        type="button"
+        [class.active]="view === 'help'"
+        [attr.aria-pressed]="view === 'help'"
+        (click)="showView('help')"
+      >
+        {{ text('supportFaq') }}
+      </button>
+      <button
+        type="button"
+        [class.active]="view === 'history'"
+        [attr.aria-pressed]="view === 'history'"
+        (click)="showView('history')"
+      >
+        {{ text('chatHistory') }}
+      </button>
+    </nav>
+
+    <div *ngIf="error" class="support-error" role="alert">
+      <p>{{ error }}</p>
+      <button *ngIf="retryMode" type="button" (click)="retry()" [disabled]="saving">
+        {{ text('retry') }}
+      </button>
+      <button type="button" (click)="showView('help')">{{ text('supportFaq') }}</button>
+    </div>
+    <p *ngIf="loading" class="loading-state" role="status">{{ text('loading') }}</p>
+
+    <ng-container *ngIf="view === 'chat' && !loading">
+      <div *ngIf="selectedCase" class="order-context">
+        <button
+          type="button"
+          (click)="orderNumber = selectedCase.order_number; orderEditorOpen = !orderEditorOpen"
+          [disabled]="saving"
+          [attr.aria-expanded]="orderEditorOpen"
+        >
+          <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'order' }"></ng-container>
+          <span>{{ selectedCase.order_number || text('chatAddOrder') }}</span>
+          <small>{{ selectedCase.order_number ? text('edit') : text('optional') }}</small>
+        </button>
+        <form *ngIf="orderEditorOpen" class="order-editor" (ngSubmit)="linkOrder()">
+          <label class="sr-only" for="chat-order">{{ text('supportOrderNumber') }}</label>
+          <input
+            id="chat-order"
+            name="orderNumber"
+            [(ngModel)]="orderNumber"
+            maxlength="50"
+            [placeholder]="text('supportOrderPlaceholder')"
+            [disabled]="saving"
+          />
+          <button type="submit" class="primary-button" [disabled]="saving">
+            {{ text('save') }}
+          </button>
+        </form>
+      </div>
+
+      <div
+        #messageList
+        class="support-messages scroll-area"
+        (scroll)="onScroll()"
+        role="log"
+        aria-live="polite"
+        aria-relevant="additions text"
+      >
+        <section *ngIf="!selectedCase" class="chat-welcome">
+          <span class="welcome-avatar"
+            ><ng-container *ngTemplateOutlet="icon; context: { $implicit: 'spark' }"></ng-container
+          ></span>
+          <p class="eyebrow">JETFOOD AI</p>
+          <h3>{{ text('chatWelcomeTitle') }}</h3>
+          <p>{{ text('chatWelcomeDescription') }}</p>
+          <fieldset class="language-picker" [disabled]="saving || loading">
+            <legend>{{ text('chooseChatLanguage') }}</legend>
+            <button #languageStart type="button" (click)="chooseLanguage('ru')">
+              Русский<span>RU</span>
+            </button>
+            <button type="button" (click)="chooseLanguage('kk')">Қазақша<span>KZ</span></button>
+            <button type="button" (click)="chooseLanguage('en')">English<span>EN</span></button>
+          </fieldset>
+          <p *ngIf="saving" class="muted" role="status">{{ text('loading') }}</p>
+        </section>
+
+        <ng-container *ngIf="selectedCase">
+          <p class="conversation-date">{{ selectedCase.created_at | date: 'dd.MM.yyyy' }}</p>
+          <article
+            *ngFor="let message of selectedCase.messages"
+            class="message-row"
+            [class.from-user]="message.sender === 'customer'"
+          >
+            <div class="message-bubble" [class.from-staff]="message.sender === 'staff'">
+              <strong *ngIf="message.sender !== 'customer'" class="message-author">{{
+                message.sender === 'assistant'
+                  ? text('chatAssistantName')
+                  : text('supportSender.staff')
+              }}</strong>
+              <p>{{ message.body }}</p>
+              <time [attr.datetime]="message.created_at">{{
+                message.created_at | date: 'HH:mm'
+              }}</time>
+            </div>
+          </article>
+
+          <section
+            *ngIf="showSuggestions"
+            class="suggestions"
+            [attr.aria-label]="text('chatPopularQuestions')"
+          >
+            <p>{{ text('chatPopularQuestions') }}</p>
+            <div class="topic-grid">
+              <button
+                type="button"
+                *ngFor="let topic of quickTopics"
+                (click)="askTopic(topic.key)"
+                [disabled]="saving"
+              >
+                <ng-container
+                  *ngTemplateOutlet="icon; context: { $implicit: topic.icon }"
+                ></ng-container
+                ><span>{{ text(topic.key) }}</span>
+              </button>
+            </div>
+            <p class="muted">{{ text('chatOwnQuestion') }}</p>
+          </section>
+
+          <article *ngIf="pendingBody" class="message-row from-user pending-message">
+            <div class="message-bubble">
+              <p>{{ pendingBody }}</p>
+              <small>{{ saving ? text('chatSending') : text('chatNotSent') }}</small>
+            </div>
+          </article>
+          <div *ngIf="replyPending" class="typing-indicator" role="status">
+            <span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span
+            ><span>{{ text('supportAiThinking') }}</span>
+          </div>
+          <p
+            *ngIf="operatorNotice || selectedCase.operator_requested"
+            class="operator-notice"
+            role="status"
+          >
+            {{ operatorNotice || text('operatorCreated') }}
+          </p>
+          <p *ngIf="selectedCase.resolution" class="operator-notice">
+            <strong>{{ text('supportResolution') }}:</strong> {{ selectedCase.resolution }}
+          </p>
+        </ng-container>
+      </div>
+
+      <footer class="composer-footer">
+        <ng-container *ngIf="selectedCase?.status !== 'resolved'; else resolved">
+          <form class="message-composer" (ngSubmit)="sendMessage()">
+            <label class="sr-only" for="chat-message">{{ text('chatPlaceholder') }}</label>
+            <textarea
+              #composer
+              id="chat-message"
+              name="messageDraft"
+              [(ngModel)]="messageDraft"
+              rows="1"
+              maxlength="4000"
+              [placeholder]="
+                selectedCase ? text('chatPlaceholder') : text('chatChooseLanguageFirst')
+              "
+              [disabled]="!selectedCase || saving"
+              (keydown)="onComposerKeydown($event)"
+              (input)="resizeComposer($event)"
+            ></textarea>
+            <button
+              type="submit"
+              class="send-button"
+              [disabled]="saving || !selectedCase || !messageDraft.trim()"
+              [attr.aria-label]="text('supportSendMessage')"
+            >
+              <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'send' }"></ng-container>
+            </button>
+          </form>
+          <p class="composer-note">{{ text('chatPrivacyNote') }}</p>
+        </ng-container>
+        <ng-template #resolved
+          ><p class="muted">{{ text('supportCaseResolved') }}</p>
+          <button class="primary-button" type="button" (click)="startNewCase()">
+            {{ text('supportNewCase') }}
+          </button></ng-template
+        >
+      </footer>
+    </ng-container>
+
+    <section *ngIf="view === 'help'" class="help-view scroll-area">
+      <h3>{{ text('chatHelpTitle') }}</h3>
+      <p class="muted">{{ text('chatHelpDescription') }}</p>
+      <p *ngIf="faqLoading" role="status">{{ text('loading') }}</p>
+      <div *ngIf="faqError" role="alert">
+        <p>{{ text('chatFaqFailed') }}</p>
+        <button type="button" class="secondary-button" (click)="loadFaq()">
+          {{ text('retry') }}
+        </button>
+      </div>
+      <p *ngIf="!faqLoading && !faqError && !faqItems.length" class="muted">
+        {{ text('chatFaqEmpty') }}
+      </p>
+      <details *ngFor="let faq of faqItems" class="faq-card">
+        <summary>{{ faq.question }}</summary>
+        <p>{{ faq.answer }}</p>
+      </details>
+      <div class="human-support">
+        <h4>{{ text('chatNeedHuman') }}</h4>
+        <p>{{ text('chatHumanDescription') }}</p>
+        <p *ngIf="selectedCase?.operator_requested" class="operator-notice">
+          {{ text('operatorCreated') }}
+        </p>
+        <button
+          *ngIf="!selectedCase?.operator_requested && !operatorFormOpen"
+          type="button"
+          class="secondary-button"
+          (click)="openOperatorForm()"
+          [disabled]="saving"
+        >
+          {{ text('operatorRequest') }}
+        </button>
+        <form *ngIf="operatorFormOpen" class="operator-form" (ngSubmit)="requestOperator()">
+          <label for="operator-issue">{{ text('supportProblemDescription') }}</label>
+          <textarea
+            id="operator-issue"
+            name="issueDescription"
+            [(ngModel)]="issueDescription"
+            maxlength="4000"
+            rows="3"
+            required
+            [disabled]="saving"
+          ></textarea>
+          <button
+            type="submit"
+            class="primary-button"
+            [disabled]="saving || !issueDescription.trim()"
+          >
+            {{ text('operatorRequest') }}
+          </button>
+          <button
+            type="button"
+            class="text-button"
+            (click)="operatorFormOpen = false"
+            [disabled]="saving"
+          >
+            {{ text('cancel') }}
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <section *ngIf="view === 'history'" class="history-view scroll-area">
+      <div class="section-heading">
+        <h3>{{ text('chatHistory') }}</h3>
+        <button
+          type="button"
+          class="text-button"
+          (click)="startNewCase()"
+          [disabled]="saving || loading"
+        >
+          {{ text('supportNewCase') }}
+        </button>
+      </div>
+      <div *ngIf="!loading && !cases.length" class="empty-history">
+        <ng-container *ngTemplateOutlet="icon; context: { $implicit: 'history' }"></ng-container>
+        <p>{{ text('chatNoHistory') }}</p>
+      </div>
       <button
         type="button"
         *ngFor="let supportCase of cases"
-        [class.selected]="selectedCase?.id === supportCase.id"
+        class="history-item"
+        [disabled]="saving"
         (click)="selectCase(supportCase)"
       >
-        <span>#{{ supportCase.order_number || supportCase.id }}</span>
-        <small>{{ statusLabel(supportCase.status) }}</small>
-      </button>
-    </div>
-
-    <button
-      *ngIf="!selectedCase"
-      type="button"
-      class="support-new-case"
-      (click)="startNewCase()"
-    >{{ i18n.t('supportNewCase') }}</button>
-
-    <form *ngIf="!selectedCase" class="support-create-form" (ngSubmit)="openCase()">
-      <label>
-        {{ i18n.t('supportOrderNumber') }} ({{ i18n.t('optional') }})
-        <input
-          name="orderNumber"
-          [(ngModel)]="orderNumber"
-          [placeholder]="i18n.t('supportOrderPlaceholder')"
-          maxlength="50"
+        <span class="history-icon"
+          ><ng-container *ngTemplateOutlet="icon; context: { $implicit: 'message' }"></ng-container
+        ></span>
+        <span
+          ><strong>{{ caseTitle(supportCase) }}</strong
+          ><small
+            >{{ supportCase.order_number || text('chatGeneralQuestion') }} ·
+            {{ supportCase.updated_at | date: 'dd.MM HH:mm' }}</small
+          ><small *ngIf="supportCase.operator_requested">{{
+            statusLabel(supportCase.status)
+          }}</small></span
         >
-      </label>
-      <label>
-        {{ i18n.t('supportProblemDescription') }}
-        <textarea
-          name="issueDescription"
-          [(ngModel)]="issueDescription"
-          [placeholder]="i18n.t('supportProblemPlaceholder')"
-          required
-          maxlength="4000"
-          rows="3"
-          [disabled]="saving"
-        ></textarea>
-      </label>
-      <button type="submit" [disabled]="saving || !issueDescription.trim()">
-        {{ i18n.t('supportSendRequest') }}
       </button>
-      <p *ngIf="saving" class="support-thinking" role="status">
-        <span class="support-spinner" aria-hidden="true"></span>
-        {{ i18n.t('supportAiThinking') }}
-      </p>
-    </form>
-
-    <section *ngIf="selectedCase" class="support-conversation">
-      <div class="support-case-heading">
-        <button type="button" class="support-back" (click)="selectedCase = null">{{ i18n.t('supportBackToCases') }}</button>
-        <strong *ngIf="selectedCase.order_number">{{ i18n.t('supportOrderNumber') }}: {{ selectedCase.order_number }}</strong>
-        <strong *ngIf="!selectedCase.order_number">{{ i18n.t('supportNewCase') }} #{{ selectedCase.id }}</strong>
-        <span class="support-status" [attr.data-status]="selectedCase.status">{{ statusLabel(selectedCase.status) }}</span>
-      </div>
-
-      <div class="support-messages">
-        <article
-          *ngFor="let message of selectedCase.messages"
-          class="support-message"
-          [class.from-user]="message.sender === 'customer'"
-          [class.from-assistant]="message.sender === 'assistant'"
-          [class.from-staff]="message.sender === 'staff'"
-        >
-          <strong>{{ i18n.t('supportSender.' + message.sender) }}</strong>
-          <p>{{ message.body }}</p>
-          <time>{{ message.created_at | date:'short' }}</time>
-        </article>
-      </div>
-
-      <p *ngIf="selectedCase.resolution" class="support-resolution">
-        <strong>{{ i18n.t('supportResolution') }}:</strong> {{ selectedCase.resolution }}
-      </p>
-
-      <form
-        *ngIf="selectedCase.status !== 'resolved'"
-        class="support-reply-form"
-        (ngSubmit)="sendMessage()"
-      >
-        <textarea
-          name="messageDraft"
-          [(ngModel)]="messageDraft"
-          [placeholder]="i18n.t('supportMessagePlaceholder')"
-          required
-          maxlength="4000"
-          rows="2"
-          [disabled]="saving"
-        ></textarea>
-        <div>
-          <button type="submit" [disabled]="saving || !messageDraft.trim()">
-            {{ i18n.t('supportSendMessage') }}
-          </button>
-        </div>
-        <p *ngIf="saving" class="support-thinking" role="status">
-          <span class="support-spinner" aria-hidden="true"></span>
-          {{ i18n.t('supportAiThinking') }}
-        </p>
-      </form>
-      <p *ngIf="selectedCase.status === 'resolved'" class="support-resolved-note">
-        {{ i18n.t('supportCaseResolved') }}
-      </p>
     </section>
   </section>
+
+  <ng-template #icon let-kind>
+    <svg
+      class="chat-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+      [ngSwitch]="kind"
+    >
+      <path
+        *ngSwitchCase="'spark'"
+        d="m12 3 2.6 6.4L21 12l-6.4 2.6L12 21l-2.6-6.4L3 12l6.4-2.6z M20 2v4 M18 4h4"
+      />
+      <path
+        *ngSwitchCase="'message'"
+        d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6 3V6a2 2 0 0 1 2-2z M7 9h10 M7 13h6"
+      />
+      <path *ngSwitchCase="'close'" d="m6 6 12 12 M18 6 6 18" />
+      <g *ngSwitchCase="'globe'">
+        <circle cx="12" cy="12" r="9" />
+        <ellipse cx="12" cy="12" rx="4" ry="9" />
+        <path d="M3 12h18" />
+      </g>
+      <path *ngSwitchCase="'order'" d="M6 3h12v18l-3-2-3 2-3-2-3 2z M9 7h6 M9 11h6 M9 15h3" />
+      <g *ngSwitchCase="'promo'">
+        <path d="m4 13 9-9h7v7l-9 9z M10 10l5 5" />
+        <circle cx="16" cy="8" r=".7" />
+      </g>
+      <path *ngSwitchCase="'payment'" d="M3 5h18v14H3z M3 10h18 M7 15h3" />
+      <path *ngSwitchCase="'menu'" d="M5 3v6a3 3 0 0 0 6 0V3 M8 3v18 M20 21V3c-5 3-5 10 0 10" />
+      <path *ngSwitchCase="'send'" d="M12 20V4 m-6 6 6-6 6 6" />
+      <g *ngSwitchCase="'history'"><path d="M3 11a9 9 0 1 1 2 7 M3 5v6h6 M12 7v5l3 2" /></g>
+    </svg>
+  </ng-template>
 </ng-container>

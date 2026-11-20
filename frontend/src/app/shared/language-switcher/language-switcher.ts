@@ -18,7 +18,7 @@ export class LanguageSwitcher {
     });
   }
 
-  switchLanguage(lang: 'en' | 'ru'): void {
+  switchLanguage(lang: 'en' | 'ru' | 'kk'): void {
     this.i18n.setLanguage(lang);
   }
 }

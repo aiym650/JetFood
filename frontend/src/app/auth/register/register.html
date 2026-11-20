@@ -26,7 +26,7 @@
       <div class="register-card">
         <app-language-switcher></app-language-switcher>
         <h2>{{ i18n.t('register') }}</h2>
-        <form (ngSubmit)="onSubmit()">
+        <form novalidate (ngSubmit)="onSubmit()">
           <div class="form-group">
             <label for="username">{{ i18n.t('username') }}</label>
             <input
@@ -39,18 +39,17 @@
             >
           </div>
           <div class="form-group">
-            <label for="email">Email</label>
+            <label for="email">Email <small class="optional-label">({{ i18n.t('optionalLabel') }})</small></label>
             <input
               type="email"
               id="email"
               [(ngModel)]="email"
               name="email"
-              required
               [placeholder]="i18n.t('enterEmail')"
             >
           </div>
           <div class="form-group">
-            <label for="phone">{{ i18n.t('phone') }}</label>
+            <label for="phone">{{ i18n.t('phone') }} <small class="optional-label">({{ i18n.t('optionalLabel') }})</small></label>
             <input
               type="tel"
               id="phone"
@@ -59,6 +58,7 @@
               [placeholder]="i18n.t('enterPhone')"
             >
           </div>
+          <p class="contact-optional-note">{{ i18n.t('contactOptionalNote') }}</p>
           <div class="form-group">
             <label for="password">{{ i18n.t('password') }}</label>
             <input

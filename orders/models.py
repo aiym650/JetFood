@@ -1,14 +1,66 @@
 from django.db import models
 from django.db.models import Q
 from django.conf import settings
+from django.core.validators import MinValueValidator
+from backend.image_references import validate_image_reference
+
+
+class PromoCode(models.Model):
+    code = models.CharField(max_length=50, unique=True)
+    kind = models.CharField(max_length=20, choices=[('percent', 'Percent'), ('fixed', 'KZT'), ('delivery', 'Free delivery')])
+    value = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    is_active = models.BooleanField(default=True)
+    starts_at = models.DateTimeField(null=True, blank=True)
+    ends_at = models.DateTimeField(null=True, blank=True)
+    minimum_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    maximum_discount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
+    usage_limit = models.PositiveIntegerField(null=True, blank=True)
+    per_user_limit = models.PositiveIntegerField(null=True, blank=True)
+    used_count = models.PositiveIntegerField(default=0, editable=False)
+    restaurant = models.ForeignKey('restaurants.Restaurant', on_delete=models.PROTECT, null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=Q(value__gte=0, minimum_amount__gte=0), name='promo_amounts_nonnegative'),
+            models.CheckConstraint(condition=~Q(kind='percent') | Q(value__lte=100), name='promo_percent_at_most_100'),
+            models.CheckConstraint(condition=Q(maximum_discount__isnull=True) | Q(maximum_discount__gte=0), name='promo_cap_nonnegative'),
+        ]
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        self.code = self.code.strip().upper()
+        if self.kind == 'percent' and not 0 <= self.value <= 100:
+            raise ValidationError({'value': 'Use a percentage between 0 and 100.'})
+        if self.starts_at and self.ends_at and self.starts_at >= self.ends_at:
+            raise ValidationError({'ends_at': 'End must be after start.'})
+
+    def save(self, *args, **kwargs):
+        self.code = self.code.strip().upper()
+        self.full_clean()
+        if self.pk:
+            # Redemptions update this counter atomically; ordinary admin saves cannot reset it.
+            kwargs['update_fields'] = [f.name for f in self._meta.concrete_fields if f.name not in ['id', 'used_count']]
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.code
+
+
+class PromoRedemption(models.Model):
+    promo = models.ForeignKey(PromoCode, on_delete=models.PROTECT, related_name='redemptions')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    order = models.OneToOneField('Order', on_delete=models.PROTECT, related_name='redemption')
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class MenuItem(models.Model):
+    menu_category = models.ForeignKey('restaurants.MenuCategory', on_delete=models.PROTECT, null=True, blank=True, related_name='items')
+    demo_key = models.CharField(max_length=80, unique=True, null=True, blank=True, editable=False)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     category = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    image_url = models.URLField(max_length=500, blank=True)
+    image_url = models.CharField(max_length=500, blank=True, validators=[validate_image_reference])
     rating = models.DecimalField(max_digits=2, decimal_places=1, default=0)
     is_active = models.BooleanField(default=True)
     restaurant = models.ForeignKey(
@@ -37,8 +89,31 @@ class MenuItem(models.Model):
     def __str__(self):
         return self.name
 
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if not self.menu_category_id and not self.category.strip():
+            raise ValidationError({'menu_category': 'Choose a menu category.'})
+        if self.menu_category_id and self.menu_category.restaurant_id != self.restaurant_id:
+            raise ValidationError({'menu_category': 'Category must belong to the same restaurant.'})
+
+    def save(self, *args, **kwargs):
+        if not self.menu_category_id and self.restaurant_id and self.category:
+            from restaurants.models import MenuCategory
+            self.menu_category, _ = MenuCategory.objects.get_or_create(restaurant_id=self.restaurant_id, name=self.category)
+        self.clean()
+        if self.menu_category_id:
+            self.category = self.menu_category.name
+        super().save(*args, **kwargs)
+
 
 class Order(models.Model):
+    promo_code = models.CharField(max_length=50, blank=True)
+    items_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    delivery_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    idempotency_key = models.CharField(max_length=100, null=True, blank=True)
+    request_fingerprint = models.CharField(max_length=64, blank=True)
     STATUS_CHOICES = [
         ("pending", "Pending"),
         ("confirmed", "Confirmed"),
@@ -98,6 +173,7 @@ class Order(models.Model):
             models.Index(fields=["customer"]),
         ]
         constraints = [
+            models.UniqueConstraint(fields=['customer', 'idempotency_key'], name='order_customer_idempotency'),
             models.CheckConstraint(
                 condition=Q(total_amount__gte=0),
                 name="order_total_not_negative",

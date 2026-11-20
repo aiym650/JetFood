@@ -229,3 +229,6 @@
     font-size: 28px;
   }
 }
+
+.optional-label { font-size: .8em; color: #777; font-weight: normal; }
+.contact-optional-note { background: #f3f5ff; border-left: 3px solid #667eea; padding: 12px; color: #49506a; }

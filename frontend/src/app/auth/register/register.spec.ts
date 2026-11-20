@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
+import { vi } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 
@@ -31,6 +32,7 @@ describe('Register', () => {
 
     fixture = TestBed.createComponent(Register);
     component = fixture.componentInstance;
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     fixture.detectChanges();
   });
 
@@ -39,6 +41,7 @@ describe('Register', () => {
   });
 
   it('shows a specific message when the username is already registered', () => {
+    component.username = 'test-user';
     component.password = 'testpass123';
     component.confirmPassword = component.password;
     authMock.register = () => throwError(() => new HttpErrorResponse({
@@ -48,17 +51,18 @@ describe('Register', () => {
 
     component.onSubmit();
 
-    expect(component.errorMessage).toBe(TestBed.inject(I18nService).t('usernameAlreadyTaken'));
+    expect(component.errorMessage).toBe(TestBed.inject(I18nService).t('registrationFailedUsername'));
   });
 
-  it('shows a backend connection message when registration cannot reach the server', () => {
+  it('shows the generic registration message for a network error', () => {
+    component.username = 'test-user';
     component.password = 'testpass123';
     component.confirmPassword = component.password;
     authMock.register = () => throwError(() => new HttpErrorResponse({ status: 0 }));
 
     component.onSubmit();
 
-    expect(component.errorMessage).toBe(TestBed.inject(I18nService).t('backendUnavailable'));
+    expect(component.errorMessage).toBe(TestBed.inject(I18nService).t('registrationFailed'));
   });
 
   it('should render working navigation links', () => {
@@ -66,5 +70,32 @@ describe('Register', () => {
 
     expect(links[0].getAttribute('href')).toBe('/login');
     expect(links[1].getAttribute('href')).toBe('/landing');
+  });
+
+  it('registers without contacts and preserves spaces in the password', () => {
+    let submitted: any;
+    authMock.register = ((value: any) => { submitted = value; return of({}); }) as any;
+    component.username = '  new-user  ';
+    component.password = component.confirmPassword = ' password123 ';
+    component.onSubmit();
+    expect(submitted).toEqual({ username: 'new-user', email: '', phone: '', password: ' password123 ' });
+    expect(fixture.nativeElement.querySelector('form').hasAttribute('novalidate')).toBe(true);
+    expect(fixture.nativeElement.querySelector('#email').required).toBe(false);
+  });
+
+  it('validates only nonempty trimmed email and phone', () => {
+    component.username = 'new-user';
+    component.password = component.confirmPassword = 'password123';
+    component.email = ' test@ ';
+    component.onSubmit();
+    expect(component.errorMessage).toBe('registrationFailedEmail');
+    component.email = '   ';
+    component.phone = 'abc123';
+    component.onSubmit();
+    expect(component.errorMessage).toBe('registrationFailedPhone');
+    component.phone = ' +77011234567 ';
+    component.onSubmit();
+    expect(component.errorMessage).toBe('');
+    expect(component.phone).toBe('+77011234567');
   });
 });
