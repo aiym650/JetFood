@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import { Dashboard } from './dashboard';
@@ -18,6 +18,7 @@ describe('Dashboard', () => {
 
   beforeEach(async () => {
     localStorage.removeItem('jetfood-cart-45');
+    sessionStorage.removeItem('jetfood-checkout-45');
     const menuItems = [
       { id: 1, name: 'Пицца Маргарита', description: 'Томаты, моцарелла, базилик', price: 890, image_url: '', category: 'Пицца', rating: 4.8, restaurant: 1 },
       { id: 2, name: 'Бургер Классический', description: 'Говядина, сыр, овощи, соус', price: 650, image_url: '', category: 'Бургеры', rating: 4.7, restaurant: 2 },
@@ -441,6 +442,30 @@ describe('Dashboard', () => {
     second.next({ total_amount: '1602.00' });
     first.next({ total_amount: '801.00' });
     expect(component.cartQuote?.total_amount).toBe('1602.00');
+  });
+
+  it('explains a blocked connection and reuses the checkout key on retry', () => {
+    const create = vi.spyOn(TestBed.inject(Orders), 'createOrder')
+      .mockReturnValue(throwError(() => ({ status: 0 })));
+    component.addToCart(component.foodItems[0]);
+    component.deliveryAddress = 'Test address';
+    component.checkout();
+    expect(component.checkoutError).toBe(component.i18n.t('checkoutConnectionFailed'));
+    expect(component.cartItemCount).toBe(1);
+    expect(component.submittingOrder).toBe(false);
+    component.checkout();
+    expect(create.mock.calls[1][1]).toBe(create.mock.calls[0][1]);
+  });
+
+  it('shows the server explanation for a rejected order instead of a generic failure', () => {
+    vi.spyOn(TestBed.inject(Orders), 'createOrder').mockReturnValue(throwError(() => ({
+      status: 400, error: ['You have reached the maximum of 5 pending orders'],
+    })));
+    component.addToCart(component.foodItems[0]);
+    component.deliveryAddress = 'Test address';
+    component.checkout();
+    expect(component.checkoutError).toBe('You have reached the maximum of 5 pending orders');
+    expect(component.cartItemCount).toBe(1);
   });
 
 });

@@ -1,5 +1,10 @@
 export const featureTranslations = {
   en: {
+    checkoutConnectionFailed: 'Could not connect to checkout. Check your connection and try again.',
+    checkoutSessionExpired: 'Your session has expired. Sign in again to place the order.',
+    checkoutRequestConflict: 'This checkout attempt was already used for a different cart. Reload the page and review your orders before trying again.',
+    checkoutBusy: 'Checkout is temporarily busy. Please wait a moment and try again.',
+    checkoutItemsChanged: 'Some dishes are unavailable or the cart contains items from different restaurants. Review your cart.',
     resetPriceFilters: 'Reset', anyPrice: 'Any', promoPlaceholder: 'Enter code', promoApplied: 'Applied:', recalculatingCart: 'Updating your total…',
     chatLauncher: 'Ask AI', chatAssistantName: 'JetFood assistant', chatAssistantSubtitle: 'AI help with orders and the app',
     chatTab: 'AI chat', chatHistory: 'History', chatLanguage: 'Conversation language', chatNavigation: 'Support sections',
@@ -33,6 +38,11 @@ export const featureTranslations = {
     promoErrors: { not_found: 'Code not found.', inactive: 'Code is inactive.', not_started: 'Code is not active yet.', expired: 'Code has expired.', restaurant: 'Code does not apply to this restaurant.', minimum: 'The minimum item subtotal has not been reached.', limit: 'Usage limit reached.', user_limit: 'You have reached your usage limit.' },
   },
   ru: {
+    checkoutConnectionFailed: 'Не удалось связаться с сервером оформления заказа. Проверьте соединение и повторите попытку.',
+    checkoutSessionExpired: 'Сессия истекла. Войдите снова, чтобы оформить заказ.',
+    checkoutRequestConflict: 'Эта попытка оформления уже использована для другой корзины. Обновите страницу и проверьте свои заказы перед повторной попыткой.',
+    checkoutBusy: 'Сервис оформления временно занят. Немного подождите и повторите попытку.',
+    checkoutItemsChanged: 'Некоторые блюда недоступны или в корзине есть блюда разных ресторанов. Проверьте состав корзины.',
     resetPriceFilters: 'Сбросить', anyPrice: 'Любая', promoPlaceholder: 'Введите код', promoApplied: 'Применён:', recalculatingCart: 'Пересчитываем сумму…',
     chatLauncher: 'Спросить AI', chatAssistantName: 'Помощник JetFood', chatAssistantSubtitle: 'ИИ отвечает о заказах и приложении',
     chatTab: 'Чат с ИИ', chatHistory: 'История', chatLanguage: 'Язык беседы', chatNavigation: 'Разделы поддержки',
@@ -66,6 +76,11 @@ export const featureTranslations = {
     promoErrors: { not_found: 'Промокод не найден.', inactive: 'Промокод отключён.', not_started: 'Срок действия ещё не начался.', expired: 'Срок действия истёк.', restaurant: 'Промокод не подходит для этого ресторана.', minimum: 'Не достигнута минимальная стоимость товаров.', limit: 'Лимит использований исчерпан.', user_limit: 'Вы исчерпали свой лимит использований.' },
   },
   kk: {
+    checkoutConnectionFailed: 'Тапсырысты рәсімдеу серверімен байланысу мүмкін болмады. Байланысты тексеріп, қайталаңыз.',
+    checkoutSessionExpired: 'Сессия аяқталды. Тапсырыс беру үшін қайта кіріңіз.',
+    checkoutRequestConflict: 'Бұл рәсімдеу әрекеті басқа себет үшін қолданылған. Қайталаудан бұрын бетті жаңартып, тапсырыстарыңызды тексеріңіз.',
+    checkoutBusy: 'Тапсырысты рәсімдеу қызметі уақытша бос емес. Біраз күтіп, қайталап көріңіз.',
+    checkoutItemsChanged: 'Кейбір тағамдар қолжетімсіз немесе себетте әртүрлі мейрамханалардың тағамдары бар. Себетті тексеріңіз.',
     resetPriceFilters: 'Тазарту', anyPrice: 'Шектеусіз', promoPlaceholder: 'Кодты енгізіңіз', promoApplied: 'Қолданылды:', recalculatingCart: 'Сома қайта есептелуде…',
     filterByPrice: 'Баға бойынша сүзгі', minPrice: 'Ең төменгі баға', maxPrice: 'Ең жоғары баға',
     chatLauncher: 'AI-дан сұрау', chatAssistantName: 'JetFood көмекшісі', chatAssistantSubtitle: 'AI тапсырыстар мен қолданба туралы жауап береді',

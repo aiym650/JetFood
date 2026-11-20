@@ -85,6 +85,31 @@ class OrderTestCase(TestCase):
         order_item = OrderItem.objects.get(order_id=response.data["id"])
         self.assertEqual(order_item.menu_item, self.pizza)
 
+    def test_browser_cash_checkout_with_idempotency_header(self):
+        self.client.force_authenticate(user=self.customer)
+        origin = 'http://localhost:4200'
+        preflight = self.client.options(
+            '/api/orders/', HTTP_ORIGIN=origin,
+            HTTP_ACCESS_CONTROL_REQUEST_METHOD='POST',
+            HTTP_ACCESS_CONTROL_REQUEST_HEADERS='authorization,content-type,idempotency-key',
+        )
+        self.assertIn('idempotency-key', preflight.headers['Access-Control-Allow-Headers'].lower())
+        payload = {
+            'delivery_address': 'Test delivery address', 'payment_method': 'cash',
+            'promo_code': '', 'items': [{'item_id': self.pizza.pk, 'quantity': 1, 'price_per_item': '0.01'}],
+        }
+        first = self.client.post('/api/orders/', payload, format='json', HTTP_ORIGIN=origin, HTTP_IDEMPOTENCY_KEY='browser-cash-checkout')
+        self.assertEqual(first.status_code, 201, first.data)
+        self.assertEqual(first.headers['Access-Control-Allow-Origin'], origin)
+        self.assertEqual(first.data['total_amount'], str(self.pizza.price))
+        order = Order.objects.get(pk=first.data['id'])
+        self.assertEqual(order.payment.method, 'cash')
+        self.assertEqual(order.payment.amount, self.pizza.price)
+        repeated = self.client.post('/api/orders/', payload, format='json', HTTP_ORIGIN=origin, HTTP_IDEMPOTENCY_KEY='browser-cash-checkout')
+        self.assertEqual(repeated.status_code, 200, repeated.data)
+        self.assertEqual(repeated.data['id'], first.data['id'])
+        self.assertEqual(Order.objects.filter(customer=self.customer).count(), 1)
+
     def test_order_rejects_non_positive_quantity_or_unknown_menu_item(self):
         self.client.force_authenticate(user=self.customer)
         for item_id, quantity in [(self.pizza.id, 0), (99999, 1)]:

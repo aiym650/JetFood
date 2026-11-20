@@ -571,13 +571,33 @@ export class Dashboard implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: (error) => {
-        this.checkoutError = error.error?.promo_error
-          ? this.promotionError(error) : this.i18n.t('orderCreateFailed');
+        this.checkoutError = this.orderError(error);
         this.submittingOrder = false;
         this.clearCardDetails();
         this.changeDetector.markForCheck();
       },
     });
+  }
+
+  private orderError(error: { status?: number; error?: any }): string {
+    if (error.status === 0) return this.i18n.t('checkoutConnectionFailed');
+    if (error.error?.promo_error) return this.promotionError(error);
+    if (error.status === 401) return this.i18n.t('checkoutSessionExpired');
+    if (error.status === 409) return this.i18n.t('checkoutRequestConflict');
+    if (error.status === 429 || error.status === 503) return this.i18n.t('checkoutBusy');
+    if (error.error && typeof error.error === 'object' && !Array.isArray(error.error)) {
+      if (error.error.delivery_address) return this.i18n.t('missingDeliveryAddress');
+      if (error.error.items) return this.i18n.t('checkoutItemsChanged');
+    }
+    // DRF may return a list for business validation. Show its actual explanation.
+    if (error.status === 400) {
+      const body = error.error;
+      const raw = Array.isArray(body) ? body : body?.non_field_errors ?? body?.detail;
+      const details = Array.isArray(raw) ? raw : [raw];
+      const message = details.find((value: unknown) => typeof value === 'string' && value.trim());
+      if (message) return message;
+    }
+    return this.i18n.t('orderCreateFailed');
   }
 
   applyPromo(): void {
