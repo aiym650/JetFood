@@ -1,0 +1,2038 @@
+
+/* app-dashboard */
+app-dashboard{display:block;color:#242424}app-dashboard .dashboard-container{min-height:100%;background:#fff9f2}app-dashboard .dashboard-container .main-content{min-height:calc(100vh - 76px);padding-bottom:40px}
+app-dashboard .dashboard-container .top-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px clamp(18px,4vw,54px)}app-dashboard .dashboard-container .search-bar{position:relative;width:min(460px,68%)}app-dashboard .dashboard-container .search-bar input{box-sizing:border-box;width:100%;min-height:46px;padding:11px 15px 11px 44px;border:1px solid #f0e2d6;border-radius:14px;background:#fff;box-shadow:0 5px 18px #64432d0b;font:inherit;font-size:14px}app-dashboard .dashboard-container .search-bar input:focus{outline:3px solid #ffe2d4;border-color:#ff6b35}app-dashboard .dashboard-container .search-icon{position:absolute;top:50%;left:16px;width:13px;height:13px;transform:translateY(-60%);border:2px solid #8a817a;border-radius:50%}app-dashboard .dashboard-container .search-icon:after{position:absolute;right:-5px;bottom:-3px;width:6px;height:2px;transform:rotate(45deg);border-radius:2px;background:#8a817a;content:''}app-dashboard .dashboard-container .top-bar-meta{display:flex;align-items:center;gap:12px}app-dashboard .dashboard-container .delivery-note{color:#77716c;font-size:13px}app-dashboard .dashboard-container .cart-trigger{display:flex;min-height:44px;align-items:center;gap:10px;padding:8px 14px;border:0;border-radius:13px;background:#ff6b35;color:#fff;font:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px #ff6b352e}app-dashboard .dashboard-container .cart-trigger:hover{background:#e85a28}app-dashboard .dashboard-container .cart-count{display:grid;width:23px;height:23px;place-items:center;border-radius:50%;background:#ffc857;color:#4a2c16;font-size:12px}
+app-dashboard .dashboard-container .hero-section{position:relative;display:grid;min-height:290px;grid-template-columns:minmax(0,1fr) minmax(160px,.65fr) minmax(145px,.55fr);align-items:center;gap:clamp(14px,3vw,30px);overflow:hidden;margin:4px clamp(18px,4vw,54px) 0;padding:clamp(22px,4vw,40px);border:1px solid #f4dfcf;border-radius:26px;background:#fff1e5}app-dashboard .dashboard-container .hero-section:after{position:absolute;right:-85px;bottom:-150px;width:280px;height:280px;border:36px solid #ffc85738;border-radius:50%;content:'';pointer-events:none}app-dashboard .dashboard-container .hero-copy, app-dashboard .dashboard-container .hero-visual, app-dashboard .dashboard-container .hero-promo{position:relative;z-index:1}app-dashboard .dashboard-container .hero-eyebrow{display:inline-flex;margin:0 0 13px;padding:7px 10px;border-radius:99px;background:#ffe1c9;color:#ad4b2d;font-size:10px;font-weight:800;letter-spacing:.12em}app-dashboard .dashboard-container .hero-section h1{max-width:570px;margin:0 0 12px;color:#242424;font-size:clamp(29px,4vw,46px);font-weight:780;letter-spacing:-.045em;line-height:1.08}app-dashboard .dashboard-container .hero-copy>p:not(.hero-eyebrow){max-width:460px;margin:0;color:#726861;font-size:14px;line-height:1.6}app-dashboard .dashboard-container .hero-order-button{display:inline-flex;min-height:46px;align-items:center;gap:10px;margin-top:18px;padding:0 18px;border-radius:13px;background:#ff6b35;color:#fff;font-size:14px;font-weight:700;text-decoration:none;box-shadow:0 8px 18px #ff6b3538;transition:transform .18s,background .18s}app-dashboard .dashboard-container .hero-order-button:hover{transform:translateY(-2px);background:#e85a28}app-dashboard .dashboard-container .hero-order-button span{font-size:20px}app-dashboard .dashboard-container .hero-visual{display:grid;width:min(100%,260px);aspect-ratio:1;place-self:center;place-items:center}app-dashboard .dashboard-container .hero-visual:before{position:absolute;inset:5%;border:8px solid #ffffffad;border-radius:50%;content:''}app-dashboard .dashboard-container .hero-visual img{width:88%;height:88%;border:7px solid #fff;border-radius:50%;object-fit:cover;box-shadow:0 16px 38px #6d432e2b;transform:rotate(-6deg)}app-dashboard .dashboard-container .hero-promo{display:grid;min-width:0;gap:7px;padding:16px;border:1px solid #ffffffdb;border-radius:17px;background:#fffaf5;box-shadow:0 10px 24px #7b503214}app-dashboard .dashboard-container .hero-promo span{color:#df5b34;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}app-dashboard .dashboard-container .hero-promo strong{color:#302b28;font-size:15px;line-height:1.35}app-dashboard .dashboard-container .hero-promo small{color:#7d756e;font-size:12px;line-height:1.5}
+app-dashboard .dashboard-container .restaurant-catalog, app-dashboard .dashboard-container .catalog-section{padding:32px clamp(18px,4vw,54px) 16px}app-dashboard .dashboard-container .section-heading{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:17px}app-dashboard .dashboard-container .section-heading h2{margin:0 0 7px;color:#242424;font-size:clamp(22px,2.4vw,28px);font-weight:760;letter-spacing:-.035em}app-dashboard .dashboard-container .section-heading p{margin:0;color:#77716c;font-size:14px}app-dashboard .dashboard-container .result-count{display:grid;min-width:34px;height:34px;place-items:center;border-radius:11px;background:#fff0e7;color:#ce5634;font-weight:700}
+app-dashboard .dashboard-container .home-categories{display:flex;gap:9px;overflow-x:auto;margin:0 0 23px;padding:3px 1px 9px;scrollbar-width:thin;scrollbar-color:#e8cdbb transparent}app-dashboard .dashboard-container .home-category{display:flex;min-width:max-content;min-height:47px;align-items:center;gap:8px;padding:7px 13px 7px 8px;border:1px solid #f0e5dc;border-radius:14px;background:#fff;color:#59524d;cursor:pointer;font-size:13px;font-weight:650;transition:transform .18s,border-color .18s}app-dashboard .dashboard-container .home-category:hover{transform:translateY(-2px);border-color:#ffc5a8}app-dashboard .dashboard-container .home-category.active{border-color:#ff6b35;background:#fff0e7;color:#c94f2d}app-dashboard .dashboard-container .home-category-icon{display:grid;width:30px;height:30px;place-items:center;border-radius:10px;background:#fff2e8;font-size:17px}
+app-dashboard .dashboard-container .home-highlights{margin:0 0 30px}app-dashboard .dashboard-container .home-highlights-heading h2{margin:0 0 13px;color:#242424;font-size:20px;font-weight:750}app-dashboard .dashboard-container .home-highlight-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}app-dashboard .dashboard-container .home-highlight{min-height:132px;padding:17px;border:1px solid #f0e5dc;border-radius:17px;background:#fff}app-dashboard .dashboard-container .home-highlight h3{margin:9px 0 6px;color:#302b28;font-size:15px;font-weight:740}app-dashboard .dashboard-container .home-highlight p{margin:0;color:#77716c;font-size:12px;line-height:1.5}app-dashboard .dashboard-container .home-highlight-promo{border-color:#ffdcc8;background:#fff0e4}app-dashboard .dashboard-container .highlight-kicker{display:inline-flex;padding:5px 8px;border-radius:8px;background:#ff6b35;color:#fff;font-size:10px;font-weight:750;text-transform:uppercase}app-dashboard .dashboard-container .home-highlight-promo a{display:inline-flex;gap:7px;margin-top:10px;color:#c94f2d;font-size:12px;font-weight:750;text-decoration:none}app-dashboard .dashboard-container .highlight-icon{display:grid;width:31px;height:31px;place-items:center;border-radius:10px;background:#fff1e7;color:#df5b34;font-size:21px}app-dashboard .dashboard-container .home-highlight-delivery{background:#f0f8ef}app-dashboard .dashboard-container .home-highlight-delivery .highlight-icon{background:#dbf0dc;color:#318957}app-dashboard .dashboard-container .home-highlight-favorites{background:#fff9e8}app-dashboard .dashboard-container .home-highlight-favorites .highlight-icon{background:#ffefc3;color:#be7c20}
+app-dashboard .dashboard-container .restaurant-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,255px),1fr));gap:18px}app-dashboard .dashboard-container .restaurant-card{display:grid;grid-template-rows:180px 1fr;min-width:0;overflow:hidden;padding:0;border:1px solid #f0e5dc;border-radius:19px;background:#fff;color:#242424;text-align:left;cursor:pointer;box-shadow:0 6px 20px #4730220b;transition:transform .18s,box-shadow .18s}app-dashboard .dashboard-container .restaurant-card:hover{transform:translateY(-3px);box-shadow:0 13px 28px #4730221a}app-dashboard .dashboard-container .restaurant-card img, app-dashboard .dashboard-container .restaurant-image-placeholder{display:grid;width:100%;height:180px;place-items:center;object-fit:cover;background:#ffe9d7;color:#bd5a35;font-size:24px;font-weight:800}app-dashboard .dashboard-container .restaurant-card-info{display:grid;align-content:start;gap:6px;padding:15px}app-dashboard .dashboard-container .restaurant-card-info strong{color:#292521;font-size:17px}app-dashboard .dashboard-container .restaurant-card-info>span{color:#77716c;font-size:12px;line-height:1.4}app-dashboard .dashboard-container .restaurant-card-info .restaurant-rating{color:#302b28;font-weight:700}app-dashboard .dashboard-container .restaurant-rating>span{color:#e4a626}app-dashboard .dashboard-container .restaurant-rating small{color:#8a817a;font-size:11px;font-weight:500}app-dashboard .dashboard-container .restaurant-card-info .restaurant-menu-link{margin-top:4px;padding-top:10px;border-top:1px solid #f3ece6;color:#d85631;font-size:12px;font-weight:700}app-dashboard .dashboard-container .back-to-restaurants{margin:0 0 9px;padding:0;border:0;background:none;color:#d85631;font:inherit;font-size:13px;font-weight:700;cursor:pointer}app-dashboard .dashboard-container .categories{display:flex;gap:9px;overflow-x:auto;padding:2px 0 13px}app-dashboard .dashboard-container .category-btn{padding:9px 14px;border:1px solid #f0e2d6;border-radius:22px;background:#fff;color:#655d56;font-size:13px;font-weight:650;cursor:pointer;white-space:nowrap}app-dashboard .dashboard-container .category-btn.active{border-color:#ff6b35;background:#ff6b35;color:#fff}
+app-dashboard .dashboard-container .food-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,215px),1fr));gap:16px}app-dashboard .dashboard-container .food-card{overflow:hidden;border:1px solid #f0e5dc;border-radius:17px;background:#fff;box-shadow:0 5px 18px #4730220d;transition:transform .18s,box-shadow .18s}app-dashboard .dashboard-container .food-card:hover{transform:translateY(-3px);box-shadow:0 12px 25px #4730221a}app-dashboard .dashboard-container .food-image{position:relative;height:165px;overflow:hidden;background:#fff0e4}app-dashboard .dashboard-container .food-image img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .3s}app-dashboard .dashboard-container .food-card:hover .food-image img{transform:scale(1.04)}app-dashboard .dashboard-container .food-rating{position:absolute;right:9px;bottom:9px;padding:5px 8px;border-radius:9px;background:#fffffff2;color:#34312e;font-size:12px;font-weight:700}app-dashboard .dashboard-container .food-rating span{color:#e4a626}app-dashboard .dashboard-container .food-info{padding:14px}app-dashboard .dashboard-container .food-category{margin-bottom:6px;color:#d85631;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}app-dashboard .dashboard-container .food-name{margin:0 0 6px;color:#292521;font-size:16px;font-weight:700}app-dashboard .dashboard-container .food-description{min-height:34px;margin:0 0 11px;color:#77716c;font-size:12px;line-height:1.5}app-dashboard .dashboard-container .food-footer{display:flex;align-items:center;justify-content:space-between;gap:8px}app-dashboard .dashboard-container .food-price{color:#292521;font-size:16px;font-weight:750}app-dashboard .dashboard-container .add-to-cart-btn{min-height:38px;padding:8px 11px;border:0;border-radius:10px;background:#ff6b35;color:#fff;font-size:12px;font-weight:700;cursor:pointer}app-dashboard .dashboard-container .add-to-cart-btn:hover{background:#e85a28}app-dashboard .dashboard-container .empty-menu{padding:32px 18px;border:1px dashed #efdccc;border-radius:16px;background:#fff;color:#77716c;text-align:center}
+app-dashboard .dashboard-container .cart-sidebar{position:fixed;z-index:1000;top:0;right:0;display:flex;width:min(420px,100vw);height:100dvh;box-sizing:border-box;flex-direction:column;border-left:1px solid #f1e7de;border-radius:19px 0 0 19px;background:#fffdfa;box-shadow:-16px 0 44px #3e2a2926}app-dashboard .dashboard-container .cart-header{display:flex;align-items:center;gap:10px;padding:19px;border-bottom:1px solid #f2e8df}app-dashboard .dashboard-container .cart-header h3{margin:0;color:#292521;font-size:19px}app-dashboard .dashboard-container .clear-cart{margin-left:auto;border:0;background:none;color:#c94f2d;font-size:13px;font-weight:650;cursor:pointer}app-dashboard .dashboard-container .close-cart{border:0;background:none;color:#77716c;font-size:25px;cursor:pointer}app-dashboard .dashboard-container .cart-items{flex:0 1 auto;max-height:26dvh;overflow-y:auto;padding:13px 16px}app-dashboard .dashboard-container .cart-item{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;margin-bottom:9px;padding:11px;border:1px solid #f1e7de;border-radius:12px;background:#fff}app-dashboard .dashboard-container .cart-item-info{display:grid;gap:5px}app-dashboard .dashboard-container .cart-item-name{color:#34312e;font-size:13px;font-weight:650}app-dashboard .dashboard-container .cart-item-price{color:#77716c;font-size:12px}app-dashboard .dashboard-container .quantity-control{display:flex;align-items:center;gap:8px}app-dashboard .dashboard-container .quantity-control button{width:28px;height:28px;border:1px solid #f1dfd3;border-radius:8px;background:#fff;color:#c94f2d;font-size:17px;cursor:pointer}app-dashboard .dashboard-container .quantity-control span{min-width:12px;font-size:13px;font-weight:650;text-align:center}app-dashboard .dashboard-container .cart-footer{flex:1;min-height:0;overflow-y:auto;padding:16px 19px 22px;border-top:1px solid #f2e8df}app-dashboard .dashboard-container .address-field{display:grid;gap:6px;margin-bottom:12px;color:#5f5751;font-size:12px;font-weight:650}app-dashboard .dashboard-container .address-field input, app-dashboard .dashboard-container .address-field select{box-sizing:border-box;width:100%;min-height:42px;padding:9px 11px;border:1px solid #efdfd2;border-radius:10px;background:#fff;font:inherit;font-size:13px}app-dashboard .dashboard-container .card-payment-form{display:grid;gap:2px;margin:14px 0;padding:14px;border:1px solid #f0e5dc;border-radius:13px;background:#fffaf5}app-dashboard .dashboard-container .card-payment-form h4{margin:0 0 5px;color:#302b28}app-dashboard .dashboard-container .checkout-message{margin:0 0 9px;font-size:12px}app-dashboard .dashboard-container .checkout-error{color:#b43e35}app-dashboard .dashboard-container .checkout-success{position:fixed;z-index:1001;right:20px;bottom:20px;max-width:380px;padding:13px 17px;border-radius:12px;background:#e9f6ec;color:#267345;box-shadow:0 8px 24px #0002;font-size:14px}app-dashboard .dashboard-container .cart-total{display:flex;justify-content:space-between;margin-bottom:13px;color:#292521;font-size:16px;font-weight:700}app-dashboard .dashboard-container .checkout-btn{position:sticky;bottom:0;width:100%;min-height:47px;padding:12px;border:0;border-radius:12px;background:#ff6b35;color:#fff;font-size:14px;font-weight:750;cursor:pointer;box-shadow:0 6px 15px #ff6b3533}app-dashboard .dashboard-container .checkout-btn:hover:not(:disabled){background:#e85a28}app-dashboard .dashboard-container .checkout-btn:disabled{opacity:.6;cursor:wait}app-dashboard .dashboard-container .payment-receipt{position:static;max-width:500px;margin:24px auto}app-dashboard .dashboard-container .catalog-price-panel{margin-bottom:16px}app-dashboard .dashboard-container .cart-sidebar .promo-panel{margin:13px 0}app-dashboard .dashboard-container .quote-summary{display:grid;gap:9px;margin:17px 0}app-dashboard .dashboard-container .quote-row{display:flex;justify-content:space-between;gap:12px;color:#77716c;font-size:13px}app-dashboard .dashboard-container .quote-row dd{margin:0;color:#3c3631}app-dashboard .dashboard-container .quote-row.is-discount dd{color:#267345}app-dashboard .dashboard-container .quote-summary .cart-total{padding-top:13px;border-top:1px solid #f0e5dc}app-dashboard .dashboard-container .quote-summary .cart-total dd{margin:0;font-size:20px}
+@media(max-width:900px){app-dashboard .dashboard-container .hero-section{grid-template-columns:minmax(0,1fr) minmax(145px,.65fr)}app-dashboard .dashboard-container .hero-promo{grid-column:1/-1}app-dashboard .dashboard-container .home-highlight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){app-dashboard .dashboard-container .top-bar{padding:8px 14px 13px}app-dashboard .dashboard-container .search-bar{width:auto;flex:1}app-dashboard .dashboard-container .search-bar input{min-height:43px;padding-left:40px}app-dashboard .dashboard-container .delivery-note{display:none}app-dashboard .dashboard-container .cart-trigger{min-height:42px;padding:7px 9px}app-dashboard .dashboard-container .hero-section{grid-template-columns:minmax(0,1fr) minmax(90px,.5fr);gap:9px;margin:0 14px;padding:21px 16px;border-radius:21px}app-dashboard .dashboard-container .hero-section h1{font-size:clamp(25px,7vw,33px)}app-dashboard .dashboard-container .hero-copy>p:not(.hero-eyebrow){font-size:13px}app-dashboard .dashboard-container .hero-promo{grid-column:1/-1}app-dashboard .dashboard-container .restaurant-catalog, app-dashboard .dashboard-container .catalog-section{padding:24px 14px 9px}app-dashboard .dashboard-container .home-highlight-grid{grid-template-columns:1fr;gap:8px}app-dashboard .dashboard-container .home-highlight{min-height:0;padding:15px}app-dashboard .dashboard-container .restaurant-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}app-dashboard .dashboard-container .restaurant-card{grid-template-rows:124px 1fr;border-radius:14px}app-dashboard .dashboard-container .restaurant-card img, app-dashboard .dashboard-container .restaurant-image-placeholder{height:124px}app-dashboard .dashboard-container .restaurant-card-info{gap:5px;padding:9px}app-dashboard .dashboard-container .restaurant-card-info strong{font-size:14px}app-dashboard .dashboard-container .restaurant-card-info>span{font-size:10px}app-dashboard .dashboard-container .food-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}app-dashboard .dashboard-container .food-image{height:118px}app-dashboard .dashboard-container .food-info{padding:9px}app-dashboard .dashboard-container .food-footer{align-items:flex-start;flex-direction:column}app-dashboard .dashboard-container .add-to-cart-btn{width:100%}app-dashboard .dashboard-container .cart-sidebar{width:100%;border-radius:0}}
+@media(max-width:380px){app-dashboard .dashboard-container .hero-section{grid-template-columns:1fr}app-dashboard .dashboard-container .hero-visual{display:none}app-dashboard .dashboard-container .restaurant-grid, app-dashboard .dashboard-container .food-grid{grid-template-columns:1fr}app-dashboard .dashboard-container .restaurant-card{grid-template-rows:160px 1fr}app-dashboard .dashboard-container .restaurant-card img, app-dashboard .dashboard-container .restaurant-image-placeholder{height:160px}}
+
+
+/* app-landing */
+/* Global Styles */
+app-landing .landing-container * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+app-landing .landing-container {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: #ffffff;
+  min-height: 100vh;
+}
+
+app-landing .landing-container .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Navbar */
+app-landing .landing-container .navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+  padding: 15px 0;
+}
+
+app-landing .landing-container .navbar-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+app-landing .landing-container .logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0066ff;
+}
+
+app-landing .landing-container .logo-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: #ffcc4d;
+  color: #17233c;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+app-landing .landing-container .nav-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+/* Buttons */
+app-landing .landing-container .btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+app-landing .landing-container .btn-primary {
+  background: #0066ff;
+  color: white;
+}
+
+app-landing .landing-container .btn-primary:hover {
+  background: #0052cc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
+}
+
+app-landing .landing-container .btn-outline {
+  background: transparent;
+  color: #0066ff;
+  border: 2px solid #0066ff;
+}
+
+app-landing .landing-container .btn-outline:hover {
+  background: #0066ff;
+  color: white;
+}
+
+app-landing .landing-container .btn-large {
+  padding: 16px 32px;
+  font-size: 16px;
+}
+
+/* Hero Section */
+app-landing .landing-container .hero-section {
+  padding-top: 100px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+app-landing .landing-container .hero-section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+app-landing .landing-container .hero-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+app-landing .landing-container .hero-text {
+  color: white;
+}
+
+app-landing .landing-container .hero-text h1 {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+app-landing .landing-container .hero-text p {
+  font-size: 20px;
+  line-height: 1.6;
+  margin-bottom: 32px;
+  opacity: 0.95;
+}
+
+app-landing .landing-container .hero-buttons {
+  display: flex;
+  gap: 16px;
+}
+
+app-landing .landing-container .hero-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+app-landing .landing-container .food-illustration {
+  width: min(440px, 42vw);
+  height: 440px;
+  border: 12px solid rgba(255, 255, 255, 0.2);
+  border-radius: 34px;
+  object-fit: cover;
+  box-shadow: 0 24px 70px rgba(28, 23, 58, 0.28);
+}
+
+/* Features Section */
+app-landing .landing-container .features-section {
+  padding: 100px 0;
+  background: #f8f9fa;
+}
+
+app-landing .landing-container .section-title {
+  text-align: center;
+  font-size: 36px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 60px;
+}
+
+app-landing .landing-container .features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+}
+
+app-landing .landing-container .feature-card {
+  background: white;
+  padding: 40px 30px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+app-landing .landing-container .feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+app-landing .landing-container .feature-icon {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 20px;
+  border-radius: 17px;
+  background: #fff1e9;
+  color: #ce5634;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+app-landing .landing-container .feature-card h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+app-landing .landing-container .feature-card p {
+  color: #666;
+  line-height: 1.6;
+}
+
+/* How It Works Section */
+app-landing .landing-container .how-it-works-section {
+  padding: 100px 0;
+  background: white;
+}
+
+app-landing .landing-container .steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 40px;
+}
+
+app-landing .landing-container .step {
+  text-align: center;
+  padding: 30px;
+}
+
+app-landing .landing-container .step-number {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 auto 20px;
+}
+
+app-landing .landing-container .step h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+app-landing .landing-container .step p {
+  color: #666;
+  line-height: 1.6;
+}
+
+/* CTA Section */
+app-landing .landing-container .cta-section {
+  padding: 100px 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  text-align: center;
+  color: white;
+}
+
+app-landing .landing-container .cta-section h2 {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+app-landing .landing-container .cta-section p {
+  font-size: 18px;
+  margin-bottom: 32px;
+  opacity: 0.95;
+}
+
+/* Footer */
+app-landing .landing-container .footer {
+  background: #1a1a2e;
+  color: white;
+  padding: 60px 0 20px;
+}
+
+app-landing .landing-container .footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+app-landing .landing-container .footer-section h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+app-landing .landing-container .footer-section h4 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+app-landing .landing-container .footer-section ul {
+  list-style: none;
+}
+
+app-landing .landing-container .footer-section ul li {
+  margin-bottom: 10px;
+}
+
+app-landing .landing-container .footer-section ul li a {
+  color: #ccc;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+app-landing .landing-container .footer-section ul li a:hover {
+  color: white;
+}
+
+app-landing .landing-container .app-btn {
+  background: #333;
+  color: white;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+app-landing .landing-container .app-btn:hover {
+  background: #444;
+}
+
+app-landing .landing-container .footer-bottom {
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid #333;
+  color: #888;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  app-landing .landing-container .hero-content {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  app-landing .landing-container .hero-text h1 {
+    font-size: 36px;
+  }
+
+  app-landing .landing-container .hero-buttons {
+    flex-direction: column;
+  }
+
+  app-landing .landing-container .hero-image {
+    display: none;
+  }
+
+  app-landing .landing-container .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  app-landing .landing-container .steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+app-landing .landing-container {
+  color: #242424;
+  background: #fff9f2;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+app-landing .landing-container .navbar {
+  border-bottom: 1px solid #f1e8df;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 5px 24px rgba(89, 61, 43, 0.05);
+}
+
+app-landing .landing-container .logo {
+  color: #242424;
+  letter-spacing: -0.6px;
+}
+
+app-landing .landing-container .logo-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: #ff6b35;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(255, 107, 53, 0.2);
+}
+
+app-landing .landing-container .hero-section {
+  min-height: 0;
+  padding: 105px 0 70px;
+  background: #fff9f2;
+}
+
+app-landing .landing-container .hero-section::before {
+  display: none;
+  animation: none;
+}
+
+app-landing .landing-container .hero-content {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.9fr);
+  gap: clamp(32px, 6vw, 80px);
+  padding-top: 40px;
+  padding-bottom: 28px;
+}
+
+app-landing .landing-container .hero-text {
+  color: #242424;
+}
+
+app-landing .landing-container .hero-text h1 {
+  max-width: 620px;
+  font-size: clamp(38px, 5.3vw, 62px);
+  letter-spacing: -0.055em;
+  line-height: 1.04;
+}
+
+app-landing .landing-container .hero-text p {
+  max-width: 560px;
+  color: #706760;
+  font-size: 17px;
+}
+
+app-landing .landing-container .food-illustration {
+  width: min(430px, 36vw);
+  height: min(430px, 36vw);
+  border: 10px solid #fff;
+  border-radius: 46% 54% 54% 46% / 48% 44% 56% 52%;
+  box-shadow: 0 22px 54px rgba(115, 77, 50, 0.16);
+  transform: rotate(2deg);
+}
+
+app-landing .landing-container .btn {
+  border-radius: 13px;
+}
+
+app-landing .landing-container .btn-primary {
+  background: #ff6b35;
+  box-shadow: 0 8px 18px rgba(255, 107, 53, 0.18);
+}
+
+app-landing .landing-container .btn-primary:hover {
+  transform: translateY(-2px);
+  background: #e85a28;
+  box-shadow: 0 10px 24px rgba(255, 107, 53, 0.22);
+}
+
+app-landing .landing-container .btn-outline {
+  border: 1px solid #f0cbb6;
+  background: #fff;
+  color: #bd5635;
+}
+
+app-landing .landing-container .btn-outline:hover {
+  border-color: #ff6b35;
+  background: #fff2e8;
+  color: #ae4b2d;
+}
+
+app-landing .landing-container .features-section, app-landing .landing-container .how-it-works-section {
+  padding: 72px 0;
+  background: #fff;
+}
+
+app-landing .landing-container .section-title {
+  margin-bottom: 38px;
+  color: #242424;
+  font-size: clamp(27px, 3.5vw, 36px);
+  letter-spacing: -0.04em;
+}
+
+app-landing .landing-container .features-grid {
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  gap: 18px;
+}
+
+app-landing .landing-container .feature-card {
+  padding: 30px 24px;
+  border: 1px solid #f0e5dc;
+  border-radius: 20px;
+  box-shadow: 0 7px 22px rgba(71, 48, 34, 0.045);
+}
+
+app-landing .landing-container .feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 13px 28px rgba(71, 48, 34, 0.09);
+}
+
+app-landing .landing-container .feature-icon {
+  border-radius: 16px;
+  background: #fff0e4;
+  color: #c94f2d;
+}
+
+app-landing .landing-container .feature-card h3, app-landing .landing-container .step h3 {
+  color: #292521;
+}
+
+app-landing .landing-container .feature-card p, app-landing .landing-container .step p {
+  color: #77716c;
+}
+
+app-landing .landing-container .step-number {
+  background: #ff6b35;
+  box-shadow: 0 8px 18px rgba(255, 107, 53, 0.18);
+}
+
+app-landing .landing-container .cta-section {
+  padding: 72px 0;
+  background: #fff0e4;
+  color: #292521;
+}
+
+app-landing .landing-container .cta-section p {
+  color: #706760;
+}
+
+app-landing .landing-container .cta-section h2 {
+  font-size: clamp(28px, 4vw, 40px);
+  letter-spacing: -0.04em;
+}
+
+app-landing .landing-container .footer {
+  background: #292521;
+}
+
+app-landing .landing-container .footer-section ul li a:hover {
+  color: #ffc857;
+}
+
+app-landing .landing-container .app-btn {
+  border: 1px solid #66594f;
+  border-radius: 11px;
+  background: #38312d;
+}
+
+app-landing .landing-container .app-btn:hover {
+  background: #4a4039;
+}
+
+@media (max-width: 768px) {
+  app-landing .landing-container .hero-section {
+    padding-top: 88px;
+    padding-bottom: 38px;
+  }
+
+  app-landing .landing-container .hero-content {
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 24px;
+  }
+
+  app-landing .landing-container .hero-text h1 {
+    font-size: clamp(34px, 9vw, 46px);
+  }
+
+  app-landing .landing-container .hero-text p {
+    font-size: 15px;
+  }
+
+  app-landing .landing-container .hero-buttons {
+    align-items: stretch;
+  }
+
+  app-landing .landing-container .hero-image {
+    display: flex;
+  }
+
+  app-landing .landing-container .food-illustration {
+    width: min(300px, 74vw);
+    height: min(300px, 74vw);
+  }
+
+  app-landing .landing-container .features-section, app-landing .landing-container .how-it-works-section {
+    padding: 48px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  app-landing .landing-container .navbar-content {
+    gap: 8px;
+    padding: 0 12px;
+  }
+
+  app-landing .landing-container .logo {
+    gap: 6px;
+    font-size: 18px;
+  }
+
+  app-landing .landing-container .logo-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 11px;
+    font-size: 17px;
+  }
+
+  app-landing .landing-container .nav-buttons {
+    align-items: center;
+    gap: 5px;
+  }
+
+  app-landing .landing-container .nav-buttons .btn {
+    padding: 8px 9px;
+    font-size: 12px;
+  }
+
+  app-landing .landing-container app-language-switcher .language-switcher {
+    gap: 2px;
+    padding: 2px;
+  }
+
+  app-landing .landing-container app-language-switcher .lang-btn {
+    min-width: 31px;
+    padding: 6px 5px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  app-landing .landing-container .logo-text {
+    display: none;
+  }
+}
+
+
+/* app-support-chat */
+app-support-chat {
+  position: fixed;
+  z-index: 1200;
+  right: 24px;
+  bottom: 24px;
+  font-family: inherit;
+  color: #24262b;
+  --accent: #ef6848;
+  --soft: #fff0e9;
+}
+app-support-chat button, app-support-chat input, app-support-chat textarea {
+  font: inherit;
+}
+app-support-chat button {
+  cursor: pointer;
+}
+app-support-chat button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+app-support-chat button:focus-visible, app-support-chat input:focus-visible, app-support-chat textarea:focus-visible, app-support-chat summary:focus-visible {
+  outline: 3px solid #ec987f;
+  outline-offset: 3px;
+}
+app-support-chat .chat-icon {
+  display: block;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+app-support-chat .support-launcher {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  margin-left: auto;
+  padding: 14px 19px;
+  border: 0;
+  border-radius: 28px;
+  background: #24262b;
+  color: #fff;
+  box-shadow: 0 7px 24px #24262b29;
+  font-size: 14px;
+  font-weight: 650;
+}
+app-support-chat .support-launcher .chat-icon {
+  width: 24px;
+  height: 24px;
+}
+app-support-chat .support-launcher.open {
+  width: 52px;
+  min-height: 52px;
+  justify-content: center;
+  padding: 0;
+}
+app-support-chat .support-panel {
+  position: absolute;
+  right: 0;
+  bottom: 68px;
+  display: flex;
+  flex-direction: column;
+  width: min(430px, calc(100vw - 32px));
+  height: min(690px, calc(100dvh - 120px));
+  overflow: hidden;
+  border: 1px solid #e6e6e8;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 20px 80px #18233230;
+  font-size: 14px;
+}
+app-support-chat .support-header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 20px 18px 16px;
+  flex-shrink: 0;
+}
+app-support-chat .assistant-avatar, app-support-chat .welcome-avatar {
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--soft);
+  color: #bd462d;
+}
+app-support-chat .assistant-avatar {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+app-support-chat .header-title {
+  flex: 1;
+  min-width: 0;
+}
+app-support-chat .header-title h2 {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: -0.3px;
+}
+app-support-chat .header-title p {
+  margin: 5px 0 0;
+  color: #787a82;
+  font-size: 12px;
+  line-height: 1.4;
+}
+app-support-chat .icon-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 36px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #777981;
+}
+app-support-chat .icon-button:hover {
+  background: #f4f4f5;
+}
+app-support-chat .chat-navigation {
+  display: flex;
+  gap: 4px;
+  margin: 0 18px 12px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #f3f3f4;
+  flex-shrink: 0;
+}
+app-support-chat .chat-navigation button {
+  flex: 1;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #72747d;
+  font-size: 13px;
+  font-weight: 600;
+}
+app-support-chat .chat-navigation .active {
+  background: #fff;
+  color: #25262b;
+  box-shadow: 0 2px 5px #2222220c;
+}
+app-support-chat .language-settings {
+  padding: 0 18px 14px;
+  font-size: 13px;
+}
+app-support-chat .language-options {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+app-support-chat .language-options button {
+  flex: 1;
+  padding: 8px 4px;
+  border: 1px solid #ddd;
+  border-radius: 9px;
+  background: #fff;
+  font-size: 12px;
+}
+app-support-chat .language-options [aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--soft);
+}
+app-support-chat .scroll-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+app-support-chat .support-messages {
+  padding: 12px 18px 18px;
+  background: #f7f7f8;
+}
+app-support-chat .chat-welcome {
+  padding: 14px 6px;
+}
+app-support-chat .welcome-avatar {
+  width: 62px;
+  height: 62px;
+  margin-bottom: 22px;
+}
+app-support-chat .welcome-avatar .chat-icon {
+  width: 32px;
+  height: 32px;
+}
+app-support-chat .eyebrow {
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 1.6px;
+  color: #ad4d35;
+}
+app-support-chat .chat-welcome h3 {
+  margin: 10px 0;
+  font-size: 28px;
+  letter-spacing: -1px;
+  line-height: 1.15;
+}
+app-support-chat .chat-welcome > p:not(.eyebrow) {
+  line-height: 1.6;
+  color: #777981;
+}
+app-support-chat .language-picker {
+  display: grid;
+  gap: 8px;
+  margin: 24px 0 0;
+  padding: 0;
+  border: 0;
+}
+app-support-chat .language-picker legend {
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+app-support-chat .language-picker button {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1px solid #e7e7ea;
+  border-radius: 12px;
+  background: #fff;
+  text-align: left;
+}
+app-support-chat .language-picker button:hover {
+  border-color: var(--accent);
+}
+app-support-chat .language-picker span {
+  font-size: 11px;
+  color: #96979d;
+}
+app-support-chat .order-context {
+  padding: 0 18px 12px;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+}
+app-support-chat .order-context > button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid #ececee;
+  border-radius: 10px;
+  background: #fff;
+  color: #63656e;
+  font-size: 12px;
+}
+app-support-chat .order-context .chat-icon {
+  width: 17px;
+  height: 17px;
+}
+app-support-chat .order-context small {
+  margin-left: auto;
+  color: #a0a1a7;
+}
+app-support-chat .order-editor {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+app-support-chat .order-editor input {
+  min-width: 0;
+  flex: 1;
+  padding: 9px;
+  border: 1px solid #ddd;
+  border-radius: 9px;
+  font-size: 13px;
+}
+app-support-chat .conversation-date {
+  text-align: center;
+  color: #9799a0;
+  font-size: 11px;
+  margin: 2px 0 18px;
+}
+app-support-chat .message-row {
+  display: flex;
+  margin: 0 0 12px;
+}
+app-support-chat .message-bubble {
+  max-width: 89%;
+  padding: 12px 14px 8px;
+  border: 1px solid #ececee;
+  border-radius: 16px 16px 16px 4px;
+  background: #fff;
+  overflow-wrap: anywhere;
+}
+app-support-chat .message-author {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: #b45239;
+}
+app-support-chat .message-bubble p {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+app-support-chat .message-bubble time, app-support-chat .message-bubble small {
+  display: block;
+  margin-top: 6px;
+  text-align: right;
+  font-size: 10px;
+  color: #96969e;
+}
+app-support-chat .from-user {
+  justify-content: flex-end;
+}
+app-support-chat .from-user .message-bubble {
+  border-color: transparent;
+  border-radius: 16px 16px 4px 16px;
+  background: #ffeadf;
+}
+app-support-chat .message-bubble.from-staff {
+  border-left: 3px solid var(--accent);
+}
+app-support-chat .pending-message {
+  opacity: 0.75;
+}
+app-support-chat .suggestions > p {
+  font-size: 12px;
+  color: #85868e;
+  margin: 18px 0 10px;
+}
+app-support-chat .topic-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+app-support-chat .topic-grid button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 96px;
+  padding: 12px;
+  border: 1px solid #e7e7e9;
+  border-radius: 14px;
+  background: #fff;
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.4;
+}
+app-support-chat .topic-grid .chat-icon {
+  width: 20px;
+  height: 20px;
+  color: #be634b;
+}
+app-support-chat .topic-grid button:hover {
+  background: var(--soft);
+  border-color: #f3cbbf;
+}
+app-support-chat .suggestions > p.muted {
+  font-size: 11px;
+}
+app-support-chat .composer-footer {
+  padding: 12px 16px 10px;
+  border-top: 1px solid #eee;
+  background: #fff;
+  flex-shrink: 0;
+}
+app-support-chat .message-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 7px;
+  border: 1px solid #e7e7e9;
+  border-radius: 18px;
+  background: #f7f7f8;
+}
+app-support-chat .message-composer:focus-within {
+  border-color: #f0b6a7;
+  background: #fff;
+}
+app-support-chat .message-composer textarea {
+  flex: 1;
+  min-width: 0;
+  max-height: 120px;
+  min-height: 36px;
+  padding: 9px 5px;
+  border: 0;
+  outline: none;
+  resize: none;
+  line-height: 1.45;
+  background: transparent;
+  color: inherit;
+  font-size: 14px;
+}
+app-support-chat .message-composer textarea::placeholder {
+  color: #9a9ba2;
+}
+app-support-chat .send-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent);
+  color: white;
+}
+app-support-chat .composer-note {
+  text-align: center;
+  font-size: 10px;
+  color: #96979e;
+  line-height: 1.5;
+  margin: 9px 0 0;
+}
+app-support-chat .typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #898a92;
+  font-size: 11px;
+  margin: 16px 0;
+}
+app-support-chat .typing-dots {
+  display: flex;
+  gap: 3px;
+  padding: 9px 11px;
+  border-radius: 12px;
+  background: #fff;
+}
+app-support-chat .typing-dots i {
+  height: 4px;
+  width: 4px;
+  border-radius: 50%;
+  background: #b6b6bc;
+  animation: pulse 1.2s infinite;
+}
+app-support-chat .typing-dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+app-support-chat .typing-dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.3;
+    transform: translateY(-2px);
+  }
+}
+app-support-chat .support-error {
+  padding: 12px 16px;
+  background: #fff3ef;
+  border-top: 1px solid #f8e1d8;
+  font-size: 12px;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+app-support-chat .support-error p {
+  margin: 0 0 6px;
+  color: #a94630;
+}
+app-support-chat .support-error button {
+  padding: 5px 10px;
+  margin-right: 6px;
+  border: 1px solid #eecabf;
+  border-radius: 7px;
+  background: #fff;
+  color: #93452e;
+  font-size: 11px;
+}
+app-support-chat .loading-state {
+  padding: 20px;
+  color: #888;
+  text-align: center;
+}
+app-support-chat .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (max-width: 768px) {
+  app-support-chat {
+    right: 12px;
+    bottom: 84px;
+  }
+  app-support-chat .support-panel {
+    width: min(430px, calc(100vw - 24px));
+    height: calc(100dvh - 180px);
+    bottom: 64px;
+    border-radius: 20px;
+  }
+  app-support-chat .support-launcher {
+    min-height: 48px;
+    padding: 12px 16px;
+  }
+  app-support-chat .support-launcher.open {
+    min-height: 48px;
+    width: 48px;
+  }
+  app-support-chat .support-header {
+    padding-top: 16px;
+  }
+  app-support-chat .chat-welcome h3 {
+    font-size: 25px;
+  }
+  app-support-chat .composer-footer {
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+}
+@media (max-height: 620px) {
+  app-support-chat .support-panel {
+    position: fixed;
+    top: 8px;
+    bottom: 76px;
+    right: 12px;
+    height: auto;
+  }
+  app-support-chat .chat-welcome {
+    padding-top: 0;
+  }
+  app-support-chat .welcome-avatar {
+    display: none;
+  }
+  app-support-chat .language-picker {
+    margin-top: 12px;
+  }
+}
+
+app-support-chat {
+  color: #242424;
+  --accent: #ff6b35;
+  --soft: #fff0e7;
+}
+
+app-support-chat .support-launcher {
+  background: #ff6b35;
+  box-shadow: 0 7px 24px #ff6b3535;
+}
+
+app-support-chat .support-launcher:hover {
+  background: #e85a28;
+}
+@media (prefers-reduced-motion: reduce) {
+  app-support-chat .typing-dots i {
+    animation: none;
+  }
+}
+
+/* app-profile */
+app-profile {
+  display: block;
+  min-width: 0;
+  color: #242424;
+}
+
+app-profile .profile-page {
+  max-width: 1240px;
+  min-height: calc(100vh - 76px);
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 48px);
+}
+
+app-profile .page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+app-profile .page-heading-copy {
+  max-width: 720px;
+}
+
+app-profile .eyebrow,
+app-profile .section-kicker {
+  margin: 0 0 7px;
+  color: #bf5635;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+app-profile .page-heading h1 {
+  margin: 0;
+  color: #242424;
+  font-size: clamp(30px, 4vw, 42px);
+  font-weight: 780;
+  letter-spacing: -.045em;
+  line-height: 1.1;
+}
+
+app-profile .page-heading-copy > p:last-child {
+  margin: 10px 0 0;
+  color: #77716c;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+app-profile .heading-avatar,
+app-profile .profile-avatar {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #ffe2d2;
+  border-radius: 50%;
+  background: #fff0e4;
+  color: #c94f2d;
+  font-weight: 800;
+}
+
+app-profile .heading-avatar {
+  width: 54px;
+  height: 54px;
+  font-size: 21px;
+}
+
+app-profile .profile-grid {
+  display: grid;
+  grid-template-areas:
+    "personal addresses"
+    "personal security"
+    "danger danger";
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr);
+  align-items: start;
+  gap: 18px;
+}
+
+app-profile .profile-card {
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid #f0e5dc;
+  border-radius: 19px;
+  background: #fff;
+  box-shadow: 0 7px 22px rgba(71, 48, 34, .05);
+}
+
+app-profile .personal-card { grid-area: personal; }
+app-profile .addresses-card { grid-area: addresses; }
+app-profile .security-card { grid-area: security; }
+app-profile .account-delete { grid-area: danger; }
+
+app-profile .section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+app-profile .section-heading h2,
+app-profile .security-copy h2,
+app-profile .dialog-heading h2 {
+  margin: 0;
+  color: #292521;
+  font-size: 19px;
+  font-weight: 750;
+  letter-spacing: -.025em;
+}
+
+app-profile .section-heading .section-kicker,
+app-profile .security-copy .section-kicker,
+app-profile .dialog-heading .section-kicker {
+  margin-bottom: 5px;
+}
+
+app-profile .section-description {
+  margin: 6px 0 0;
+  color: #77716c;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+app-profile .profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin: 0 0 20px;
+  padding: 14px;
+  border: 1px solid #f3e8de;
+  border-radius: 15px;
+  background: #fffaf5;
+}
+
+app-profile .profile-avatar {
+  width: 48px;
+  height: 48px;
+  font-size: 19px;
+}
+
+app-profile .identity-copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+app-profile .identity-copy strong {
+  overflow: hidden;
+  color: #302b28;
+  font-size: 14px;
+  text-overflow: ellipsis;
+}
+
+app-profile .identity-copy span {
+  overflow: hidden;
+  color: #77716c;
+  font-size: 12px;
+  text-overflow: ellipsis;
+}
+
+app-profile .account-label {
+  display: grid;
+  gap: 4px;
+  margin-left: auto;
+  padding-left: 12px;
+  border-left: 1px solid #eee1d7;
+  text-align: right;
+}
+
+app-profile .account-label span {
+  color: #8a817a;
+  font-size: 10px;
+}
+
+app-profile .account-label strong {
+  color: #5f5751;
+  font-size: 11px;
+}
+
+app-profile .field-grid,
+app-profile .address-field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px 15px;
+}
+
+app-profile .profile-form label,
+app-profile .address-form label,
+app-profile .account-delete label {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  margin: 0;
+  color: #5f5751;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+app-profile .field-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #5f5751;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+app-profile .field-label svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: #c87554;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+app-profile .profile-form input,
+app-profile .profile-form textarea,
+app-profile .address-form input,
+app-profile .address-form textarea,
+app-profile .account-delete input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 41px;
+  padding: 9px 11px;
+  border: 1px solid #efdfd2;
+  border-radius: 10px;
+  background: #fffdfa;
+  color: #302b28;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+app-profile .profile-form textarea,
+app-profile .address-form textarea {
+  min-height: 74px;
+  resize: vertical;
+}
+
+app-profile .field-grid.is-readonly input,
+app-profile .field-grid.is-readonly textarea {
+  border-color: #f0e8e1;
+  background: #fffaf6;
+  color: #514a44;
+}
+
+app-profile .profile-form input:focus,
+app-profile .profile-form textarea:focus,
+app-profile .address-form input:focus,
+app-profile .address-form textarea:focus,
+app-profile .account-delete input:focus {
+  border-color: #ff9a70;
+  outline: 3px solid #ffe0d2;
+  outline-offset: 1px;
+}
+
+app-profile .address-field,
+app-profile .instructions-field {
+  grid-column: 1 / -1;
+}
+
+app-profile .profile-card button,
+app-profile .address-dialog button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 13px;
+  border: 0;
+  border-radius: 11px;
+  background: #ff6b35;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+}
+
+app-profile .profile-card button:hover:not(:disabled),
+app-profile .address-dialog button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #e85a28;
+  box-shadow: 0 5px 13px rgba(232, 90, 40, .16);
+}
+
+app-profile .profile-card button:disabled,
+app-profile .address-dialog button:disabled {
+  opacity: .58;
+  cursor: not-allowed;
+}
+
+app-profile .profile-card button.secondary,
+app-profile .address-dialog button.secondary {
+  border: 1px solid #f0ded0;
+  background: #fff7f0;
+  color: #b94f30;
+  box-shadow: none;
+}
+
+app-profile .profile-card button.secondary:hover:not(:disabled),
+app-profile .address-dialog button.secondary:hover:not(:disabled) {
+  background: #ffede1;
+}
+
+app-profile .edit-profile-button svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+app-profile .form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 17px;
+}
+
+app-profile .notice {
+  margin: 13px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #f1e4d8;
+  border-radius: 11px;
+  background: #fffaf4;
+  color: #675e56;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+app-profile .notice.error {
+  border-color: #f3d4d0;
+  background: #fff2f0;
+  color: #a33b35;
+}
+
+app-profile .notice.success {
+  border-color: #d7eddd;
+  background: #edf8ef;
+  color: #267345;
+}
+
+app-profile .loading-notice {
+  margin: 0 0 14px;
+}
+
+app-profile .add-address-button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+app-profile .add-address-button > span {
+  font-size: 18px;
+  line-height: 12px;
+}
+
+app-profile .address-empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  padding: 20px 14px 10px;
+  text-align: center;
+}
+
+app-profile .empty-state-icon,
+app-profile .saved-address-icon,
+app-profile .security-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 13px;
+  background: #fff0e4;
+  color: #c94f2d;
+}
+
+app-profile .empty-state-icon {
+  width: 43px;
+  height: 43px;
+  margin-bottom: 3px;
+  border-radius: 50%;
+}
+
+app-profile .empty-state-icon svg,
+app-profile .saved-address-icon svg,
+app-profile .security-icon svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+app-profile .address-empty-state strong {
+  color: #302b28;
+  font-size: 13px;
+}
+
+app-profile .address-empty-state p {
+  max-width: 260px;
+  margin: 0;
+  color: #77716c;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+app-profile .address-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+app-profile .saved-address {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: start;
+  gap: 11px;
+  padding: 13px;
+  border: 1px solid #f2e8df;
+  border-radius: 14px;
+  background: #fffdfa;
+}
+
+app-profile .saved-address-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+}
+
+app-profile .saved-address-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+app-profile .address-details {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  color: #77716c;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+app-profile .address-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+app-profile .address-title-row strong {
+  color: #302b28;
+  font-size: 13px;
+}
+
+app-profile .recipient-line,
+app-profile .full-address,
+app-profile .delivery-instructions {
+  overflow-wrap: anywhere;
+}
+
+app-profile .default-badge {
+  padding: 3px 7px;
+  border-radius: 20px;
+  background: #e4f4e9;
+  color: #267345;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+app-profile .delivery-instructions {
+  color: #8a817a;
+  font-style: italic;
+}
+
+app-profile .address-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 13px;
+  margin-top: 4px;
+}
+
+app-profile .profile-card .address-actions button {
+  min-height: 30px;
+  padding: 4px 0;
+  background: transparent;
+  color: #bd5635;
+  font-size: 11px;
+  box-shadow: none;
+}
+
+app-profile .profile-card .address-actions button:hover:not(:disabled) {
+  transform: none;
+  background: transparent;
+  color: #923d26;
+  text-decoration: underline;
+}
+
+app-profile .profile-card .address-actions button.delete-action {
+  color: #a8463b;
+}
+
+app-profile .security-summary {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+}
+
+app-profile .security-icon {
+  width: 40px;
+  height: 40px;
+}
+
+app-profile .security-copy {
+  min-width: 0;
+}
+
+app-profile .security-copy .section-description {
+  max-width: 330px;
+}
+
+app-profile .security-toggle {
+  white-space: nowrap;
+}
+
+app-profile .password-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px 14px;
+  margin-top: 18px;
+  padding-top: 17px;
+  border-top: 1px solid #f1e8e1;
+}
+
+app-profile .password-form label:first-child,
+app-profile .password-form label:nth-child(3),
+app-profile .password-form .notice,
+app-profile .password-form > button[type="submit"] {
+  grid-column: 1 / -1;
+}
+
+app-profile .password-input {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+
+app-profile .password-input input {
+  padding-right: 43px;
+}
+
+app-profile .profile-card button.password-visibility,
+app-profile .address-dialog button.password-visibility {
+  position: absolute;
+  top: 50%;
+  right: 3px;
+  width: 36px;
+  min-height: 34px;
+  padding: 5px;
+  transform: translateY(-50%);
+  background: transparent;
+  color: #8a817a;
+  box-shadow: none;
+}
+
+app-profile .profile-card button.password-visibility:hover:not(:disabled),
+app-profile .address-dialog button.password-visibility:hover:not(:disabled) {
+  transform: translateY(-50%);
+  background: #fff0e4;
+  color: #bd5635;
+}
+
+app-profile .password-visibility svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+app-profile .account-delete {
+  border-color: #f0d9d3;
+}
+
+app-profile .account-delete summary {
+  color: #94483d;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+app-profile .account-delete > p {
+  margin: 13px 0;
+  color: #77716c;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+app-profile .account-delete label {
+  max-width: 420px;
+  margin-bottom: 12px;
+}
+
+app-profile .profile-card button.danger {
+  background: #bd4d3d;
+}
+
+app-profile .profile-card button.danger:hover:not(:disabled) {
+  background: #a83e32;
+}
+
+app-profile .modal-backdrop {
+  position: fixed;
+  z-index: 1300;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding: clamp(16px, 5vh, 48px) 16px;
+  background: rgba(36, 31, 27, .42);
+  backdrop-filter: blur(4px);
+}
+
+app-profile .address-dialog {
+  box-sizing: border-box;
+  width: min(100%, 620px);
+  max-height: min(90vh, 780px);
+  overflow-y: auto;
+  padding: 24px;
+  border: 1px solid #f0e5dc;
+  border-radius: 20px;
+  background: #fffdfa;
+  box-shadow: 0 24px 70px rgba(36, 31, 27, .22);
+}
+
+app-profile .dialog-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 19px;
+}
+
+app-profile .profile-card button.icon-close,
+app-profile .address-dialog button.icon-close {
+  width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: 1px solid #f0e5dc;
+  border-radius: 50%;
+  background: #fff;
+  color: #756b64;
+  font-size: 22px;
+  font-weight: 400;
+}
+
+app-profile .address-field-grid {
+  gap: 14px;
+}
+
+app-profile .checkbox-option {
+  display: flex !important;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 9px !important;
+  margin-top: 14px !important;
+  color: #5f5751;
+  font-size: 12px;
+}
+
+app-profile .checkbox-option input {
+  width: 17px;
+  min-height: 17px;
+  accent-color: #ff6b35;
+}
+
+app-profile .address-form .form-actions {
+  margin-top: 17px;
+}
+
+@media (max-width: 1000px) {
+  app-profile .profile-grid {
+    grid-template-areas:
+      "personal"
+      "addresses"
+      "security"
+      "danger";
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  app-profile .profile-page {
+    padding: 22px 14px;
+  }
+
+  app-profile .page-heading {
+    gap: 14px;
+    margin-bottom: 19px;
+  }
+
+  app-profile .page-heading-copy > p:last-child {
+    font-size: 13px;
+  }
+
+  app-profile .heading-avatar {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+
+  app-profile .profile-card {
+    padding: 17px;
+    border-radius: 16px;
+  }
+
+  app-profile .section-heading {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  app-profile .edit-profile-button,
+  app-profile .add-address-button,
+  app-profile .security-toggle {
+    width: 100%;
+  }
+
+  app-profile .profile-identity {
+    gap: 10px;
+    padding: 11px;
+  }
+
+  app-profile .profile-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  app-profile .account-label {
+    max-width: 98px;
+    padding-left: 8px;
+  }
+
+  app-profile .account-label span {
+    font-size: 9px;
+  }
+
+  app-profile .account-label strong {
+    font-size: 10px;
+  }
+
+  app-profile .field-grid,
+  app-profile .address-field-grid,
+  app-profile .password-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  app-profile .address-field,
+  app-profile .instructions-field,
+  app-profile .password-form label:first-child,
+  app-profile .password-form label:nth-child(3),
+  app-profile .password-form .notice,
+  app-profile .password-form > button[type="submit"] {
+    grid-column: auto;
+  }
+
+  app-profile .security-summary {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  app-profile .security-toggle {
+    grid-column: 1 / -1;
+  }
+
+  app-profile .address-dialog {
+    padding: 19px 16px;
+    border-radius: 17px;
+  }
+
+  app-profile .form-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  app-profile .form-actions button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  app-profile .heading-avatar {
+    display: none;
+  }
+
+  app-profile .account-label {
+    display: none;
+  }
+}
+

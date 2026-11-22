@@ -1,12 +1,15 @@
 /* Low-priority defaults fill gaps without overriding component-specific controls. */
 :root {
-  --jf-primary: #c84b29;
-  --jf-primary-hover: #ad3d20;
-  --jf-ink: #292f37;
-  --jf-muted: #717a86;
-  --jf-border: #dfe4e9;
-  --jf-soft: #f6f8fa;
-  --jf-focus: #edb19e;
+  --jf-primary: #ff6b35;
+  --jf-primary-hover: #e85a28;
+  --jf-ink: #242424;
+  --jf-muted: #777777;
+  --jf-border: #f0e2d6;
+  --jf-soft: #fff4e8;
+  --jf-focus: #ffc2a8;
+  --jf-cream: #fff9f2;
+  --jf-yellow: #ffc857;
+  --jf-green: #35a86b;
 }
 
 @layer jetfood-controls {

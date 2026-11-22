@@ -171,3 +171,124 @@ tbody tr:hover {
   padding: 40px;
   color: #666;
 }
+
+.admin-container {
+  min-height: calc(100vh - 76px);
+  max-width: 1280px;
+  padding: clamp(24px, 4vw, 48px);
+  color: #242424;
+}
+
+.admin-header h1 {
+  color: #242424;
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 780;
+  letter-spacing: -0.04em;
+}
+
+.users-table {
+  overflow-x: auto;
+  border: 1px solid #f0e5dc;
+  border-radius: 18px;
+  box-shadow: 0 7px 22px rgba(71, 48, 34, 0.05);
+}
+
+.users-table table {
+  min-width: 720px;
+}
+
+.users-table thead {
+  background: #fff4e8;
+}
+
+.users-table th {
+  color: #5e554d;
+}
+
+.users-table th,
+.users-table td {
+  border-bottom-color: #f2e8df;
+}
+
+.users-table tbody tr:hover {
+  background: #fffaf5;
+}
+
+.role-select,
+.form-group input,
+.form-group select,
+.modal-content input,
+.modal-content select {
+  border-color: #efdfd2;
+  border-radius: 11px;
+}
+
+.admin-container .btn {
+  border-radius: 11px;
+  font-weight: 650;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.admin-container .btn-primary {
+  background: #ff6b35;
+}
+
+.admin-container .btn-primary:hover {
+  transform: translateY(-1px);
+  background: #e85a28;
+}
+
+.admin-container .btn-secondary {
+  background: #fff2e8;
+  color: #bc5434;
+}
+
+.admin-container .btn-secondary:hover {
+  background: #ffe8d9;
+}
+
+.admin-container .btn-danger {
+  background: #bd4d3d;
+}
+
+.modal-overlay {
+  padding: 18px;
+  background: rgba(39, 31, 25, 0.42);
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  border: 1px solid #f0e5dc;
+  border-radius: 22px;
+  box-shadow: 0 24px 70px rgba(48, 33, 23, 0.22);
+}
+
+.modal-content h2 {
+  color: #292521;
+}
+
+.moderation-section {
+  margin-top: 24px;
+  padding: 22px;
+  border: 1px solid #f0e5dc;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 7px 22px rgba(71, 48, 34, 0.045);
+}
+
+.moderation-section h2 {
+  margin-top: 0;
+  color: #292521;
+}
+
+@media (max-width: 600px) {
+  .admin-container {
+    padding: 22px 14px;
+  }
+
+  .admin-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+}

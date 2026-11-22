@@ -22,3 +22,33 @@
   color: white;
   border-color: #007bff;
 }
+
+.language-switcher {
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #f0e8e1;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.lang-btn {
+  min-width: 39px;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #77716c;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.lang-btn:hover {
+  background: #fff4ed;
+  color: #c94f2d;
+}
+
+.lang-btn.active {
+  background: #ff6b35;
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(255, 107, 53, 0.2);
+}

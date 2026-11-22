@@ -1,7 +1,26 @@
 <app-sidebar [currentUser]="currentUser" (toggleSidebar)="toggleSidebar()"></app-sidebar>
 <main class="app-content" [class.sidebar-collapsed]="sidebarCollapsed">
   <header class="app-toolbar">
-    <app-language-switcher></app-language-switcher>
+    <a class="toolbar-location" routerLink="/profile" fragment="address-book" [attr.aria-label]="i18n.t('changeAddress')">
+      <span class="toolbar-location-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+      </span>
+      <span class="toolbar-location-copy">
+        <small>{{ i18n.t('toolbarDelivery') }}</small>
+        <strong>{{ i18n.t('cityAlmaty') }}</strong>
+      </span>
+      <span class="toolbar-location-change">{{ i18n.t('changeAddress') }}</span>
+    </a>
+    <div class="toolbar-actions">
+      <a class="toolbar-icon-button" routerLink="/notifications" [attr.aria-label]="i18n.t('notifications')" [title]="i18n.t('notifications')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 8-3 8-3 10h18c0-2-3-2-3-10M10 21h4"/></svg>
+      </a>
+      <a class="toolbar-profile" routerLink="/profile" [attr.aria-label]="i18n.t('profile')">
+        <span class="toolbar-avatar" aria-hidden="true">{{ currentUser?.username?.charAt(0)?.toUpperCase() }}</span>
+        <span class="toolbar-user-name">{{ currentUser?.username }}</span>
+      </a>
+      <app-language-switcher></app-language-switcher>
+    </div>
   </header>
   <router-outlet></router-outlet>
 </main>

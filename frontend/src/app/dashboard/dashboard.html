@@ -25,10 +25,14 @@
     </div>
 
     <div class="hero-section" *ngIf="!selectedRestaurant">
-      <div>
+      <div class="hero-copy">
         <p class="hero-eyebrow">JETFOOD</p>
-        <h1>{{ i18n.t('welcomeFood') }} {{ currentUser?.username }}!</h1>
-        <p>{{ i18n.t('welcomeDescription') }}</p>
+        <h1>{{ i18n.t('heroTitle') }}</h1>
+        <p>{{ i18n.t('heroDescription') }}</p>
+        <a class="hero-order-button" href="#restaurants">{{ i18n.t('orderNow') }} <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <img src="/assets/demo-food/fries.jpg" alt="" fetchpriority="high" />
       </div>
       <div class="hero-promo">
         <span>{{ i18n.t('today') }}</span>
@@ -41,6 +45,7 @@
       class="restaurant-catalog"
       *ngIf="!selectedRestaurant"
       [attr.aria-label]="i18n.t('restaurants')"
+      id="restaurants"
     >
       <div class="section-heading">
         <div>
@@ -49,6 +54,45 @@
         </div>
         <span class="result-count">{{ filteredRestaurants.length }}</span>
       </div>
+      <div class="home-categories" *ngIf="cuisineCategories.length" [attr.aria-label]="i18n.t('foodCategories')">
+        <button type="button" class="home-category home-category-all" [class.active]="!searchTerm" (click)="searchTerm = ''">
+          <span class="home-category-icon" aria-hidden="true">✦</span>
+          <span>{{ i18n.t('restaurants') }}</span>
+        </button>
+        <button
+          type="button"
+          class="home-category"
+          *ngFor="let cuisine of cuisineCategories; let index = index"
+          [class.active]="searchTerm === cuisine"
+          (click)="searchTerm = cuisine"
+        >
+          <span class="home-category-icon" aria-hidden="true">{{ categoryIcons[index % categoryIcons.length] }}</span>
+          <span>{{ i18n.catalogLabel(cuisine) }}</span>
+        </button>
+      </div>
+      <section class="home-highlights" [attr.aria-label]="i18n.t('homeHighlightsTitle')">
+        <div class="home-highlights-heading">
+          <h2>{{ i18n.t('homeHighlightsTitle') }}</h2>
+        </div>
+        <div class="home-highlight-grid">
+          <div class="home-highlight home-highlight-promo">
+            <span class="highlight-kicker">{{ i18n.t('promoCode') }}</span>
+            <h3>{{ i18n.t('homePromoTitle') }}</h3>
+            <p>{{ i18n.t('homePromoText') }}</p>
+            <a href="#restaurants">{{ i18n.t('viewMenu') }} <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="home-highlight home-highlight-delivery">
+            <span class="highlight-icon" aria-hidden="true">⌁</span>
+            <h3>{{ i18n.t('homeDeliveryTitle') }}</h3>
+            <p>{{ i18n.t('homeDeliveryText') }}</p>
+          </div>
+          <div class="home-highlight home-highlight-favorites">
+            <span class="highlight-icon" aria-hidden="true">♡</span>
+            <h3>{{ i18n.t('homeFavoritesTitle') }}</h3>
+            <p>{{ i18n.t('homeFavoritesText') }}</p>
+          </div>
+        </div>
+      </section>
       <div *ngIf="restaurantsLoading" class="empty-menu" role="status">{{ i18n.t('loading') }}</div>
       <div *ngIf="restaurantsError" class="empty-menu" role="alert">
         {{ restaurantsError }}
@@ -84,6 +128,10 @@
           <span class="restaurant-card-info">
             <strong>{{ i18n.catalogLabel(restaurant.name) }}</strong
             ><span>{{ restaurant.cuisine }}</span
+            ><span class="restaurant-rating" *ngIf="restaurant.avg_rating !== undefined && restaurant.avg_rating !== null">
+              <span aria-hidden="true">★</span> {{ restaurant.avg_rating | number:'1.1-1' }}
+              <small *ngIf="restaurant.reviews_count">({{ restaurant.reviews_count }})</small>
+            </span>
             ><span *ngIf="restaurant.demo_key">{{ i18n.t('demoNotice') }}</span>
             <span>{{ i18n.catalogLabel(restaurant.description) }}</span>
             <span>{{ i18n.catalogLabel(restaurant.address) }}</span>

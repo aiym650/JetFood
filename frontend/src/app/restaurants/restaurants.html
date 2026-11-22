@@ -24,6 +24,10 @@
         <span class="restaurant-info">
           <strong>{{ i18n.catalogLabel(restaurant.name) }}</strong>
           <span>{{ restaurant.cuisine }}</span>
+          <span class="restaurant-rating" *ngIf="restaurant.avg_rating !== undefined && restaurant.avg_rating !== null">
+            <span aria-hidden="true">★</span> {{ restaurant.avg_rating | number:'1.1-1' }}
+            <small *ngIf="restaurant.reviews_count">({{ restaurant.reviews_count }})</small>
+          </span>
           <span *ngIf="restaurant.demo_key">{{ i18n.t('demoNotice') }}</span>
           <span>{{ i18n.catalogLabel(restaurant.address) }}</span>
           <span>{{ restaurant.opening_time.slice(0, 5) }}–{{ restaurant.closing_time.slice(0, 5) }}</span>

@@ -36,6 +36,7 @@ export class Dashboard implements OnInit {
   private quoteVersion = 0;
   currentUser: any = null;
   role = '';
+  readonly categoryIcons = ['🍕', '🍔', '🍣', '🍜', '🥗', '🍰', '🥤'];
   cart: CartLine[] = [];
   cartOpen = false;
   searchTerm = '';
@@ -159,6 +160,14 @@ export class Dashboard implements OnInit {
         .toLocaleLowerCase('ru')
         .includes(query),
     );
+  }
+
+  get cuisineCategories(): string[] {
+    return [...new Set(
+      this.restaurants
+        .map(restaurant => restaurant.cuisine?.trim())
+        .filter((cuisine): cuisine is string => Boolean(cuisine)),
+    )].slice(0, this.categoryIcons.length);
   }
 
   restaurantItemCount(restaurant: Restaurant): number {
