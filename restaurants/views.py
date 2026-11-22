@@ -15,7 +15,7 @@ class RestaurantListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        queryset = Restaurant.objects.all()
+        queryset = Restaurant.objects.prefetch_related('branches')
         if not can_manage(self.request.user):
             queryset = queryset.filter(is_active=True)
         search = self.request.query_params.get('search', '').strip()
@@ -38,7 +38,7 @@ class RestaurantDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        queryset = Restaurant.objects.all()
+        queryset = Restaurant.objects.prefetch_related('branches')
         if not can_manage(self.request.user):
             queryset = queryset.filter(is_active=True)
         search = self.request.query_params.get('search', '').strip()

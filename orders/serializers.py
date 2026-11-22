@@ -20,12 +20,14 @@ class MenuItemSerializer(serializers.ModelSerializer):
             "category", "menu_category",
             "price",
             "image_url",
+            "catalog_key",
+            "source_url",
             "rating",
             "restaurant",
             "restaurant_name",
             "is_active",
         ]
-        read_only_fields = ["id", "rating", "restaurant_name"]
+        read_only_fields = ["id", "catalog_key", "source_url", "rating", "restaurant_name"]
         extra_kwargs = {'category': {'required': False}}
 
     def validate(self, attrs):

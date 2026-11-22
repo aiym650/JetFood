@@ -7,7 +7,7 @@ import { Auth } from '../auth';
 import { CartQuote, Orders } from '../orders';
 import { CardPaymentInput, CardPaymentResult, Payments } from '../payments';
 import { FoodItem, Menu } from '../menu';
-import { Restaurant, Restaurants } from '../restaurants';
+import { Restaurant, RestaurantSort, Restaurants } from '../restaurants';
 import { I18nService } from '../i18n/i18n.service';
 import { Addresses, DeliveryAddress } from '../addresses';
 
@@ -60,6 +60,8 @@ export class Dashboard implements OnInit {
   cartNotice = '';
   submittingOrder = false;
   restaurants: Restaurant[] = [];
+  selectedCuisine = '';
+  restaurantSort: RestaurantSort = 'name';
   selectedRestaurant: Restaurant | null = null;
   restaurantsLoading = false;
   restaurantsError = '';
@@ -133,6 +135,7 @@ export class Dashboard implements OnInit {
   selectRestaurant(restaurant: Restaurant): void {
     this.selectedRestaurant = restaurant;
     this.selectedCategory = this.i18n.t('allCategories');
+    this.selectedCuisine = '';
     this.searchTerm = '';
     this.minPrice = null;
     this.maxPrice = null;
@@ -141,25 +144,43 @@ export class Dashboard implements OnInit {
   backToRestaurants(): void {
     this.selectedRestaurant = null;
     this.selectedCategory = this.i18n.t('allCategories');
+    this.selectedCuisine = '';
     this.searchTerm = '';
   }
 
   get filteredRestaurants(): Restaurant[] {
     const query = this.searchTerm.trim().toLocaleLowerCase('ru');
-    return this.restaurants.filter(restaurant =>
-      !query || [
+    const filtered = this.restaurants.filter(restaurant =>
+      (!this.selectedCuisine || restaurant.cuisine === this.selectedCuisine)
+      && (!query || [
         restaurant.name,
         this.i18n.catalogLabel(restaurant.name),
         restaurant.cuisine ?? "",
+        this.i18n.catalogLabel(restaurant.cuisine ?? ""),
         restaurant.description,
         this.i18n.catalogLabel(restaurant.description),
         restaurant.address,
         this.i18n.catalogLabel(restaurant.address),
+        ...(restaurant.branches ?? []).map(branch => branch.address),
       ]
         .join(' ')
         .toLocaleLowerCase('ru')
-        .includes(query),
+        .includes(query)),
     );
+    return this.sortRestaurants(filtered);
+  }
+
+  private sortRestaurants(restaurants: Restaurant[]): Restaurant[] {
+    const nameOrder = (left: Restaurant, right: Restaurant) =>
+      left.name.localeCompare(right.name, this.i18n.getCurrentLang());
+    if (this.restaurantSort === 'rating') {
+      return restaurants.sort((left, right) => {
+        const leftRating = left.reviews_count ? Number(left.avg_rating ?? 0) : -1;
+        const rightRating = right.reviews_count ? Number(right.avg_rating ?? 0) : -1;
+        return rightRating - leftRating || nameOrder(left, right);
+      });
+    }
+    return restaurants.sort(nameOrder);
   }
 
   get cuisineCategories(): string[] {

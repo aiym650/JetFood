@@ -52,10 +52,19 @@
           <h2>{{ i18n.t('restaurants') }}</h2>
           <p>{{ i18n.t('restaurantsDescription') }}</p>
         </div>
-        <span class="result-count">{{ filteredRestaurants.length }}</span>
+        <div class="restaurant-catalog-controls">
+          <label>
+            <span>{{ i18n.t('sortBy') }}</span>
+            <select [(ngModel)]="restaurantSort" [attr.aria-label]="i18n.t('sortBy')">
+              <option value="name">{{ i18n.t('sortName') }}</option>
+              <option value="rating">{{ i18n.t('sortRating') }}</option>
+            </select>
+          </label>
+          <span class="result-count">{{ filteredRestaurants.length }}</span>
+        </div>
       </div>
       <div class="home-categories" *ngIf="cuisineCategories.length" [attr.aria-label]="i18n.t('foodCategories')">
-        <button type="button" class="home-category home-category-all" [class.active]="!searchTerm" (click)="searchTerm = ''">
+        <button type="button" class="home-category home-category-all" [class.active]="!selectedCuisine" (click)="selectedCuisine = ''">
           <span class="home-category-icon" aria-hidden="true">✦</span>
           <span>{{ i18n.t('restaurants') }}</span>
         </button>
@@ -63,8 +72,8 @@
           type="button"
           class="home-category"
           *ngFor="let cuisine of cuisineCategories; let index = index"
-          [class.active]="searchTerm === cuisine"
-          (click)="searchTerm = cuisine"
+          [class.active]="selectedCuisine === cuisine"
+          (click)="selectedCuisine = selectedCuisine === cuisine ? '' : cuisine"
         >
           <span class="home-category-icon" aria-hidden="true">{{ categoryIcons[index % categoryIcons.length] }}</span>
           <span>{{ i18n.catalogLabel(cuisine) }}</span>
@@ -127,19 +136,18 @@
           >
           <span class="restaurant-card-info">
             <strong>{{ i18n.catalogLabel(restaurant.name) }}</strong
-            ><span>{{ restaurant.cuisine }}</span
-            ><span class="restaurant-rating" *ngIf="restaurant.avg_rating !== undefined && restaurant.avg_rating !== null">
+            ><span>{{ i18n.catalogLabel(restaurant.cuisine ?? '') }}</span
+            ><span class="restaurant-rating" *ngIf="restaurant.reviews_count && restaurant.avg_rating !== undefined && restaurant.avg_rating !== null">
               <span aria-hidden="true">★</span> {{ restaurant.avg_rating | number:'1.1-1' }}
-              <small *ngIf="restaurant.reviews_count">({{ restaurant.reviews_count }})</small>
+              <small>({{ restaurant.reviews_count }})</small>
             </span>
-            ><span *ngIf="restaurant.demo_key">{{ i18n.t('demoNotice') }}</span>
-            <span>{{ i18n.catalogLabel(restaurant.description) }}</span>
-            <span>{{ i18n.catalogLabel(restaurant.address) }}</span>
-            <span
-              >{{ restaurant.opening_time.slice(0, 5) }}–{{
-                restaurant.closing_time.slice(0, 5)
-              }}</span
-            >
+            ><span *ngIf="restaurant.branches?.length">{{ restaurant.branches?.length }} {{ i18n.t('locations') }}</span>
+            <span *ngFor="let branch of restaurant.branches?.slice(0, 2)">📍 {{ i18n.catalogLabel(branch.address) }}</span>
+            <span *ngIf="!restaurant.branches?.length">{{ i18n.catalogLabel(restaurant.address) }}</span>
+            <span *ngIf="restaurant.opening_time && restaurant.closing_time">
+              {{ restaurant.opening_time.slice(0, 5) }}–{{ restaurant.closing_time.slice(0, 5) }}
+            </span>
+            <span *ngIf="restaurant.description">{{ i18n.catalogLabel(restaurant.description) }}</span>
             <span class="restaurant-menu-link"
               >{{ restaurantItemCount(restaurant) }} {{ i18n.t('dishes') }} ·
               {{ i18n.t('viewMenu') }}</span
@@ -269,7 +277,7 @@
               [attr.loading]="index < 2 ? 'eager' : 'lazy'"
               [attr.fetchpriority]="index === 0 ? 'high' : 'auto'"
             />
-            <span class="food-rating"><span aria-hidden="true">★</span> {{ item.rating }}</span>
+            <span class="food-rating" *ngIf="item.rating > 0"><span aria-hidden="true">★</span> {{ item.rating }}</span>
           </div>
           <div class="food-info">
             <div class="food-category">{{ categoryLabel(item.category) }}</div>
@@ -297,7 +305,7 @@
       </div>
       <ng-template #emptyMenu>
         <div *ngIf="!menuLoading && !menuError && foodItems.length === 0" class="empty-menu">
-          {{ i18n.t('menuEmpty') }}
+          {{ selectedRestaurant.catalog_key ? i18n.t('menuNotVerified') : i18n.t('menuEmpty') }}
         </div>
         <div
           *ngIf="!menuLoading && !menuError && foodItems.length > 0 && filteredItems.length === 0"
@@ -306,6 +314,9 @@
           {{ i18n.t('noDishesFound') }}
         </div>
       </ng-template>
+      <p *ngIf="selectedRestaurant.catalog_key && foodItems.length" class="menu-price-disclaimer">
+        {{ i18n.t('menuPriceDisclaimer') }}
+      </p>
     </section>
 
     <div class="cart-sidebar" *ngIf="cart.length > 0 && cartOpen">

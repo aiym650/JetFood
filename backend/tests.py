@@ -3,6 +3,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 
 from orders.models import MenuItem, Order
+from restaurants.models import Restaurant
 
 
 class GlobalSearchTests(TestCase):
@@ -25,8 +26,16 @@ class GlobalSearchTests(TestCase):
             password='testpass123',
             role='admin',
         )
-        self.menu_item = MenuItem.objects.get(
+        self.restaurant = Restaurant.objects.create(
+            name='Search Test Kitchen',
+            address='Search Street 1',
+        )
+        self.menu_item = MenuItem.objects.create(
             name='Пицца Маргарита',
+            description='Томаты, моцарелла, базилик',
+            category='Пицца',
+            price='890.00',
+            restaurant=self.restaurant,
         )
         MenuItem.objects.create(
             name='Hidden pizza',

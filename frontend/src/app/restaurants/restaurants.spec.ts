@@ -5,7 +5,7 @@ import { vi } from 'vitest';
 
 import { Auth } from '../auth';
 import { Menu } from '../menu';
-import { Restaurants } from '../restaurants';
+import { Restaurant, Restaurants } from '../restaurants';
 import { I18nService } from '../i18n/i18n.service';
 import { RestaurantsPage } from './restaurants';
 
@@ -33,6 +33,7 @@ describe('RestaurantsPage', () => {
               working_days: [0, 1, 2, 3, 4, 5, 6],
               is_active: true,
             }]),
+          createRestaurant: () => of({} as Restaurant),
           },
         },
         { provide: Menu, useValue: { getItems: () => of([{
@@ -79,6 +80,75 @@ describe('RestaurantsPage', () => {
     component.selectRestaurant(component.restaurants[0]);
 
     expect(router.navigate).toHaveBeenCalledWith(['/restaurants', 1]);
+  });
+
+  it('searches branch addresses and sorts restaurants with verified ratings first', () => {
+    const makeRestaurant = (
+      id: number,
+      name: string,
+      rating: number,
+      reviews: number,
+      branchAddress: string,
+    ): Restaurant => ({
+      id,
+      name,
+      cuisine: 'Бургеры',
+      description: '',
+      address: branchAddress,
+      phone: '',
+      image_url: '',
+      opening_time: null,
+      closing_time: null,
+      working_days: [],
+      is_active: true,
+      avg_rating: rating,
+      reviews_count: reviews,
+      branches: [{
+        id: id * 10,
+        address: branchAddress,
+        phone: '',
+        opening_time: null,
+        closing_time: null,
+        working_days: [],
+        is_active: true,
+        delivery_available: null,
+        delivery_info: '',
+        source_url: '',
+      }],
+    });
+
+    component.restaurants = [
+      makeRestaurant(1, 'A Burger', 4.2, 2, 'Satpaeva 10'),
+      makeRestaurant(2, 'B Burger', 4.8, 1, 'Abay 20'),
+      makeRestaurant(3, 'C Burger', 0, 0, 'Main Street 30'),
+    ];
+    component.search = 'Satpaeva';
+    expect(component.filteredRestaurants.map(item => item.name)).toEqual(['A Burger']);
+
+    component.search = '';
+    component.sortBy = 'rating';
+    expect(component.filteredRestaurants.map(item => item.name)).toEqual(['B Burger', 'A Burger', 'C Burger']);
+  });
+
+  it('saves unknown opening hours as null rather than rejecting or submitting blanks', () => {
+    const createRestaurant = vi.spyOn(TestBed.inject(Restaurants), 'createRestaurant');
+    component.restaurantForm = {
+      ...component.restaurantForm,
+      name: 'Unknown Hours Kitchen',
+      address: 'Main Street 10',
+      opening_time: '',
+      closing_time: '',
+      working_days: [],
+    };
+
+    component.saveRestaurant();
+
+    expect(createRestaurant).toHaveBeenCalledWith(expect.objectContaining({
+      opening_time: null,
+      closing_time: null,
+      working_days: [],
+    }));
+    expect(component.restaurantFormError).toBe('');
   });
 
   it('lets customers view dishes on a restaurant detail page', () => {
