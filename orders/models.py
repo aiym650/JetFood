@@ -55,12 +55,14 @@ class PromoRedemption(models.Model):
 
 class MenuItem(models.Model):
     menu_category = models.ForeignKey('restaurants.MenuCategory', on_delete=models.PROTECT, null=True, blank=True, related_name='items')
+    catalog_key = models.CharField(max_length=120, unique=True, null=True, blank=True, editable=False)
     demo_key = models.CharField(max_length=80, unique=True, null=True, blank=True, editable=False)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     category = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     image_url = models.CharField(max_length=500, blank=True, validators=[validate_image_reference])
+    source_url = models.URLField(max_length=500, blank=True)
     rating = models.DecimalField(max_digits=2, decimal_places=1, default=0)
     is_active = models.BooleanField(default=True)
     restaurant = models.ForeignKey(

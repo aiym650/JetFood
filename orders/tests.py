@@ -2,7 +2,9 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
+from decimal import Decimal
 from .models import DeliveryRoute, MenuItem, Order, OrderItem
+from restaurants.models import Restaurant
 
 User = get_user_model()
 
@@ -21,7 +23,22 @@ class OrderTestCase(TestCase):
             password="admin123",
             role="admin",
         )
-        self.pizza = MenuItem.objects.get(name="Пицца Маргарита")
+        self.restaurant = Restaurant.objects.create(
+            name="Order Test Kitchen",
+            address="Test Street 1",
+        )
+        self.pizza = MenuItem.objects.create(
+            name="Order test pizza",
+            category="Pizza",
+            price=Decimal("890.00"),
+            restaurant=self.restaurant,
+        )
+        self.second_item = MenuItem.objects.create(
+            name="Order test side",
+            category="Sides",
+            price="250.00",
+            restaurant=self.restaurant,
+        )
         self.client = APIClient()
 
     def test_menu_lists_active_items_for_authenticated_users(self):
@@ -32,8 +49,8 @@ class OrderTestCase(TestCase):
         response = self.client.get("/api/orders/menu/")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 8)
-        self.assertEqual(response.data[0]["name"], "Пицца Маргарита")
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]["name"], self.pizza.name)
         self.assertEqual(response.data[0]["price"], "890.00")
         self.assertTrue(
             all(
@@ -44,7 +61,7 @@ class OrderTestCase(TestCase):
         self.pizza.is_active = False
         self.pizza.save()
         response = self.client.get("/api/orders/menu/")
-        self.assertEqual(len(response.data), 7)
+        self.assertEqual(len(response.data), 1)
 
     def test_order_creation(self):
         """Test order creation"""

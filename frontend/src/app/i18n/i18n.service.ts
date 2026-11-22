@@ -5,7 +5,7 @@ import { translations } from './translations';
 
 const catalogTranslationKeys: Record<string, string> = {
   'Пицца': 'menuCategories.pizza',
-  'Бургеры': 'menuCategories.burgers',
+  'Бургеры': 'catalogCuisineBurgers',
   'Супы': 'menuCategories.soups',
   'Суши': 'menuCategories.sushi',
   'Салаты': 'menuCategories.salads',
@@ -40,6 +40,17 @@ const catalogTranslationKeys: Record<string, string> = {
   'Бургеры и блюда на гриле': 'restaurantCatalog.grillHouseDescription',
   'Супы и суши': 'restaurantCatalog.asianKitchenDescription',
   'Салаты и легкие блюда': 'restaurantCatalog.freshTableDescription',
+  'Донер и шаурма': 'catalogCuisineDoner',
+  'Жареная курица': 'catalogCuisineFriedChicken',
+  'Паназиатская кухня': 'catalogCuisinePanAsian',
+  'Суши и японская кухня': 'catalogCuisineJapanese',
+  'Казахская кухня': 'catalogCuisineKazakh',
+  'Фастфуд и донер': 'catalogCuisineFastFood',
+  'Комбо': 'catalogCategoryCombo',
+  'Донеры': 'catalogCategoryDoner',
+  'Донер': 'catalogCategoryDoner',
+  'Сеты': 'catalogCategorySets',
+  'Гарниры': 'catalogCategorySides',
 };
 
 @Injectable({

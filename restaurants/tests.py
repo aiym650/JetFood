@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from orders.models import MenuItem
-from .models import Restaurant
+from .models import Restaurant, RestaurantBranch
 
 User = get_user_model()
 
@@ -44,6 +44,33 @@ class RestaurantApiTests(TestCase):
         self.assertIn('North Kitchen', names)
         self.assertNotIn('Closed Kitchen', names)
 
+    def test_customer_catalog_includes_verified_branch_data_read_only(self):
+        branch = RestaurantBranch.objects.create(
+            restaurant=self.restaurant,
+            address='Main Street 1, unit 2',
+            source_url='https://2gis.kz/almaty/firm/123456789',
+            delivery_available=None,
+        )
+        self.client.force_authenticate(self.customer)
+
+        response = self.client.get('/api/restaurants/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        item = next(item for item in response.data['results'] if item['id'] == self.restaurant.id)
+        self.assertEqual(item['branches'][0]['id'], branch.id)
+        self.assertEqual(item['branches'][0]['source_url'], branch.source_url)
+        self.assertIsNone(item['branches'][0]['delivery_available'])
+
+        self.client.force_authenticate(self.manager)
+        ignored = self.client.patch(
+            f'/api/restaurants/{self.restaurant.id}/',
+            {'branches': [{'address': 'Unverified address'}]},
+            format='json',
+        )
+        self.assertEqual(ignored.status_code, status.HTTP_200_OK)
+        branch.refresh_from_db()
+        self.assertEqual(branch.address, 'Main Street 1, unit 2')
+
     def test_only_managers_can_create_or_edit_restaurants(self):
         self.client.force_authenticate(self.customer)
         forbidden = self.client.post('/api/restaurants/', {
@@ -76,6 +103,26 @@ class RestaurantApiTests(TestCase):
             'working_days': [7],
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_restaurant_schedule_allows_unknown_hours_but_not_partial_hours(self):
+        self.client.force_authenticate(self.manager)
+        unknown = self.client.post('/api/restaurants/', {
+            'name': 'Unknown Hours Kitchen',
+            'address': 'Main Street 5',
+            'working_days': [],
+        }, format='json')
+        self.assertEqual(unknown.status_code, status.HTTP_201_CREATED)
+        self.assertIsNone(unknown.data['opening_time'])
+        self.assertIsNone(unknown.data['closing_time'])
+
+        partial = self.client.post('/api/restaurants/', {
+            'name': 'Partial Hours Kitchen',
+            'address': 'Main Street 6',
+            'opening_time': '09:00',
+            'working_days': [],
+        }, format='json')
+        self.assertEqual(partial.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('closing_time', partial.data)
 
     def test_menu_management_and_customer_availability_filter(self):
         self.client.force_authenticate(self.manager)

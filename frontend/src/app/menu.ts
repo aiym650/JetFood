@@ -14,6 +14,8 @@ export interface FoodItem {
   restaurant: number;
   restaurant_name?: string | null;
   is_active?: boolean;
+  catalog_key?: string | null;
+  source_url?: string;
 }
 
 export type FoodItemInput = Omit<FoodItem, 'id' | 'rating' | 'restaurant_name'>;

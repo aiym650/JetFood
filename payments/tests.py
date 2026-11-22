@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from orders.models import MenuItem, Order
+from restaurants.models import Restaurant
 from .models import Payment
 from .serializers import luhn_is_valid
 
@@ -24,11 +25,15 @@ class PaymentApiTests(TestCase):
         self.courier = User.objects.create_user(
             username="courier", password="pass12345", role="delivery"
         )
+        restaurant = Restaurant.objects.create(
+            name="Payment Test Kitchen",
+            address="Payment Street 1",
+        )
         self.menu_item = MenuItem.objects.create(
             name="Payment test meal",
             category="Test",
             price="25.00",
-            restaurant=MenuItem.objects.get(name="Пицца Маргарита").restaurant,
+            restaurant=restaurant,
         )
         self.client = APIClient()
 
