@@ -71,3 +71,34 @@ h1 {
 .back-link:hover {
   text-decoration: underline;
 }
+
+.info-page {
+  background: #fff9f2;
+  color: #242424;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.brand {
+  color: #242424;
+}
+
+.brand-icon {
+  border-radius: 13px;
+  background: #ff6b35;
+  color: #fff;
+}
+
+.eyebrow,
+.back-link {
+  color: #d85631;
+}
+
+.info-content h1 {
+  color: #242424;
+  font-weight: 780;
+  letter-spacing: -0.045em;
+}
+
+.description {
+  color: #706760;
+}

@@ -47,48 +47,61 @@ class OrderListCreateView(generics.ListCreateAPIView):
         else:
             return Order.objects.filter(customer=user)
 
-    def perform_create(self, serializer):
-        user = self.request.user
-        try:
-            validate_user_pending_orders(user)
+    def create(self, request, *args, **kwargs):
+        import time
+        from django.db import OperationalError
+        for attempt in range(5):
+            try:
+                return self._create_once(request)
+            except OperationalError as exc:
+                if 'locked' not in str(exc).lower():
+                    raise
+                if attempt == 4:
+                    return Response({'detail': 'Checkout is busy. Retry with the same Idempotency-Key.'}, status=503, headers={'Retry-After': '1'})
+                time.sleep(0.05 * 2 ** attempt)
 
-            total_amount = sum(
-                item["quantity"] * item["menu_item"].price
-                for item in serializer.validated_data["items"]
-            )
-            item_count = sum(
-                item["quantity"] for item in serializer.validated_data["items"]
-            )
-            if item_count > BusinessConstraints.MAX_ITEMS_PER_ORDER:
-                raise DRFValidationError(
-                    {
-                        "items": f"В одном заказе можно заказать не более {BusinessConstraints.MAX_ITEMS_PER_ORDER} блюд."
-                    }
-                )
-            validate_order_amount(total_amount)
-
-            estimated_time = serializer.validated_data.get("estimated_delivery_time")
-            if estimated_time:
-                validate_delivery_time(estimated_time)
-        except DjangoValidationError as error:
-            raise DRFValidationError(error.messages) from error
-
-        order_number = "ORD-" + "".join(
-            random.choices(string.ascii_uppercase + string.digits, k=10)
-        )
-        payment_method = serializer.validated_data.get("payment_method", "cash")
+    def _create_once(self, request):
+        import hashlib
+        import json
+        import uuid
+        from django.db.models import F
+        from users.models import User
+        from .models import PromoRedemption
+        from .promotions import quote
         from payments.services import create_order_payment
-
+        key = request.headers.get('Idempotency-Key', '').strip()
+        if len(key) > 100:
+            raise DRFValidationError({'detail': 'Idempotency-Key is too long.'})
+        if request.data.get('promo_code') and not key:
+            raise DRFValidationError({'detail': 'Idempotency-Key is required for promotional checkout.'})
+        fingerprint = hashlib.sha256(json.dumps(request.data, sort_keys=True).encode()).hexdigest()
         with transaction.atomic():
-            order = serializer.save(
-                customer=user,
-                order_number=order_number,
-                total_amount=total_amount,
-                status="pending",
-                priority="normal",
-                delivery_person=None,
-            )
-            create_order_payment(order, payment_method)
+            # First transaction statement is a write: serializes the customer even on SQLite.
+            User.objects.filter(pk=request.user.pk).update(last_login=F('last_login'))
+            if key:
+                previous = Order.objects.filter(customer=request.user, idempotency_key=key).first()
+                if previous:
+                    if previous.request_fingerprint != fingerprint:
+                        return Response({'detail': 'Idempotency-Key was used for another request.'}, status=409)
+                    return Response(OrderSerializer(previous).data)
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
+            totals, promo = quote(request.user, data['items'], data.get('promo_code', ''), consume=True)
+            try:
+                validate_user_pending_orders(request.user)
+                validate_order_amount(totals['items_amount'])
+                if data.get('estimated_delivery_time'):
+                    validate_delivery_time(data['estimated_delivery_time'])
+            except DjangoValidationError as error:
+                raise DRFValidationError(error.messages) from error
+            order = serializer.save(customer=request.user, order_number='ORD-' + uuid.uuid4().hex[:16].upper(),
+                status='pending', priority='normal', delivery_person=None,
+                idempotency_key=key or None, request_fingerprint=fingerprint, **totals)
+            if promo:
+                PromoRedemption.objects.create(promo=promo, user=request.user, order=order)
+            create_order_payment(order, data.get('payment_method', 'cash'))
+        return Response(OrderSerializer(order).data, status=201)
 
 
 class MenuItemListCreateView(generics.ListCreateAPIView):
@@ -104,11 +117,20 @@ class MenuItemListCreateView(generics.ListCreateAPIView):
         restaurant_id = self.request.query_params.get("restaurant")
         if restaurant_id:
             queryset = queryset.filter(restaurant_id=restaurant_id)
+        search = self.request.query_params.get('search', '').strip()
+        if search:
+            queryset = queryset.filter(Q(name__icontains=search) | Q(description__icontains=search))
+        category = self.request.query_params.get('category')
+        if category:
+            queryset = queryset.filter(category__iexact=category)
         return queryset
 
     def perform_create(self, serializer):
         if self.request.user.role not in ["admin", "manager"]:
             raise PermissionDenied("Only admins and managers can manage menu items")
+        instance = getattr(serializer, 'instance', None)
+        if instance and self.request.user.role != 'admin' and instance.restaurant.owner_id != self.request.user.pk:
+            raise PermissionDenied('Only the restaurant owner can edit this menu.')
         serializer.save()
 
 
@@ -126,12 +148,18 @@ class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     def perform_update(self, serializer):
         if self.request.user.role not in ["admin", "manager"]:
             raise PermissionDenied("Only admins and managers can manage menu items")
+        instance = getattr(serializer, 'instance', None)
+        if instance and self.request.user.role != 'admin' and instance.restaurant.owner_id != self.request.user.pk:
+            raise PermissionDenied('Only the restaurant owner can edit this menu.')
         serializer.save()
 
     def perform_destroy(self, instance):
         if self.request.user.role not in ["admin", "manager"]:
             raise PermissionDenied("Only admins and managers can manage menu items")
-        instance.delete()
+        if self.request.user.role != 'admin' and instance.restaurant.owner_id != self.request.user.pk:
+            raise PermissionDenied('Only the restaurant owner can edit this menu.')
+        instance.is_active = False
+        instance.save(update_fields=["is_active"])
 
 
 class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -390,6 +418,17 @@ def modify_order(request, order_id):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        if modified_items is not None:
+            from payments.models import Payment
+            if order.promo_code or Payment.objects.filter(order=order, status='paid').exists():
+                raise DRFValidationError({'items': 'Discounted or paid orders cannot change items. Cancel a pending order and place a new one.'})
+            from .promotions import quote
+            lines = [{'menu_item': i['item_id'], 'quantity': i['quantity']} for i in modified_items]
+            totals, _ = quote(request.user, lines, consume=True)
+            total_amount = totals['items_amount'] + order.delivery_fee
+            for item, line in zip(modified_items, lines):
+                item['item_id'] = line['menu_item']
+            order.items_amount = totals['items_amount']
         if "delivery_address" in updates:
             order.delivery_address = updates["delivery_address"]
         if "delivery_notes" in updates:
@@ -411,7 +450,9 @@ def modify_order(request, order_id):
                     for item in modified_items
                 ]
             )
-            update_fields.append("total_amount")
+            update_fields.extend(['total_amount', 'items_amount'])
+            from payments.models import Payment
+            Payment.objects.filter(order=order, status='pending').update(amount=total_amount)
         order.save(update_fields=update_fields)
 
     order.refresh_from_db()
@@ -484,3 +525,14 @@ def order_summary(request):
             "status_breakdown": list(status_breakdown),
         }
     )
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def preview_promotion(request):
+    from decimal import Decimal
+    from .promotions import quote
+    serializer = OrderSerializer(data={**request.data, 'delivery_address': 'preview'})
+    serializer.is_valid(raise_exception=True)
+    totals, _ = quote(request.user, serializer.validated_data['items'], serializer.validated_data.get('promo_code', ''))
+    return Response({key: str(value) if isinstance(value, Decimal) else value for key, value in totals.items()})

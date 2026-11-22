@@ -18,6 +18,7 @@ interface OrderItem {
 }
 
 interface OrderInput {
+  promo_code?: string;
   delivery_address: string;
   delivery_notes?: string;
   estimated_delivery_time?: string;
@@ -45,6 +46,15 @@ export interface OrderRecord {
   created_at: string;
   updated_at: string;
   items: OrderItem[];
+}
+
+export interface CartQuote {
+  items_amount: string;
+  discount_amount: string;
+  delivery_fee: string;
+  delivery_discount: string;
+  total_amount: string;
+  promo_code: string;
 }
 
 export interface DeliveryRoute {
@@ -96,8 +106,13 @@ export class Orders {
     return this.http.get<OrderRecord>(`${this.apiUrl}/${id}/`, { headers: this.getHeaders() });
   }
 
-  createOrder(order: OrderInput): Observable<OrderRecord> {
-    return this.http.post<OrderRecord>(`${this.apiUrl}/`, order, { headers: this.getHeaders() });
+  createOrder(order: OrderInput, key?: string): Observable<OrderRecord> {
+    const headers = key ? this.getHeaders().set('Idempotency-Key', key) : this.getHeaders();
+    return this.http.post<OrderRecord>(`${this.apiUrl}/`, order, { headers });
+  }
+
+  quote(items: OrderItemInput[], promo_code: string): Observable<CartQuote> {
+    return this.http.post<CartQuote>(`${this.apiUrl}/quote/`, { items, promo_code }, { headers: this.getHeaders() });
   }
 
   modifyOrder(orderId: number, changes: {

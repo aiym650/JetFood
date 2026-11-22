@@ -375,3 +375,125 @@
     min-width: 560px;
   }
 }
+
+.orders-container {
+  min-height: calc(100vh - 76px);
+  border-radius: 0;
+  background: #fff9f2;
+  color: #242424;
+}
+
+.orders-heading h1 {
+  color: #242424;
+  font-weight: 780;
+}
+
+.orders-heading .page-eyebrow,
+.order-details .details-heading > span {
+  color: #d85631;
+}
+
+.retry-button,
+.checkout-button,
+.edit-actions .checkout-button {
+  border-radius: 12px;
+  background: #ff6b35;
+  box-shadow: 0 5px 13px rgba(255, 107, 53, 0.15);
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.retry-button:hover:not(:disabled),
+.checkout-button:hover:not(:disabled),
+.edit-actions .checkout-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #e85a28;
+}
+
+.orders-table {
+  border: 1px solid #f0e5dc;
+  border-radius: 18px;
+  box-shadow: 0 8px 26px rgba(71, 48, 34, 0.055);
+}
+
+.orders-table thead {
+  background: #fff4e8;
+  color: #625950;
+}
+
+.orders-table th,
+.orders-table td {
+  border-bottom-color: #f3ece6;
+}
+
+.orders-table tbody tr:hover {
+  background: #fffaf5;
+}
+
+.order-status.status-confirmed,
+.order-status.status-preparing,
+.order-status.status-ready_for_pickup {
+  background: #fff0df;
+  color: #a45b25;
+}
+
+.order-status.status-delivering {
+  background: #fff5d8;
+  color: #85610e;
+}
+
+.order-progress li.completed,
+.order-progress li.current {
+  color: #25834e;
+}
+
+.order-progress li.completed .progress-marker,
+.order-progress li.current .progress-marker {
+  border-color: #35a86b;
+  background: #35a86b;
+}
+
+.details-button {
+  border-color: #f1dfd3;
+  border-radius: 10px;
+  color: #c94f2d;
+}
+
+.details-button:hover {
+  background: #fff2eb;
+}
+
+.details-row > td {
+  background: #fffaf5;
+}
+
+.order-details {
+  border-bottom-color: #f0e5dc;
+}
+
+.delivery-route,
+.delivery-confirmation,
+.order-edit {
+  border-color: #f0e5dc;
+  border-radius: 15px;
+  background: #fff;
+}
+
+.delivery-confirmed,
+.edit-success {
+  color: #25834e;
+}
+
+@media (max-width: 700px) {
+  .orders-container {
+    padding: 22px 14px;
+  }
+
+  .orders-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .retry-button {
+    width: 100%;
+  }
+}

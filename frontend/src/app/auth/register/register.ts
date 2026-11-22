@@ -34,8 +34,22 @@ export class Register {
   }
 
   onSubmit(): void {
+    if (this.loading) return;
     this.loading = true;
     this.errorMessage = '';
+    this.username = this.username.trim();
+    this.email = this.email.trim();
+    this.phone = this.phone.trim();
+    let validationKey = '';
+    if (!this.username) validationKey = 'registrationFailedUsername';
+    else if (!this.password) validationKey = 'registrationFailedPassword';
+    else if (this.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) validationKey = 'registrationFailedEmail';
+    else if (this.phone && !/^\+?1?\d{9,15}$/.test(this.phone)) validationKey = 'registrationFailedPhone';
+    if (validationKey) {
+      this.errorMessage = this.i18n.t(validationKey);
+      this.loading = false;
+      return;
+    }
 
     if (this.password !== this.confirmPassword) {
       this.errorMessage = this.i18n.t('passwordsNotMatch');
@@ -62,7 +76,11 @@ export class Register {
       },
       error: (error) => {
         this.loading = false;
-        this.errorMessage = this.i18n.t(this.auth.getRegistrationErrorKey(error));
+        const fields = ['phone', 'email', 'username', 'password'];
+        const field = fields.find(key => error.error && typeof error.error === 'object' && key in error.error);
+        this.errorMessage = this.i18n.t(field
+          ? 'registrationFailed' + field.charAt(0).toUpperCase() + field.slice(1)
+          : 'registrationFailed');
         this.changeDetector.markForCheck();
       }
     });

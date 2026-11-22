@@ -46,24 +46,24 @@ const catalogTranslationKeys: Record<string, string> = {
   providedIn: 'root'
 })
 export class I18nService {
-  private currentLang = new BehaviorSubject<'en' | 'ru'>('en');
+  private currentLang = new BehaviorSubject<'en' | 'ru' | 'kk'>('en');
   currentLang$ = this.currentLang.asObservable();
 
   constructor(@Inject(DOCUMENT) private document: Document) {
-    const savedLang = localStorage.getItem('lang') as 'en' | 'ru';
-    if (savedLang && (savedLang === 'en' || savedLang === 'ru')) {
+    const savedLang = localStorage.getItem('lang') as 'en' | 'ru' | 'kk';
+    if (savedLang && (savedLang === 'en' || savedLang === 'ru' || savedLang === 'kk')) {
       this.currentLang.next(savedLang);
     }
     this.document.documentElement.lang = this.currentLang.value;
   }
 
-  setLanguage(lang: 'en' | 'ru'): void {
+  setLanguage(lang: 'en' | 'ru' | 'kk'): void {
     this.currentLang.next(lang);
     localStorage.setItem('lang', lang);
     this.document.documentElement.lang = lang;
   }
 
-  getCurrentLang(): 'en' | 'ru' {
+  getCurrentLang(): 'en' | 'ru' | 'kk' {
     return this.currentLang.value;
   }
 
@@ -77,6 +77,12 @@ export class I18nService {
     }
 
     return value || key;
+  }
+
+  inLanguage(key: string, language: 'en' | 'ru' | 'kk'): string {
+    let value: any = translations[language];
+    for (const part of key.split('.')) value = value?.[part];
+    return typeof value === 'string' ? value : key;
   }
 
   t(key: string): string {

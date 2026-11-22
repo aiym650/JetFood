@@ -15,7 +15,22 @@ import { HttpClient } from '@angular/common/http';
   styleUrl: './restaurants.css',
 })
 export class RestaurantsPage implements OnInit {
-  currentUser: { role: string } | null = null;
+  search = '';
+  cuisine = '';
+  category = '';
+  get cuisines(): string[] { return [...new Set(this.restaurants.map(r => r.cuisine ?? '').filter(Boolean))]; }
+  get filteredRestaurants(): Restaurant[] {
+    const term = this.search.trim().toLocaleLowerCase();
+    return this.restaurants.filter(r => (!this.cuisine || r.cuisine === this.cuisine)
+      && [r.name, r.description, r.cuisine].join(' ').toLocaleLowerCase().includes(term));
+  }
+  get categories(): string[] { return [...new Set(this.menuItems.map(i => i.category))]; }
+  get filteredMenu(): FoodItem[] { return this.menuItems.filter(i => !this.category || i.category === this.category); }
+  addToCart(item: FoodItem): void {
+    if (item.is_active === false || !this.selectedRestaurant?.is_active) return;
+    this.router.navigate(['/dashboard'], { queryParams: { addItem: item.id } });
+  }
+  currentUser: { role: string; id?: number } | null = null;
   restaurants: Restaurant[] = [];
   selectedRestaurant: Restaurant | null = null;
   menuItems: FoodItem[] = [];
@@ -47,7 +62,13 @@ export class RestaurantsPage implements OnInit {
   ];
 
   get canManage(): boolean {
-    return ['admin', 'manager'].includes(this.currentUser?.role ?? '');
+    return this.selectedRestaurant ? this.canManageRestaurant(this.selectedRestaurant)
+      : ['admin', 'manager'].includes(this.currentUser?.role ?? '');
+  }
+
+  canManageRestaurant(restaurant: Restaurant): boolean {
+    return this.currentUser?.role === 'admin'
+      || (this.currentUser?.role === 'manager' && restaurant.owner != null && restaurant.owner === this.currentUser.id);
   }
 
   constructor(
@@ -106,6 +127,7 @@ export class RestaurantsPage implements OnInit {
   }
 
   private activateRestaurant(restaurant: Restaurant): void {
+    this.category = '';
     this.selectedRestaurant = restaurant;
     this.resetMenuForm();
     this.loadMenu(restaurant);
@@ -191,6 +213,7 @@ export class RestaurantsPage implements OnInit {
     this.restaurantForm = {
       name: restaurant.name,
       description: restaurant.description,
+      cuisine: restaurant.cuisine ?? '',
       address: restaurant.address,
       phone: restaurant.phone,
       image_url: restaurant.image_url,

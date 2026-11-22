@@ -7,11 +7,11 @@ class RestaurantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Restaurant
         fields = [
-            'id', 'name', 'description', 'address', 'phone', 'image_url',
+            'id', 'name', 'description', 'cuisine', 'demo_key', 'address', 'phone', 'image_url',
             'opening_time', 'closing_time', 'working_days', 'is_active',
             'owner', 'avg_rating', 'reviews_count', 'created_at', 'updated_at',
         ]
-        read_only_fields = ['id', 'owner', 'avg_rating', 'reviews_count', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'demo_key', 'owner', 'avg_rating', 'reviews_count', 'created_at', 'updated_at']
 
     def validate_working_days(self, value):
         if not isinstance(value, list) or any(

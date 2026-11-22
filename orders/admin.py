@@ -1,11 +1,14 @@
 from django.contrib import admin
-from .models import MenuItem, Order, OrderItem
+from .models import MenuItem, Order, OrderItem, PromoCode, PromoRedemption
+from restaurants.admin_permissions import RestaurantScopeAdmin
 
 
 @admin.register(MenuItem)
-class MenuItemAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'price', 'rating', 'is_active']
-    list_filter = ['category', 'is_active']
+class MenuItemAdmin(RestaurantScopeAdmin, admin.ModelAdmin):
+    readonly_fields = ['category', 'rating']
+    list_display = ['name', 'restaurant', 'menu_category', 'price', 'rating', 'is_active']
+    list_filter = ['restaurant', 'menu_category', 'is_active']
+    list_editable = ['price', 'is_active']
     search_fields = ['name', 'description']
 
 
@@ -17,6 +20,7 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
+    readonly_fields = ['promo_code', 'items_amount', 'discount_amount', 'delivery_fee', 'delivery_discount', 'total_amount', 'idempotency_key', 'request_fingerprint']
     list_display = ['order_number', 'customer', 'status', 'priority', 'total_amount', 'created_at']
     list_filter = ['status', 'priority', 'created_at']
     search_fields = ['order_number', 'customer__username']
@@ -28,3 +32,23 @@ class OrderAdmin(admin.ModelAdmin):
 class OrderItemAdmin(admin.ModelAdmin):
     list_display = ['order', 'item_name', 'quantity', 'price_per_item', 'subtotal']
     search_fields = ['item_name']
+
+
+@admin.register(PromoCode)
+class PromoCodeAdmin(admin.ModelAdmin):
+    list_display = ['code', 'kind', 'value', 'is_active', 'restaurant', 'used_count', 'usage_limit', 'ends_at']
+    list_filter = ['kind', 'is_active', 'restaurant']
+    search_fields = ['code']
+    readonly_fields = ['used_count']
+
+
+@admin.register(PromoRedemption)
+class PromoRedemptionAdmin(admin.ModelAdmin):
+    list_display = ['promo', 'user', 'order', 'created_at']
+    readonly_fields = ['promo', 'user', 'order', 'created_at']
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

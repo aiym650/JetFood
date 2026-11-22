@@ -13,7 +13,7 @@ class BusinessConstraints:
     
     # Order constraints
     MIN_ORDER_AMOUNT = 10.00
-    MAX_ORDER_AMOUNT = 10000.00
+    MAX_ORDER_AMOUNT = 1000000.00
     MAX_ITEMS_PER_ORDER = 50
     
     # Delivery constraints
@@ -33,11 +33,11 @@ def validate_order_amount(amount):
     """Validate order amount against business constraints"""
     if amount < BusinessConstraints.MIN_ORDER_AMOUNT:
         raise ValidationError(
-            f"Order amount must be at least ${BusinessConstraints.MIN_ORDER_AMOUNT}"
+            f"Order amount must be at least {BusinessConstraints.MIN_ORDER_AMOUNT} KZT"
         )
     if amount > BusinessConstraints.MAX_ORDER_AMOUNT:
         raise ValidationError(
-            f"Order amount cannot exceed ${BusinessConstraints.MAX_ORDER_AMOUNT}"
+            f"Order amount cannot exceed {BusinessConstraints.MAX_ORDER_AMOUNT} KZT"
         )
 
 

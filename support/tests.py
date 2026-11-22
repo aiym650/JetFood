@@ -19,6 +19,8 @@ User = get_user_model()
 
 class SupportCaseApiTests(TestCase):
     def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
         self.customer = User.objects.create_user(
             username='support-customer',
             email='support-customer@example.com',
@@ -61,11 +63,11 @@ class SupportCaseApiTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['order_number'], self.order.order_number)
         self.assertEqual(response.data['status'], 'waiting_for_customer')
-        self.assertEqual(len(response.data['messages']), 2)
-        self.assertEqual(response.data['messages'][0]['sender'], 'customer')
-        self.assertEqual(response.data['messages'][1]['sender'], 'assistant')
-        self.assertEqual(response.data['messages'][1]['body'], 'Ваш заказ доставляется.')
-        self.assertEqual(SupportMessage.objects.filter(support_case_id=response.data['id']).count(), 2)
+        self.assertEqual(len(response.data['messages']), 3)
+        self.assertEqual(response.data['messages'][1]['sender'], 'customer')
+        self.assertEqual(response.data['messages'][2]['sender'], 'assistant')
+        self.assertEqual(response.data['messages'][2]['body'], 'Ваш заказ доставляется.')
+        self.assertEqual(SupportMessage.objects.filter(support_case_id=response.data['id']).count(), 3)
         generate_reply.assert_called_once()
 
     def test_customer_must_own_the_order_number(self):
@@ -146,7 +148,7 @@ class SupportCaseApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
         self.assertEqual(SupportCase.objects.count(), 1)
-        self.assertEqual(SupportMessage.objects.count(), 1)
+        self.assertEqual(SupportMessage.objects.count(), 2)
         self.assertEqual(response.data['case_id'], SupportCase.objects.get().pk)
 
     def test_customer_cannot_read_another_customers_case(self):

@@ -18,15 +18,15 @@ export class SidebarComponent {
   isCollapsed = false;
 
   private readonly menuItems = [
-    { icon: '⌂', label: 'dashboard', route: '/dashboard' },
-    { icon: 'U', label: 'profile', route: '/profile' },
-    { icon: 'P', label: 'payments', route: '/payments' },
-    { icon: 'R', label: 'restaurants', route: '/restaurants' },
-    { icon: '▤', label: 'orders', route: '/orders' },
-    { icon: '▥', label: 'analytics', route: '/analytics', roles: ['admin', 'manager', 'analyst'] },
-    { icon: '▧', label: 'reports', route: '/reports' },
-    { icon: '↗', label: 'integration', route: '/integration', roles: ['admin', 'manager'] },
-    { icon: '○', label: 'notifications', route: '/notifications' },
+    { icon: 'dashboard', label: 'dashboard', route: '/dashboard' },
+    { icon: 'profile', label: 'profile', route: '/profile' },
+    { icon: 'payments', label: 'payments', route: '/payments' },
+    { icon: 'restaurants', label: 'restaurants', route: '/restaurants' },
+    { icon: 'orders', label: 'orders', route: '/orders' },
+    { icon: 'analytics', label: 'analytics', route: '/analytics', roles: ['admin', 'manager', 'analyst'] },
+    { icon: 'reports', label: 'reports', route: '/reports', roles: ['admin', 'manager', 'analyst'] },
+    { icon: 'integration', label: 'integration', route: '/integration', roles: ['admin', 'manager'] },
+    { icon: 'notifications', label: 'notifications', route: '/notifications' },
   ];
 
   constructor(

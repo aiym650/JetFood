@@ -1,0 +1,211 @@
+/* FAQ and conversation history screens. */
+.help-view,
+.history-view {
+  padding: 12px 20px 24px;
+}
+.help-view h3,
+.history-view h3 {
+  margin: 8px 0 10px;
+  font-size: 21px;
+  letter-spacing: -0.5px;
+}
+.muted {
+  color: #85868e;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.faq-card {
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px solid #e9e9ec;
+  border-radius: 12px;
+}
+.faq-card summary {
+  cursor: pointer;
+  line-height: 1.45;
+  font-weight: 550;
+}
+.faq-card p {
+  line-height: 1.6;
+  color: #6f717a;
+  white-space: pre-wrap;
+}
+.human-support {
+  margin-top: 24px;
+  padding: 18px;
+  border-radius: 16px;
+  background: #f7f7f8;
+}
+.human-support h4 {
+  margin: 0;
+  font-size: 16px;
+}
+.human-support > p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #797b84;
+}
+.primary-button,
+.secondary-button {
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 12px;
+}
+.primary-button {
+  background: var(--accent);
+  color: #fff;
+}
+.secondary-button {
+  background: #fff;
+  border: 1px solid #ddd;
+  color: #36383f;
+}
+.text-button {
+  border: 0;
+  background: transparent;
+  color: #b9563c;
+  padding: 8px 0;
+  font-size: 12px;
+}
+.operator-form {
+  display: grid;
+  gap: 10px;
+  font-size: 12px;
+}
+.operator-form textarea {
+  width: 100%;
+  padding: 10px;
+  resize: vertical;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+}
+.operator-notice {
+  padding: 12px;
+  border-radius: 12px;
+  background: #edf5ed;
+  color: #426346;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.history-item {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 0;
+  border: 0;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+  text-align: left;
+  color: inherit;
+}
+.history-icon {
+  padding: 10px;
+  border-radius: 12px;
+  background: #f5f5f6;
+  height: 42px;
+}
+.history-item > span:last-child {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  flex: 1;
+}
+.history-item strong {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 550;
+  font-size: 13px;
+}
+.history-item small {
+  font-size: 11px;
+  color: #8c8d95;
+}
+.empty-history {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 55px 10px;
+  color: #a1a2a8;
+  text-align: center;
+}
+
+.help-view,
+.history-view {
+  color: #292521;
+}
+
+.help-view h3,
+.history-view h3 {
+  color: #292521;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+}
+
+.muted {
+  color: #77716c;
+}
+
+.faq-card {
+  border-color: #f0e5dc;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.faq-card p {
+  color: #6f6760;
+}
+
+.human-support {
+  border: 1px solid #f0e5dc;
+  border-radius: 18px;
+  background: #fff6ed;
+}
+
+.human-support > p {
+  color: #77716c;
+}
+
+.primary-button {
+  background: #ff6b35;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: #e85a28;
+}
+
+.secondary-button {
+  border-color: #f0e5dc;
+  color: #5e554d;
+}
+
+.text-button {
+  color: #c94f2d;
+}
+
+.operator-notice {
+  background: #edf8ef;
+  color: #267345;
+}
+
+.history-item {
+  border-bottom-color: #f0e5dc;
+}
+
+.history-icon {
+  border-radius: 13px;
+  background: #fff0e7;
+  color: #d85631;
+}
+
+.empty-history {
+  color: #827a73;
+}

@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from .models import SupportCase, SupportMessage
+from .models import SupportCase, SupportMessage, FAQ
+
+admin.site.register(FAQ)
 
 
 class SupportMessageInline(admin.TabularInline):
@@ -24,12 +26,12 @@ class SupportMessageInline(admin.TabularInline):
 
 @admin.register(SupportCase)
 class SupportCaseAdmin(admin.ModelAdmin):
-    list_display = ('id', 'order_number', 'customer', 'status', 'updated_at')
-    list_filter = ('status', 'created_at')
+    list_display = ('id', 'order_number', 'customer', 'language', 'operator_requested', 'status', 'updated_at')
+    list_filter = ('status', 'operator_requested', 'language', 'created_at')
     search_fields = ('order_number', 'customer__username', 'issue_description')
     readonly_fields = (
-        'customer', 'order', 'order_number', 'issue_description', 'status',
-        'resolution', 'created_at', 'updated_at',
+        'customer', 'order', 'order_number', 'issue_description',
+        'created_at', 'updated_at',
     )
     inlines = [SupportMessageInline]
 

@@ -4,6 +4,8 @@ import { map, Observable } from 'rxjs';
 import { ApiListResponse, getApiListResults } from './shared/api-list';
 
 export interface Restaurant {
+  cuisine?: string;
+  demo_key?: string | null;
   id: number;
   name: string;
   description: string;

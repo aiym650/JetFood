@@ -9,21 +9,30 @@
           [attr.aria-label]="i18n.t(selectedRestaurant ? 'searchFood' : 'searchRestaurants')"
           [value]="searchTerm"
           (input)="searchTerm = $any($event.target).value"
-        >
+        />
       </label>
       <div class="top-bar-meta">
         <span class="delivery-note">{{ i18n.t('deliveryApprox') }}</span>
-        <button class="cart-trigger" *ngIf="cart.length > 0" type="button" (click)="cartOpen = !cartOpen">
+        <button
+          class="cart-trigger"
+          *ngIf="cart.length > 0"
+          type="button"
+          (click)="cartOpen = !cartOpen"
+        >
           {{ i18n.t('cart') }} <span class="cart-count">{{ cartItemCount }}</span>
         </button>
       </div>
     </div>
 
     <div class="hero-section" *ngIf="!selectedRestaurant">
-      <div>
+      <div class="hero-copy">
         <p class="hero-eyebrow">JETFOOD</p>
-        <h1>{{ i18n.t('welcomeFood') }} {{ currentUser?.username }}!</h1>
-        <p>{{ i18n.t('welcomeDescription') }}</p>
+        <h1>{{ i18n.t('heroTitle') }}</h1>
+        <p>{{ i18n.t('heroDescription') }}</p>
+        <a class="hero-order-button" href="#restaurants">{{ i18n.t('orderNow') }} <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <img src="/assets/demo-food/fries.jpg" alt="" fetchpriority="high" />
       </div>
       <div class="hero-promo">
         <span>{{ i18n.t('today') }}</span>
@@ -32,7 +41,12 @@
       </div>
     </div>
 
-    <section class="restaurant-catalog" *ngIf="!selectedRestaurant" [attr.aria-label]="i18n.t('restaurants')">
+    <section
+      class="restaurant-catalog"
+      *ngIf="!selectedRestaurant"
+      [attr.aria-label]="i18n.t('restaurants')"
+      id="restaurants"
+    >
       <div class="section-heading">
         <div>
           <h2>{{ i18n.t('restaurants') }}</h2>
@@ -40,22 +54,96 @@
         </div>
         <span class="result-count">{{ filteredRestaurants.length }}</span>
       </div>
+      <div class="home-categories" *ngIf="cuisineCategories.length" [attr.aria-label]="i18n.t('foodCategories')">
+        <button type="button" class="home-category home-category-all" [class.active]="!searchTerm" (click)="searchTerm = ''">
+          <span class="home-category-icon" aria-hidden="true">✦</span>
+          <span>{{ i18n.t('restaurants') }}</span>
+        </button>
+        <button
+          type="button"
+          class="home-category"
+          *ngFor="let cuisine of cuisineCategories; let index = index"
+          [class.active]="searchTerm === cuisine"
+          (click)="searchTerm = cuisine"
+        >
+          <span class="home-category-icon" aria-hidden="true">{{ categoryIcons[index % categoryIcons.length] }}</span>
+          <span>{{ i18n.catalogLabel(cuisine) }}</span>
+        </button>
+      </div>
+      <section class="home-highlights" [attr.aria-label]="i18n.t('homeHighlightsTitle')">
+        <div class="home-highlights-heading">
+          <h2>{{ i18n.t('homeHighlightsTitle') }}</h2>
+        </div>
+        <div class="home-highlight-grid">
+          <div class="home-highlight home-highlight-promo">
+            <span class="highlight-kicker">{{ i18n.t('promoCode') }}</span>
+            <h3>{{ i18n.t('homePromoTitle') }}</h3>
+            <p>{{ i18n.t('homePromoText') }}</p>
+            <a href="#restaurants">{{ i18n.t('viewMenu') }} <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="home-highlight home-highlight-delivery">
+            <span class="highlight-icon" aria-hidden="true">⌁</span>
+            <h3>{{ i18n.t('homeDeliveryTitle') }}</h3>
+            <p>{{ i18n.t('homeDeliveryText') }}</p>
+          </div>
+          <div class="home-highlight home-highlight-favorites">
+            <span class="highlight-icon" aria-hidden="true">♡</span>
+            <h3>{{ i18n.t('homeFavoritesTitle') }}</h3>
+            <p>{{ i18n.t('homeFavoritesText') }}</p>
+          </div>
+        </div>
+      </section>
       <div *ngIf="restaurantsLoading" class="empty-menu" role="status">{{ i18n.t('loading') }}</div>
       <div *ngIf="restaurantsError" class="empty-menu" role="alert">
         {{ restaurantsError }}
-        <button type="button" class="add-to-cart-btn" (click)="loadRestaurants()">{{ i18n.t('retry') }}</button>
+        <button type="button" class="add-to-cart-btn" (click)="loadRestaurants()">
+          {{ i18n.t('retry') }}
+        </button>
       </div>
-      <div class="restaurant-grid" *ngIf="!restaurantsLoading && !restaurantsError && filteredRestaurants.length; else emptyRestaurants">
-        <button type="button" class="restaurant-card" *ngFor="let restaurant of filteredRestaurants"
-          (click)="selectRestaurant(restaurant)">
-          <img *ngIf="restaurant.image_url" [src]="restaurant.image_url" [alt]="i18n.catalogLabel(restaurant.name)" loading="lazy">
-          <span *ngIf="!restaurant.image_url" class="restaurant-image-placeholder" aria-hidden="true">JF</span>
+      <div
+        class="restaurant-grid"
+        *ngIf="
+          !restaurantsLoading && !restaurantsError && filteredRestaurants.length;
+          else emptyRestaurants
+        "
+      >
+        <button
+          type="button"
+          class="restaurant-card"
+          *ngFor="let restaurant of filteredRestaurants"
+          (click)="selectRestaurant(restaurant)"
+        >
+          <img
+            *ngIf="restaurant.image_url"
+            [src]="restaurant.image_url"
+            [alt]="i18n.catalogLabel(restaurant.name)"
+            loading="lazy"
+          />
+          <span
+            *ngIf="!restaurant.image_url"
+            class="restaurant-image-placeholder"
+            aria-hidden="true"
+            >JF</span
+          >
           <span class="restaurant-card-info">
-            <strong>{{ i18n.catalogLabel(restaurant.name) }}</strong>
+            <strong>{{ i18n.catalogLabel(restaurant.name) }}</strong
+            ><span>{{ restaurant.cuisine }}</span
+            ><span class="restaurant-rating" *ngIf="restaurant.avg_rating !== undefined && restaurant.avg_rating !== null">
+              <span aria-hidden="true">★</span> {{ restaurant.avg_rating | number:'1.1-1' }}
+              <small *ngIf="restaurant.reviews_count">({{ restaurant.reviews_count }})</small>
+            </span>
+            ><span *ngIf="restaurant.demo_key">{{ i18n.t('demoNotice') }}</span>
             <span>{{ i18n.catalogLabel(restaurant.description) }}</span>
             <span>{{ i18n.catalogLabel(restaurant.address) }}</span>
-            <span>{{ restaurant.opening_time.slice(0, 5) }}–{{ restaurant.closing_time.slice(0, 5) }}</span>
-            <span class="restaurant-menu-link">{{ restaurantItemCount(restaurant) }} {{ i18n.t('dishes') }} · {{ i18n.t('viewMenu') }}</span>
+            <span
+              >{{ restaurant.opening_time.slice(0, 5) }}–{{
+                restaurant.closing_time.slice(0, 5)
+              }}</span
+            >
+            <span class="restaurant-menu-link"
+              >{{ restaurantItemCount(restaurant) }} {{ i18n.t('dishes') }} ·
+              {{ i18n.t('viewMenu') }}</span
+            >
           </span>
         </button>
       </div>
@@ -69,69 +157,152 @@
     <section class="catalog-section" *ngIf="selectedRestaurant" [attr.aria-label]="i18n.t('menu')">
       <div class="section-heading">
         <div>
-          <button type="button" class="back-to-restaurants" (click)="backToRestaurants()">{{ i18n.t('backToRestaurants') }}</button>
+          <button type="button" class="back-to-restaurants" (click)="backToRestaurants()">
+            {{ i18n.t('backToRestaurants') }}
+          </button>
           <h2>{{ i18n.catalogLabel(selectedRestaurant.name) }}</h2>
-          <p>{{ i18n.catalogLabel(selectedRestaurant.description) }} · {{ i18n.catalogLabel(selectedRestaurant.address) }}</p>
+          <p>
+            {{ i18n.catalogLabel(selectedRestaurant.description) }} ·
+            {{ i18n.catalogLabel(selectedRestaurant.address) }}
+          </p>
         </div>
         <span class="result-count">{{ filteredItems.length }} {{ i18n.t('dishes') }}</span>
       </div>
 
       <div class="categories" [attr.aria-label]="i18n.t('foodCategories')">
-      <button
-        *ngFor="let category of categories"
-        type="button"
-        (click)="selectCategory(category)"
-        [class.active]="(allCategoriesSelected && category === i18n.t('allCategories')) || selectedCategory === category"
-        class="category-btn"
-      >
-        {{ categoryLabel(category) }}
-      </button>
+        <button
+          *ngFor="let category of categories"
+          type="button"
+          (click)="selectCategory(category)"
+          [class.active]="
+            (allCategoriesSelected && category === i18n.t('allCategories')) ||
+            selectedCategory === category
+          "
+          class="category-btn"
+        >
+          {{ categoryLabel(category) }}
+        </button>
       </div>
-      <div class="price-filters" role="group" [attr.aria-label]="i18n.t('filterByPrice')">
-        <label>{{ i18n.t('minPrice') }}
-          <input type="number" min="0" step="1" [value]="minPrice ?? ''"
-            (input)="setPriceFilter('min', $any($event.target).value)">
-        </label>
-        <label>{{ i18n.t('maxPrice') }}
-          <input type="number" min="0" step="1" [value]="maxPrice ?? ''"
-            (input)="setPriceFilter('max', $any($event.target).value)">
-        </label>
+      <div
+        class="price-filters catalog-price-panel"
+        role="group"
+        [attr.aria-label]="i18n.t('filterByPrice')"
+      >
+        <div class="catalog-price-heading">
+          <span class="catalog-price-title">
+            <svg
+              class="ui-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M4 7h16M7 12h10M10 17h4" />
+            </svg>
+            {{ i18n.t('filterByPrice') }}
+          </span>
+          <button
+            type="button"
+            class="ui-text-button"
+            (click)="setPriceFilter('min', ''); setPriceFilter('max', '')"
+            [disabled]="minPrice === null && maxPrice === null"
+          >
+            {{ i18n.t('resetPriceFilters') }}
+          </button>
+        </div>
+        <div class="catalog-price-fields">
+          <label class="ui-field"
+            ><span class="ui-field-label">{{ i18n.t('minPrice') }}</span>
+            <span class="ui-input-shell">
+              <input
+                class="ui-input"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                step="1"
+                placeholder="0"
+                [value]="minPrice ?? ''"
+                (input)="setPriceFilter('min', $any($event.target).value)"
+              />
+              <span class="ui-input-unit">₸</span>
+            </span>
+          </label>
+          <label class="ui-field"
+            ><span class="ui-field-label">{{ i18n.t('maxPrice') }}</span>
+            <span class="ui-input-shell">
+              <input
+                class="ui-input"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                step="1"
+                [placeholder]="i18n.t('anyPrice')"
+                [value]="maxPrice ?? ''"
+                (input)="setPriceFilter('max', $any($event.target).value)"
+              />
+              <span class="ui-input-unit">₸</span>
+            </span>
+          </label>
+        </div>
       </div>
 
       <div *ngIf="menuLoading" class="empty-menu" role="status">{{ i18n.t('menuLoading') }}</div>
       <div *ngIf="menuError" class="empty-menu" role="alert">
         {{ menuError }}
-        <button type="button" class="add-to-cart-btn" (click)="loadMenu()">{{ i18n.t('retry') }}</button>
+        <button type="button" class="add-to-cart-btn" (click)="loadMenu()">
+          {{ i18n.t('retry') }}
+        </button>
       </div>
-      <div class="food-grid" *ngIf="!menuLoading && !menuError && filteredItems.length; else emptyMenu">
-      <article *ngFor="let item of filteredItems; let index = index" class="food-card">
-        <div class="food-image">
-          <img
-            [src]="item.image_url"
-            [alt]="itemName(item)"
-            [attr.loading]="index < 2 ? 'eager' : 'lazy'"
-            [attr.fetchpriority]="index === 0 ? 'high' : 'auto'"
-          >
-          <span class="food-rating"><span aria-hidden="true">★</span> {{ item.rating }}</span>
-        </div>
-        <div class="food-info">
-          <div class="food-category">{{ categoryLabel(item.category) }}</div>
-          <h3 class="food-name">{{ itemName(item) }}</h3>
-          <p class="food-description">{{ itemDescription(item) }}</p>
-          <div class="food-footer">
-            <div class="food-price">{{ item.price }} ₸</div>
-            <button type="button" (click)="addToCart(item)" class="add-to-cart-btn" [disabled]="submittingOrder || pendingPaymentOrderId !== null || cartItemCount >= 50" [attr.aria-label]="i18n.t('addToCart') + ' ' + itemName(item)">
-              {{ i18n.t('addToCart') }}
-            </button>
+      <div
+        class="food-grid"
+        *ngIf="!menuLoading && !menuError && filteredItems.length; else emptyMenu"
+      >
+        <article *ngFor="let item of filteredItems; let index = index" class="food-card">
+          <div class="food-image">
+            <img
+              *ngIf="item.image_url"
+              [src]="item.image_url"
+              [alt]="itemName(item)"
+              [attr.loading]="index < 2 ? 'eager' : 'lazy'"
+              [attr.fetchpriority]="index === 0 ? 'high' : 'auto'"
+            />
+            <span class="food-rating"><span aria-hidden="true">★</span> {{ item.rating }}</span>
           </div>
-        </div>
-      </article>
+          <div class="food-info">
+            <div class="food-category">{{ categoryLabel(item.category) }}</div>
+            <h3 class="food-name">{{ itemName(item) }}</h3>
+            <p class="food-description">{{ itemDescription(item) }}</p>
+            <div class="food-footer">
+              <div class="food-price">{{ item.price }} ₸</div>
+              <button
+                type="button"
+                (click)="addToCart(item)"
+                class="add-to-cart-btn"
+                [disabled]="
+                  item.is_active === false ||
+                  submittingOrder ||
+                  pendingPaymentOrderId !== null ||
+                  cartItemCount >= 50
+                "
+                [attr.aria-label]="i18n.t('addToCart') + ' ' + itemName(item)"
+              >
+                {{ i18n.t('addToCart') }}
+              </button>
+            </div>
+          </div>
+        </article>
       </div>
       <ng-template #emptyMenu>
         <div *ngIf="!menuLoading && !menuError && foodItems.length === 0" class="empty-menu">
           {{ i18n.t('menuEmpty') }}
         </div>
-        <div *ngIf="!menuLoading && !menuError && foodItems.length > 0 && filteredItems.length === 0" class="empty-menu">
+        <div
+          *ngIf="!menuLoading && !menuError && foodItems.length > 0 && filteredItems.length === 0"
+          class="empty-menu"
+        >
           {{ i18n.t('noDishesFound') }}
         </div>
       </ng-template>
@@ -140,8 +311,22 @@
     <div class="cart-sidebar" *ngIf="cart.length > 0 && cartOpen">
       <div class="cart-header">
         <h3>{{ i18n.t('cart') }}</h3>
-        <button type="button" (click)="clearCart()" class="clear-cart" [disabled]="submittingOrder || pendingPaymentOrderId !== null">{{ i18n.t('clearCart') }}</button>
-        <button type="button" (click)="cartOpen = false" class="close-cart" [attr.aria-label]="i18n.t('closeCart')">×</button>
+        <button
+          type="button"
+          (click)="clearCart()"
+          class="clear-cart"
+          [disabled]="submittingOrder || pendingPaymentOrderId !== null"
+        >
+          {{ i18n.t('clearCart') }}
+        </button>
+        <button
+          type="button"
+          (click)="cartOpen = false"
+          class="close-cart"
+          [attr.aria-label]="i18n.t('closeCart')"
+        >
+          ×
+        </button>
       </div>
       <div class="cart-items">
         <div *ngFor="let line of cart" class="cart-item">
@@ -150,66 +335,126 @@
             <span class="cart-item-price">{{ line.item.price * line.quantity }} ₸</span>
           </div>
           <div class="quantity-control">
-            <button type="button" (click)="changeQuantity(line, -1)" [disabled]="submittingOrder || pendingPaymentOrderId !== null" [attr.aria-label]="i18n.t('decreaseQuantity') + ': ' + itemName(line.item)">−</button>
+            <button
+              type="button"
+              (click)="changeQuantity(line, -1)"
+              [disabled]="submittingOrder || pendingPaymentOrderId !== null"
+              [attr.aria-label]="i18n.t('decreaseQuantity') + ': ' + itemName(line.item)"
+            >
+              −
+            </button>
             <span>{{ line.quantity }}</span>
-            <button type="button" (click)="changeQuantity(line, 1)" [disabled]="submittingOrder || pendingPaymentOrderId !== null || cartItemCount >= 50" [attr.aria-label]="i18n.t('increaseQuantity') + ': ' + itemName(line.item)">+</button>
+            <button
+              type="button"
+              (click)="changeQuantity(line, 1)"
+              [disabled]="submittingOrder || pendingPaymentOrderId !== null || cartItemCount >= 50"
+              [attr.aria-label]="i18n.t('increaseQuantity') + ': ' + itemName(line.item)"
+            >
+              +
+            </button>
           </div>
         </div>
       </div>
       <div class="cart-footer">
         <p *ngIf="cartNotice" class="checkout-message" role="status">{{ cartNotice }}</p>
-        <p class="cart-limit">{{ i18n.t('cartLimit') }}</p>
+        <p class="cart-limit ui-help-text">{{ i18n.t('cartLimit') }}</p>
         <label class="address-field">
           {{ i18n.t('deliveryAddressLabel') }}
-          <select *ngIf="savedAddresses.length" [value]="selectedAddressId ?? ''" (change)="selectSavedAddress($any($event.target).value)">
+          <select
+            *ngIf="savedAddresses.length"
+            [value]="selectedAddressId ?? ''"
+            (change)="selectSavedAddress($any($event.target).value)"
+          >
             <option value="">{{ i18n.t('chooseSavedAddress') }}</option>
             <option *ngFor="let address of savedAddresses" [value]="address.id">
               {{ address.label }} — {{ address.address_line }}, {{ address.city }}
             </option>
           </select>
-          <input [value]="deliveryAddress" (input)="deliveryAddress = $any($event.target).value" [placeholder]="i18n.t('addressPlaceholder')">
+          <input
+            [value]="deliveryAddress"
+            (input)="deliveryAddress = $any($event.target).value"
+            [placeholder]="i18n.t('addressPlaceholder')"
+          />
         </label>
         <label class="address-field">
           {{ i18n.t('paymentMethod') }}
-          <select [value]="paymentMethod" [disabled]="submittingOrder || pendingPaymentOrderId !== null"
-            (change)="setPaymentMethod($any($event.target).value)">
+          <select
+            [value]="paymentMethod"
+            [disabled]="submittingOrder || pendingPaymentOrderId !== null"
+            (change)="setPaymentMethod($any($event.target).value)"
+          >
             <option value="online">{{ i18n.t('onlinePaymentSimulation') }}</option>
             <option value="cash">{{ i18n.t('cashOnDelivery') }}</option>
           </select>
         </label>
-        <section *ngIf="paymentMethod === 'online'" class="card-payment-form" [attr.aria-label]="i18n.t('cardDetails')">
+        <section
+          *ngIf="paymentMethod === 'online'"
+          class="card-payment-form"
+          [attr.aria-label]="i18n.t('cardDetails')"
+        >
           <h4>{{ i18n.t('cardDetails') }}</h4>
           <label class="address-field">
             {{ i18n.t('cardNumber') }}
-            <input type="text" inputmode="numeric" autocomplete="off" maxlength="19"
-              [value]="cardNumber" [disabled]="submittingOrder"
+            <input
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              maxlength="19"
+              [value]="cardNumber"
+              [disabled]="submittingOrder"
               (input)="formatCardNumber($any($event.target).value)"
-              [attr.aria-invalid]="!!cardNumberError()">
+              [attr.aria-invalid]="!!cardNumberError()"
+            />
           </label>
-          <p *ngIf="cardNumberError()" class="checkout-message checkout-error">{{ cardNumberError() }}</p>
+          <p *ngIf="cardNumberError()" class="checkout-message checkout-error">
+            {{ cardNumberError() }}
+          </p>
           <label class="address-field">
             {{ i18n.t('cardExpiry') }}
-            <input type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="MM/YY"
-              [value]="cardExpiry" [disabled]="submittingOrder"
+            <input
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              maxlength="5"
+              placeholder="MM/YY"
+              [value]="cardExpiry"
+              [disabled]="submittingOrder"
               (input)="formatCardExpiry($any($event.target).value)"
-              [attr.aria-invalid]="!!cardExpiryError()">
+              [attr.aria-invalid]="!!cardExpiryError()"
+            />
           </label>
-          <p *ngIf="cardExpiryError()" class="checkout-message checkout-error">{{ cardExpiryError() }}</p>
+          <p *ngIf="cardExpiryError()" class="checkout-message checkout-error">
+            {{ cardExpiryError() }}
+          </p>
           <label class="address-field">
             {{ i18n.t('cardCvv') }}
-            <input type="password" inputmode="numeric" autocomplete="off" maxlength="3"
-              [value]="cardCvv" [disabled]="submittingOrder"
+            <input
+              type="password"
+              inputmode="numeric"
+              autocomplete="off"
+              maxlength="3"
+              [value]="cardCvv"
+              [disabled]="submittingOrder"
               (input)="formatCardCvv($any($event.target).value)"
-              [attr.aria-invalid]="!!cardCvvError()">
+              [attr.aria-invalid]="!!cardCvvError()"
+            />
           </label>
           <p *ngIf="cardCvvError()" class="checkout-message checkout-error">{{ cardCvvError() }}</p>
           <label class="address-field">
             {{ i18n.t('cardholderName') }}
-            <input type="text" autocomplete="off" maxlength="120" [value]="cardholderName"
-              [disabled]="submittingOrder" (input)="formatCardholderName($any($event.target).value)"
-              [attr.aria-invalid]="!!cardholderError()">
+            <input
+              type="text"
+              autocomplete="off"
+              maxlength="120"
+              [value]="cardholderName"
+              [disabled]="submittingOrder"
+              (input)="formatCardholderName($any($event.target).value)"
+              [attr.aria-invalid]="!!cardholderError()"
+            />
           </label>
-          <p *ngIf="cardholderError()" class="checkout-message checkout-error">{{ cardholderError() }}</p>
+          <p *ngIf="cardholderError()" class="checkout-message checkout-error">
+            {{ cardholderError() }}
+          </p>
         </section>
         <div *ngIf="paymentError" class="checkout-message checkout-error" role="alert">
           <p>{{ paymentError }}</p>
@@ -217,33 +462,176 @@
             {{ i18n.t('tryAgain') }}
           </button>
         </div>
-        <p *ngIf="savedAddressError" class="checkout-message checkout-error" role="alert">{{ savedAddressError }}</p>
-        <a routerLink="/profile" class="manage-addresses">{{ i18n.t('manageAddresses') }}</a>
+        <p *ngIf="savedAddressError" class="checkout-message checkout-error" role="alert">
+          {{ savedAddressError }}
+        </p>
+        <a routerLink="/profile" class="manage-addresses ui-inline-link">
+          <svg
+            class="ui-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 0 1 16 0z" />
+            <circle cx="12" cy="10" r="2.5" />
+          </svg>
+          {{ i18n.t('manageAddresses') }}
+        </a>
         <p *ngIf="checkoutError" class="checkout-message checkout-error">{{ checkoutError }}</p>
-        <div class="cart-total">
-          <span>{{ i18n.t('total') }}</span>
-          <span>{{ cartTotal }} ₸</span>
-        </div>
-        <button type="button" class="checkout-btn" [disabled]="submittingOrder" (click)="checkout()">
-          {{ submittingOrder
-            ? i18n.t(paymentMethod === 'online' ? 'processingPayment' : 'placingOrder')
-            : i18n.t(paymentMethod === 'online'
-              ? (pendingPaymentOrderId === null ? 'placeOrderAndPay' : 'payAgain')
-              : 'checkout') }}
+        <section
+          class="promo-panel"
+          [class.is-applied]="!!cartQuote?.promo_code"
+          [attr.aria-busy]="quoteLoading"
+          aria-labelledby="cart-promo-label"
+        >
+          <label id="cart-promo-label" for="cart-promo-code" class="promo-heading">
+            <svg
+              class="ui-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m3 12 9-9h8v8l-9 9z" />
+              <circle cx="16" cy="7" r="1" />
+            </svg>
+            {{ i18n.t('promoCode') }}
+          </label>
+          <div class="promo-code-row">
+            <input
+              id="cart-promo-code"
+              class="ui-input promo-code-input"
+              [(ngModel)]="promoDraft"
+              maxlength="50"
+              autocapitalize="characters"
+              spellcheck="false"
+              [placeholder]="i18n.t('promoPlaceholder')"
+              [attr.aria-describedby]="promoError ? 'cart-promo-error' : null"
+              [disabled]="submittingOrder || pendingPaymentOrderId !== null"
+              (keyup.enter)="applyPromo()"
+            />
+            <button
+              type="button"
+              class="ui-button ui-button-primary"
+              (click)="applyPromo()"
+              [disabled]="quoteLoading || submittingOrder || pendingPaymentOrderId !== null"
+            >
+              {{ i18n.t('applyPromo') }}
+            </button>
+          </div>
+          <div class="promo-actions">
+            <p class="promo-applied" *ngIf="cartQuote?.promo_code" role="status">
+              <svg
+                class="ui-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m5 12 4 4L19 6" />
+              </svg>
+              {{ i18n.t('promoApplied') }} <strong>{{ cartQuote?.promo_code }}</strong>
+            </p>
+            <button
+              type="button"
+              class="ui-text-button"
+              (click)="removePromo()"
+              [disabled]="
+                (!promoDraft && !appliedPromo) || submittingOrder || pendingPaymentOrderId !== null
+              "
+            >
+              {{ i18n.t('removePromo') }}
+            </button>
+          </div>
+          <p *ngIf="quoteLoading" class="promo-feedback" role="status">
+            {{ i18n.t('recalculatingCart') }}
+          </p>
+          <p
+            *ngIf="promoError"
+            id="cart-promo-error"
+            role="alert"
+            class="promo-feedback checkout-error"
+          >
+            {{ promoError }}
+          </p>
+        </section>
+        <dl *ngIf="cartQuote" class="quote-summary">
+          <div class="quote-row">
+            <dt>{{ i18n.t('itemsSubtotal') }}</dt>
+            <dd>{{ cartQuote.items_amount }} ₸</dd>
+          </div>
+          <div class="quote-row" [class.is-discount]="+cartQuote.discount_amount > 0">
+            <dt>{{ i18n.t('promoDiscount') }}</dt>
+            <dd>
+              {{ +cartQuote.discount_amount > 0 ? '−' : '' }}{{ cartQuote.discount_amount }} ₸
+            </dd>
+          </div>
+          <div class="quote-row">
+            <dt>{{ i18n.t('deliveryFee') }}</dt>
+            <dd>{{ cartQuote.delivery_fee }} ₸</dd>
+          </div>
+          <div class="quote-row" [class.is-discount]="+cartQuote.delivery_discount > 0">
+            <dt>{{ i18n.t('deliveryDiscount') }}</dt>
+            <dd>
+              {{ +cartQuote.delivery_discount > 0 ? '−' : '' }}{{ cartQuote.delivery_discount }} ₸
+            </dd>
+          </div>
+          <div class="cart-total">
+            <dt>{{ i18n.t('total') }}</dt>
+            <dd>{{ cartQuote.total_amount }} ₸</dd>
+          </div>
+        </dl>
+        <button
+          type="button"
+          class="checkout-btn"
+          [disabled]="
+            submittingOrder || quoteLoading || (!cartQuote && pendingPaymentOrderId === null)
+          "
+          (click)="checkout()"
+        >
+          {{
+            submittingOrder
+              ? i18n.t(paymentMethod === 'online' ? 'processingPayment' : 'placingOrder')
+              : i18n.t(
+                  paymentMethod === 'online'
+                    ? pendingPaymentOrderId === null
+                      ? 'placeOrderAndPay'
+                      : 'payAgain'
+                    : 'checkout'
+                )
+          }}
         </button>
       </div>
     </div>
-    <div *ngIf="cartNotice && cart.length === 0" class="checkout-message" role="status">{{ cartNotice }}</div>
+    <div *ngIf="cartNotice && cart.length === 0" class="checkout-message" role="status">
+      {{ cartNotice }}
+    </div>
     <div *ngIf="checkoutSuccess" class="checkout-success" role="status">{{ checkoutSuccess }}</div>
-    <section *ngIf="paymentResult?.status === 'paid'" class="checkout-success payment-receipt" aria-live="polite">
+    <section
+      *ngIf="paymentResult?.status === 'paid'"
+      class="checkout-success payment-receipt"
+      aria-live="polite"
+    >
       <strong>{{ i18n.t('receipt') }}</strong>
       <p>{{ i18n.t('orderNumber') }}: {{ paymentResult?.order_number }}</p>
       <p>{{ i18n.t('totalAmount') }}: {{ paymentResult?.amount }} ₸</p>
       <p>{{ i18n.t('paymentMethod') }}: {{ i18n.t('onlinePaymentSimulation') }}</p>
-      <p>{{ paymentCardLabel(paymentResult?.card_brand ?? null, paymentResult?.card_last4 ?? null) }}</p>
+      <p>
+        {{ paymentCardLabel(paymentResult?.card_brand ?? null, paymentResult?.card_last4 ?? null) }}
+      </p>
       <p>{{ i18n.t('transactionId') }}: {{ paymentResult?.transaction_id }}</p>
       <p>{{ i18n.t('paymentStatus') }}: {{ i18n.t('paymentStatuses.paid') }}</p>
-      <p>{{ i18n.t('paidAt') }}: {{ paymentResult?.paid_at | date:'dd.MM.yyyy HH:mm' }}</p>
+      <p>{{ i18n.t('paidAt') }}: {{ paymentResult?.paid_at | date: 'dd.MM.yyyy HH:mm' }}</p>
     </section>
   </div>
 </div>

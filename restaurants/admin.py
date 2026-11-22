@@ -1,10 +1,19 @@
 from django.contrib import admin
 
-from .models import Restaurant
+from .models import Restaurant, MenuCategory
+from .admin_permissions import RestaurantScopeAdmin
+
+
+@admin.register(MenuCategory)
+class MenuCategoryAdmin(RestaurantScopeAdmin, admin.ModelAdmin):
+    list_display = ['name', 'restaurant', 'position']
+    list_filter = ['restaurant']
+    search_fields = ['name', 'restaurant__name']
 
 
 @admin.register(Restaurant)
-class RestaurantAdmin(admin.ModelAdmin):
+class RestaurantAdmin(RestaurantScopeAdmin, admin.ModelAdmin):
+    restaurant_owner_lookup = 'owner'
     list_display = ['name', 'address', 'is_active', 'opening_time', 'closing_time']
-    list_filter = ['is_active']
+    list_filter = ['is_active', 'cuisine']
     search_fields = ['name', 'address']

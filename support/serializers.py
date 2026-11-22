@@ -20,12 +20,15 @@ class SupportCaseSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'customer', 'customer_name', 'order', 'order_number',
             'issue_description', 'status', 'resolution', 'messages',
+            'language', 'operator_requested',
             'created_at', 'updated_at',
         ]
         read_only_fields = fields
 
 
 class SupportCaseCreateSerializer(serializers.Serializer):
+    language = serializers.ChoiceField(choices=['ru', 'kk', 'en'], default='en')
+    operator_requested = serializers.BooleanField(default=False)
     order_number = serializers.CharField(
         max_length=50,
         trim_whitespace=True,
@@ -33,7 +36,7 @@ class SupportCaseCreateSerializer(serializers.Serializer):
         allow_blank=True,
         default='',
     )
-    issue_description = serializers.CharField(max_length=4000, trim_whitespace=True)
+    issue_description = serializers.CharField(max_length=4000, trim_whitespace=True, required=False, allow_blank=True, default='')
 
     def validate_order_number(self, value):
         if not value:
@@ -60,3 +63,4 @@ class SupportCaseCreateSerializer(serializers.Serializer):
 
 class SupportMessageInputSerializer(serializers.Serializer):
     body = serializers.CharField(max_length=4000, trim_whitespace=True)
+    request_id = serializers.CharField(max_length=100, required=False)

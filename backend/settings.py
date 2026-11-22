@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from corsheaders.defaults import default_headers
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -91,7 +92,8 @@ WSGI_APPLICATION = "backend.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": os.environ.get('JETFOOD_DATABASE_NAME', BASE_DIR / "db.sqlite3"),
+        "OPTIONS": {"timeout": 20},
     }
 }
 
@@ -157,6 +159,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": "30/minute",
         "user": "120/minute",
+        "support": "10/minute",
     },
 }
 
@@ -166,6 +169,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:4200",
 ]
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [*default_headers, 'idempotency-key']
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -176,3 +180,7 @@ SUPPORT_OLLAMA_BASE_URL = os.environ.get(
 )
 SUPPORT_OLLAMA_MODEL = os.environ.get("SUPPORT_OLLAMA_MODEL", "llama3.2:3b")
 SUPPORT_OLLAMA_TIMEOUT = int(os.environ.get("SUPPORT_OLLAMA_TIMEOUT", "60"))
+
+ORDER_DELIVERY_FEE = os.environ.get('ORDER_DELIVERY_FEE', '0.00')
+
+SUPPORT_OLLAMA_API_KEY = os.environ.get('SUPPORT_OLLAMA_API_KEY', '')

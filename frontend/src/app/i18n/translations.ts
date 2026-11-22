@@ -1,4 +1,5 @@
-export const translations = {
+import { featureTranslations } from './feature-translations';
+const baseTranslations = {
   en: {
     // Auth
     login: 'Login',
@@ -544,7 +545,7 @@ export const translations = {
     confirmDeleteMenuItem: 'Delete this dish?',
     menuItemSaveFailed: 'Could not save the dish. Check the fields and try again.',
     menuItemDeleteFailed: 'Could not delete the dish.',
-    profileDescription: 'Update your personal details, delivery addresses, and security settings.',
+    profileDescription: 'Manage your personal information, delivery addresses and account security.',
     personalInformation: 'Personal information',
     profileLoadFailed: 'Could not load your profile.',
     profileSaveFailed: 'Could not save your profile.',
@@ -1134,7 +1135,7 @@ export const translations = {
     confirmDeleteMenuItem: 'Удалить это блюдо?',
     menuItemSaveFailed: 'Не удалось сохранить блюдо. Проверьте поля и попробуйте снова.',
     menuItemDeleteFailed: 'Не удалось удалить блюдо.',
-    profileDescription: 'Измените личные данные, адреса доставки и настройки безопасности.',
+    profileDescription: 'Управляйте личными данными, адресами доставки и безопасностью аккаунта.',
     personalInformation: 'Личные данные',
     profileLoadFailed: 'Не удалось загрузить профиль.',
     profileSaveFailed: 'Не удалось сохранить профиль.',
@@ -1179,4 +1180,10 @@ export const translations = {
       customer: 'Клиент'
     }
   }
+};
+
+export const translations = {
+ en: { ...baseTranslations.en, ...featureTranslations.en },
+ ru: { ...baseTranslations.ru, ...featureTranslations.ru },
+ kk: { ...baseTranslations.en, ...featureTranslations.kk },
 };
