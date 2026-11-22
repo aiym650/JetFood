@@ -94,4 +94,43 @@ describe('Orders API integration', () => {
 
     expect(savedRoute).toEqual({ route_distance_meters: 4200, estimated_duration_seconds: 420 });
   });
+
+  it('creates cancellation requests and loads pending requests for managers', () => {
+    let requestId = 0;
+    service.createRefundRequest(49, {
+      request_type: 'cancel',
+      reason_text: 'The order is taking longer than expected.',
+    }).subscribe(request => requestId = request.id);
+    const createRequest = httpTesting.expectOne('http://localhost:8000/api/orders/49/requests/');
+
+    expect(createRequest.request.method).toBe('POST');
+    expect(createRequest.request.body.request_type).toBe('cancel');
+    expect(createRequest.request.body.reason_text).toBe('The order is taking longer than expected.');
+    createRequest.flush({ id: 8 });
+
+    let pendingRequests: unknown[] = [];
+    service.getRefundRequests('pending').subscribe(requests => pendingRequests = requests);
+    const listRequest = httpTesting.expectOne('http://localhost:8000/api/orders/requests/?status=pending');
+
+    expect(listRequest.request.method).toBe('GET');
+    listRequest.flush([{ id: 8 }]);
+    expect(requestId).toBe(8);
+    expect(pendingRequests).toEqual([{ id: 8 }]);
+  });
+
+  it('sends explicit refund amounts and decision notes', () => {
+    service.approveRefundRequest(8, '12.50').subscribe();
+    const approveRequest = httpTesting.expectOne('http://localhost:8000/api/orders/requests/8/approve/');
+    expect(approveRequest.request.method).toBe('POST');
+    expect(approveRequest.request.body).toEqual({ refund_amount: '12.50' });
+    approveRequest.flush({});
+
+    service.rejectRefundRequest(9, 'The evidence does not support a refund.').subscribe();
+    const rejectRequest = httpTesting.expectOne('http://localhost:8000/api/orders/requests/9/reject/');
+    expect(rejectRequest.request.method).toBe('POST');
+    expect(rejectRequest.request.body).toEqual({
+      decision_note: 'The evidence does not support a refund.',
+    });
+    rejectRequest.flush({});
+  });
 });

@@ -11,7 +11,7 @@ from django.db import transaction
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from math import asin, cos, radians, sin, sqrt
-from .models import DeliveryRoute, MenuItem, Order, OrderItem
+from .models import DeliveryRoute, MenuItem, Order, OrderItem, RefundRequest
 from .serializers import (
     MenuItemSerializer,
     OrderSerializer,
@@ -20,7 +20,13 @@ from .serializers import (
     OrderModificationSerializer,
     DeliveryRouteSerializer,
     DeliveryRouteInputSerializer,
+    InstantOrderCancellationSerializer,
+    RefundRequestCreateSerializer,
+    RefundRequestDecisionSerializer,
+    RefundRequestRejectionSerializer,
+    RefundRequestSerializer,
 )
+from .refund_requests import cancel_customer_order, create_customer_refund_request, decide_refund_request
 from .date_filters import filter_by_created_date
 from users.constraints import (
     BusinessConstraints,
@@ -208,6 +214,16 @@ def update_order_status(request, order_id):
 
     order = get_object_or_404(queryset, id=order_id)
     target_status = serializer.validated_data["status"]
+    if user.role == "customer" and target_status == "cancelled":
+        cancellation_serializer = InstantOrderCancellationSerializer(data=request.data)
+        cancellation_serializer.is_valid(raise_exception=True)
+        cancelled_order = cancel_customer_order(
+            order_id,
+            user,
+            cancellation_serializer.validated_data["reason"],
+        )
+        return Response(OrderSerializer(cancelled_order).data)
+
     if target_status != "cancelled":
         from payments.models import Payment
 
@@ -266,6 +282,107 @@ def update_order_status(request, order_id):
                 payment.status = "cancelled"
             payment.save(update_fields=["status", "updated_at"])
     return Response({"message": f"Order status updated to {order.status}"})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def cancel_order(request, order_id):
+    if request.user.role != "customer":
+        raise PermissionDenied("Only customers can cancel their own orders.")
+    serializer = InstantOrderCancellationSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    order = cancel_customer_order(
+        order_id,
+        request.user,
+        serializer.validated_data["reason"],
+    )
+    return Response(OrderSerializer(order).data)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def create_refund_request(request, order_id):
+    if request.user.role != "customer":
+        raise PermissionDenied("Only customers can create order requests.")
+    serializer = RefundRequestCreateSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    refund_request = create_customer_refund_request(
+        order_id=order_id,
+        customer=request.user,
+        request_type=serializer.validated_data["request_type"],
+        reason_category=serializer.validated_data["reason_category"],
+        reason_text=serializer.validated_data["reason_text"],
+    )
+    return Response(
+        RefundRequestSerializer(refund_request).data,
+        status=status.HTTP_201_CREATED,
+    )
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def refund_request_list(request):
+    user = request.user
+    queryset = RefundRequest.objects.select_related(
+        "order",
+        "order__customer",
+        "order__payment",
+        "requested_by",
+        "decided_by",
+    )
+    if user.role == "customer":
+        queryset = queryset.filter(requested_by=user)
+    elif user.role not in ["admin", "manager"]:
+        raise PermissionDenied("Only customers, managers, and admins can view requests.")
+
+    order_id = request.query_params.get("order")
+    if order_id:
+        try:
+            order_id = int(order_id)
+        except ValueError as error:
+            raise DRFValidationError({"order": "Enter a valid order ID."}) from error
+        if order_id < 1:
+            raise DRFValidationError({"order": "Enter a valid order ID."})
+        queryset = queryset.filter(order_id=order_id)
+    request_status = request.query_params.get("status")
+    if request_status:
+        if request_status not in {value for value, _ in RefundRequest.STATUS_CHOICES}:
+            raise DRFValidationError({"status": "Choose a valid request status."})
+        queryset = queryset.filter(status=request_status)
+    return Response(RefundRequestSerializer(queryset, many=True).data)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def approve_refund_request(request, request_id):
+    if request.user.role not in ["admin", "manager"]:
+        raise PermissionDenied("Only managers and admins can decide requests.")
+    serializer = RefundRequestDecisionSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    refund_request = decide_refund_request(
+        request_id=request_id,
+        manager=request.user,
+        decision="approve",
+        decision_note=serializer.validated_data["decision_note"],
+        refund_amount=serializer.validated_data.get("refund_amount"),
+    )
+    return Response(RefundRequestSerializer(refund_request).data)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def reject_refund_request(request, request_id):
+    if request.user.role not in ["admin", "manager"]:
+        raise PermissionDenied("Only managers and admins can decide requests.")
+    serializer = RefundRequestRejectionSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    refund_request = decide_refund_request(
+        request_id=request_id,
+        manager=request.user,
+        decision="reject",
+        decision_note=serializer.validated_data["decision_note"],
+    )
+    return Response(RefundRequestSerializer(refund_request).data)
 
 
 @api_view(["POST"])

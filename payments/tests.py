@@ -295,6 +295,7 @@ class PaymentApiTests(TestCase):
             f"/api/orders/{order.id}/status/",
             {
                 "status": "cancelled",
+                "reason": "I no longer need this order",
             },
             format="json",
         )

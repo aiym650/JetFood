@@ -497,3 +497,67 @@
     width: 100%;
   }
 }
+
+.refund-requests-panel, .refund-request-card, .request-status-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #f0e5dc;
+  border-radius: 14px;
+  background: #fff;
+}
+.refund-requests-panel { margin-bottom: 24px; }
+.request-card-heading { display: flex; justify-content: space-between; gap: 12px; }
+.request-card-heading > div { display: grid; gap: 4px; }
+.request-muted, .request-paid { color: #737b85; font-size: 13px; }
+.request-decision-fields {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.7fr) minmax(200px, 1.3fr);
+  gap: 12px;
+}
+.request-decision-fields label, .dialog-field {
+  display: grid;
+  gap: 6px;
+  color: #625950;
+  font-size: 13px;
+  font-weight: 600;
+}
+.request-decision-fields input, .request-decision-fields textarea, .dialog-field textarea, .dialog-field select {
+  width: 100%;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #eadfd6;
+  border-radius: 9px;
+  background: #fff;
+  color: #242424;
+  font: inherit;
+}
+.request-decision-fields textarea, .dialog-field textarea { min-height: 70px; resize: vertical; }
+.request-actions, .dialog-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.action-dialog-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(36, 36, 36, 0.48);
+}
+.action-dialog {
+  width: min(100%, 500px);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 22px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 20px 70px rgba(25, 20, 17, 0.24);
+}
+.action-dialog h2 { margin: 0; font-size: 21px; }
+.action-dialog form { display: grid; gap: 15px; }
+.dialog-actions .checkout-button, .dialog-actions .details-button { min-width: 130px; padding: 10px 14px; }
+.dialog-actions button:disabled { cursor: wait; opacity: 0.65; }
+
+@media (max-width: 600px) {
+  .request-decision-fields { grid-template-columns: 1fr; }
+  .dialog-actions > button { flex: 1 1 100%; }
+}

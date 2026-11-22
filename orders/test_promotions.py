@@ -133,7 +133,10 @@ class PromotionTests(TestCase):
         self.promo.save()
         first = self.create_order()
         order_id = first.data['id']
-        self.assertEqual(self.client.post(f'/api/orders/{order_id}/status/', {'status': 'cancelled'}).status_code, 200)
+        self.assertEqual(self.client.post(
+            f'/api/orders/{order_id}/status/',
+            {'status': 'cancelled', 'reason': 'I no longer need this order.'},
+        ).status_code, 200)
         self.assertEqual(self.create_order(key='two').status_code, 400)
         other = User.objects.create_user(username='intruder')
         self.client.force_authenticate(other)

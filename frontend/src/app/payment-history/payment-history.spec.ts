@@ -75,4 +75,14 @@ describe('PaymentHistoryPage', () => {
     expect(fixture.nativeElement.textContent).toContain('Card declined.');
     expect(fixture.nativeElement.textContent).not.toContain('4000000000000002');
   });
+
+  it('renders payment history labels in Kazakh', () => {
+    component.currentUser = { role: 'customer' };
+    TestBed.inject(I18nService).setLanguage('kk');
+    fixture.changeDetectorRef.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Төлемдер тарихы');
+    expect(fixture.nativeElement.textContent).toContain('Төлем әдісі');
+    expect(fixture.nativeElement.textContent).toContain('Төлем түбіртегі');
+  });
 });

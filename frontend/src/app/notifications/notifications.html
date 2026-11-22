@@ -26,9 +26,9 @@
       class="notification-item"
     >
       <div class="notification-content">
-        <h3 class="notification-title">{{ notification.title }}</h3>
-        <p class="notification-message">{{ notification.message }}</p>
-        <span class="notification-time">{{ notification.created_at | date:'medium' }}</span>
+        <h3 class="notification-title">{{ notificationTitle(notification) }}</h3>
+        <p class="notification-message">{{ notificationMessage(notification) }}</p>
+        <span class="notification-time">{{ notification.created_at | date:'dd.MM.yyyy HH:mm' }}</span>
       </div>
       <div class="notification-actions">
         <button

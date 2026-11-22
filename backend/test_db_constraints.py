@@ -13,7 +13,7 @@ from django.utils import timezone
 
 from analytics.models import PerformanceReport
 from integration.models import ExternalIntegration, IntegrationLog
-from orders.models import MenuItem, Order, OrderItem
+from orders.models import MenuItem, Order, OrderItem, RefundRequest
 from payments.models import Payment
 from restaurants.models import Restaurant
 from users.models import DeliveryAddress, User
@@ -256,6 +256,89 @@ class DbConstraintTests(TestCase):
                 paid_at=timezone.now(),
             )
         )
+
+    # ------------------------------------------------------------ refund requests
+    def test_one_pending_refund_request_per_order(self):
+        RefundRequest.objects.create(
+            order=self.order,
+            requested_by=self.user,
+            request_type="cancel",
+            reason_text="Please cancel this order.",
+        )
+        self.rejected(
+            lambda: RefundRequest.objects.create(
+                order=self.order,
+                requested_by=self.user,
+                request_type="cancel",
+                reason_text="I still want to cancel this order.",
+            )
+        )
+
+    def test_resolved_request_allows_a_new_pending_request(self):
+        manager = User.objects.create_user("manager", "manager@example.com", "pw12345678", role="manager")
+        previous = RefundRequest.objects.create(
+            order=self.order,
+            requested_by=self.user,
+            request_type="cancel",
+            reason_text="Please cancel this order.",
+        )
+        previous.status = "rejected"
+        previous.decided_by = manager
+        previous.decided_at = timezone.now()
+        previous.decision_note = "The order is already being delivered."
+        previous.save()
+
+        current = RefundRequest.objects.create(
+            order=self.order,
+            requested_by=self.user,
+            request_type="cancel",
+            reason_text="I still want to cancel this order.",
+        )
+        self.assertEqual(current.status, "pending")
+
+    def test_refund_request_checks_reject_invalid_values(self):
+        def create(**overrides):
+            values = {
+                "order": self.order,
+                "requested_by": self.user,
+                "request_type": "cancel",
+                "reason_text": "Please cancel this order.",
+            }
+            values.update(overrides)
+            RefundRequest.objects.create(**values)
+
+        self.rejected(lambda: create(request_type="invalid"))
+        self.rejected(lambda: create(status="invalid"))
+        self.rejected(lambda: create(reason_text="Too short"))
+        self.rejected(lambda: create(reason_category="missing_items"))
+        self.rejected(lambda: create(status="approved", refund_amount="1.00"))
+        self.rejected(lambda: create(refund_amount="1.00"))
+        self.rejected(lambda: create(refund_amount="-1.00"))
+
+    def test_approved_request_requires_complete_decision_data(self):
+        manager = User.objects.create_user("manager", "manager@example.com", "pw12345678", role="manager")
+        self.rejected(lambda: RefundRequest.objects.create(
+            order=self.order,
+            requested_by=self.user,
+            request_type="refund",
+            reason_category="missing_items",
+            reason_text="Some items were missing.",
+            status="approved",
+            refund_amount="5.00",
+        ))
+
+        request = RefundRequest.objects.create(
+            order=self.order,
+            requested_by=self.user,
+            request_type="refund",
+            reason_category="missing_items",
+            reason_text="Some items were missing.",
+            status="approved",
+            decided_by=manager,
+            decided_at=timezone.now(),
+            refund_amount="5.00",
+        )
+        self.assertEqual(request.status, "approved")
 
     # ------------------------------------------------------------ analytics
     def test_check_report_end_after_start(self):

@@ -22,7 +22,7 @@
 
   <div *ngIf="photos.length" class="photo-previews" [attr.aria-label]="i18n.t('reviewPhotoPreviewLabel')">
     <div *ngFor="let photo of photos; let index = index" class="photo-preview">
-      <img [src]="photo.preview" alt="Предпросмотр фотографии">
+      <img [src]="photo.preview" [alt]="i18n.t('reviewPhotoAlt')">
       <button type="button" [attr.aria-label]="i18n.t('reviewPhotoRemove') + ' ' + (index + 1)" (click)="removePhoto(index)">×</button>
     </div>
   </div>

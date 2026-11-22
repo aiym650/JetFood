@@ -7,6 +7,16 @@ import { I18nService } from '../i18n/i18n.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { timer } from 'rxjs';
 
+interface NotificationRecord {
+  id: number;
+  notification_type: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  link: string;
+  created_at: string;
+}
+
 @Component({
   selector: 'app-notifications',
   imports: [CommonModule],
@@ -14,7 +24,7 @@ import { timer } from 'rxjs';
   styleUrl: './notifications.css',
 })
 export class NotificationsComponent implements OnInit {
-  notifications: any[] = [];
+  notifications: NotificationRecord[] = [];
   loading = false;
   error = '';
   unreadCount = 0;
@@ -109,5 +119,81 @@ export class NotificationsComponent implements OnInit {
         }
       });
     }
+  }
+
+  notificationTitle(notification: NotificationRecord): string {
+    if (this.i18n.getCurrentLang() !== 'kk') return notification.title;
+
+    switch (notification.notification_type) {
+      case 'order_created':
+        return this.i18n.t('notificationTitles.orderCreated');
+      case 'order_status':
+        return this.i18n.t('notificationTitles.orderStatus');
+      case 'order_updated':
+        return this.i18n.t('notificationTitles.courierAssigned');
+      case 'order_delivered':
+        return this.i18n.t('notificationTitles.reviewReminder');
+      case 'system':
+        if (notification.title === 'New restaurant review') return this.i18n.t('notificationTitles.newReview');
+        if (notification.title === 'Restaurant replied') return this.i18n.t('notificationTitles.restaurantReply');
+        break;
+    }
+
+    return notification.title;
+  }
+
+  notificationMessage(notification: NotificationRecord): string {
+    if (this.i18n.getCurrentLang() !== 'kk') return notification.message;
+
+    const orderNumber = notification.message.match(/(?:order|заказ[а-я]*)\s+([A-Z0-9-]+)/i)?.[1];
+    switch (notification.notification_type) {
+      case 'order_created':
+        return orderNumber
+          ? this.i18n.t('notificationMessages.orderCreated').replace('{orderNumber}', orderNumber)
+          : notification.message;
+      case 'order_status': {
+        const status = notification.message.match(/status is now (.+)\.$/i)?.[1]?.toLowerCase();
+        if (!orderNumber || !status) return notification.message;
+        const statusKeys: Record<string, string> = {
+          pending: 'pending',
+          confirmed: 'confirmed',
+          preparing: 'preparing',
+          'ready for pickup': 'ready_for_pickup',
+          delivering: 'delivering',
+          'on the way': 'delivering',
+          delivered: 'delivered',
+          cancelled: 'cancelled',
+        };
+        const statusKey = statusKeys[status];
+        if (!statusKey) return notification.message;
+        const translatedStatus = this.i18n.t(`orderStatuses.${statusKey}`);
+        return this.i18n.t('notificationMessages.orderStatus')
+          .replace('{orderNumber}', orderNumber)
+          .replace('{status}', translatedStatus);
+      }
+      case 'order_updated': {
+        const assignment = notification.message.match(/^Courier (.+) was assigned to order ([A-Z0-9-]+)\.$/i);
+        return assignment
+          ? this.i18n.t('notificationMessages.courierAssigned')
+            .replace('{courier}', assignment[1])
+            .replace('{orderNumber}', assignment[2])
+          : notification.message;
+      }
+      case 'order_delivered':
+        return orderNumber
+          ? this.i18n.t('notificationMessages.reviewReminder').replace('{orderNumber}', orderNumber)
+          : notification.message;
+      case 'system':
+        if (notification.title === 'New restaurant review') {
+          const restaurantName = notification.message.match(/^A new review was submitted for (.+)\.$/i)?.[1];
+          return restaurantName
+            ? this.i18n.t('notificationMessages.newReview').replace('{restaurant}', restaurantName)
+            : notification.message;
+        }
+        if (notification.title === 'Restaurant replied') return this.i18n.t('notificationMessages.restaurantReply');
+        break;
+    }
+
+    return notification.message;
   }
 }
