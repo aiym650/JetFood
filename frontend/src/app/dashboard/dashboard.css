@@ -1,1 +1,5 @@
 :host{display:block}
+
+.top-bar.after-hero {
+  margin-top: 18px;
+}

@@ -161,7 +161,10 @@ export class Dashboard implements OnInit {
         this.i18n.catalogLabel(restaurant.description),
         restaurant.address,
         this.i18n.catalogLabel(restaurant.address),
-        ...(restaurant.branches ?? []).map(branch => branch.address),
+        ...(restaurant.branches ?? []).flatMap(branch => [
+          branch.address,
+          this.i18n.catalogLabel(branch.address),
+        ]),
       ]
         .join(' ')
         .toLocaleLowerCase('ru')

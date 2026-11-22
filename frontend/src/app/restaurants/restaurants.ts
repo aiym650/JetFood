@@ -25,11 +25,15 @@ export class RestaurantsPage implements OnInit {
     const filtered = this.restaurants.filter(r => (!this.cuisine || r.cuisine === this.cuisine)
       && [
         r.name,
+        this.i18n.catalogLabel(r.name),
         r.description,
+        this.i18n.catalogLabel(r.description),
         r.cuisine,
         this.i18n.catalogLabel(r.cuisine ?? ''),
         r.address,
+        this.i18n.catalogLabel(r.address),
         ...(r.branches ?? []).map(branch => branch.address),
+        ...(r.branches ?? []).map(branch => this.i18n.catalogLabel(branch.address)),
       ]
         .join(' ').toLocaleLowerCase().includes(term));
     const nameOrder = (left: Restaurant, right: Restaurant) => left.name.localeCompare(right.name, this.i18n.getCurrentLang());
