@@ -255,7 +255,8 @@ class OrderTestCase(TestCase):
 
         self.client.force_authenticate(user=self.customer)
         response = self.client.post(
-            f"/api/orders/{order.id}/status/", {"status": "cancelled"}
+            f"/api/orders/{order.id}/status/",
+            {"status": "cancelled", "reason": "Changed my mind"},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 

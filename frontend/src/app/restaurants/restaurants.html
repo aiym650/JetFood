@@ -112,23 +112,23 @@
   </section>
 
   <section class="management-card" *ngIf="selectedRestaurant">
-    <h2>Reviews</h2>
+    <h2>{{ i18n.t('reviews') }}</h2>
     <p *ngIf="reviewsLoading" role="status">{{ i18n.t('loading') }}</p>
     <div *ngIf="reviewRating">
       <strong>{{ reviewRating.average | number:'1.1-2' }} / 5</strong>
-      <span> · {{ reviewRating.reviews_count }} reviews</span>
+      <span> · {{ reviewRating.reviews_count }} {{ i18n.t('reviewsCount') }}</span>
     </div>
-    <p *ngIf="!reviewsLoading && reviews.length === 0" class="notice">No published reviews yet.</p>
+    <p *ngIf="!reviewsLoading && reviews.length === 0" class="notice">{{ i18n.t('noPublishedReviews') }}</p>
     <article *ngFor="let review of reviews" class="review-card">
       <strong>{{ review.user_name }} · {{ review.overall_rating }} / 5</strong>
       <p>{{ review.comment }}</p>
       <div *ngIf="review.photos?.length">
-        <img *ngFor="let photo of review.photos" [src]="photo.url" alt="Review photo" style="max-width:120px;max-height:120px;margin-right:8px">
+        <img *ngFor="let photo of review.photos" [src]="photo.url" [alt]="i18n.t('reviewPhotoAlt')" style="max-width:120px;max-height:120px;margin-right:8px">
       </div>
-      <p *ngIf="review.reply"><strong>Restaurant reply:</strong> {{ review.reply.text }}</p>
+      <p *ngIf="review.reply"><strong>{{ i18n.t('restaurantReply') }}</strong> {{ review.reply.text }}</p>
       <form *ngIf="canManage && !review.reply" (ngSubmit)="submitReply(review.id)">
-        <input name="replyText" [(ngModel)]="replyText[review.id]" maxlength="1000" placeholder="Reply to this review">
-        <button type="submit">Reply</button>
+        <input name="replyText" [(ngModel)]="replyText[review.id]" maxlength="1000" [placeholder]="i18n.t('replyToReview')">
+        <button type="submit">{{ i18n.t('reply') }}</button>
       </form>
     </article>
   </section>

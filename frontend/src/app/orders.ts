@@ -48,6 +48,27 @@ export interface OrderRecord {
   items: OrderItem[];
 }
 
+export interface RefundRequestRecord {
+  id: number;
+  order: number;
+  order_number: string;
+  order_status: string;
+  customer_name: string;
+  requested_by: number;
+  requested_by_name: string;
+  request_type: 'cancel' | 'refund';
+  reason_category: string;
+  reason_text: string;
+  status: 'pending' | 'approved' | 'rejected';
+  decided_by: number | null;
+  decided_by_name: string | null;
+  decided_at: string | null;
+  decision_note: string;
+  refund_amount: string | null;
+  amount_paid: string;
+  created_at: string;
+}
+
 export interface CartQuote {
   items_amount: string;
   discount_amount: string;
@@ -129,6 +150,50 @@ export class Orders {
     return this.http.post(`${this.apiUrl}/${orderId}/status/`, 
       { status, notes }, 
       { headers: this.getHeaders() }
+    );
+  }
+
+  cancelOrder(orderId: number, reason: string): Observable<OrderRecord> {
+    return this.http.post<OrderRecord>(
+      `${this.apiUrl}/${orderId}/cancel/`,
+      { reason },
+      { headers: this.getHeaders() },
+    );
+  }
+
+  createRefundRequest(orderId: number, request: {
+    request_type: 'cancel' | 'refund';
+    reason_category?: string;
+    reason_text: string;
+  }): Observable<RefundRequestRecord> {
+    return this.http.post<RefundRequestRecord>(
+      `${this.apiUrl}/${orderId}/requests/`,
+      request,
+      { headers: this.getHeaders() },
+    );
+  }
+
+  getRefundRequests(status?: 'pending' | 'approved' | 'rejected'): Observable<RefundRequestRecord[]> {
+    const query = status ? `?status=${status}` : '';
+    return this.http.get<RefundRequestRecord[]>(`${this.apiUrl}/requests/${query}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  approveRefundRequest(requestId: number, refundAmount?: string): Observable<RefundRequestRecord> {
+    const body = refundAmount === undefined ? {} : { refund_amount: refundAmount };
+    return this.http.post<RefundRequestRecord>(
+      `${this.apiUrl}/requests/${requestId}/approve/`,
+      body,
+      { headers: this.getHeaders() },
+    );
+  }
+
+  rejectRefundRequest(requestId: number, decisionNote: string): Observable<RefundRequestRecord> {
+    return this.http.post<RefundRequestRecord>(
+      `${this.apiUrl}/requests/${requestId}/reject/`,
+      { decision_note: decisionNote },
+      { headers: this.getHeaders() },
     );
   }
 

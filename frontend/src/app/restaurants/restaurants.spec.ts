@@ -161,4 +161,18 @@ describe('RestaurantsPage', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Add dish');
     expect(fixture.nativeElement.textContent).not.toContain('Register a restaurant');
   });
+
+  it('renders restaurant and review labels in Kazakh', () => {
+    TestBed.inject(I18nService).setLanguage('kk');
+    fixture.changeDetectorRef.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Мейрамханалар');
+    expect(fixture.nativeElement.textContent).toContain('Мейрамхана атауы');
+
+    component.selectedRestaurant = component.restaurants[0];
+    fixture.changeDetectorRef.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Пікірлер');
+    expect(fixture.nativeElement.textContent).toContain('Әзірге жарияланған пікірлер жоқ.');
+    expect(fixture.nativeElement.textContent).not.toContain('No published reviews yet.');
+  });
 });
