@@ -30,6 +30,9 @@ class PaymentListView(generics.ListAPIView):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def pay_order(request, order_id):
+    from django.conf import settings
+    if not settings.PAYMENTS_ALLOW_LEGACY_SIMULATION:
+        return Response({"detail": "Card collection and local simulation are disabled. Use hosted checkout."}, status=410)
     if request.user.role != 'customer':
         raise PermissionDenied('Only the customer who owns the order can pay.')
 
@@ -86,6 +89,8 @@ def pay_order(request, order_id):
             'status', 'paid_at', 'transaction_id', 'card_brand', 'card_last4',
             'failure_reason', 'updated_at',
         ])
+        from loyalty.services import synchronize
+        synchronize(order)
         result = PaymentSerializer(payment).data
         result['message'] = result_message
 
@@ -116,7 +121,10 @@ def confirm_cash_payment(request, payment_id):
     if user.role not in ['admin', 'manager', 'delivery']:
         raise PermissionDenied('Permission denied.')
 
+    owned = get_object_or_404(Payment.objects.select_related('order'), pk=payment_id)
+    from loyalty.services import lock_wallet
     with transaction.atomic():
+        lock_wallet(owned.order.customer_id)
         payment = get_object_or_404(
             Payment.objects.select_for_update().select_related('order'),
             pk=payment_id,
@@ -147,6 +155,28 @@ def refund_payment(request, payment_id):
 
     serializer = RefundSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+    existing = get_object_or_404(Payment.objects.select_related('order'), pk=payment_id)
+    if existing.provider == 'bonuses':
+        from loyalty.services import lock_wallet, apply_refund
+        with transaction.atomic():
+            lock_wallet(existing.order.customer_id)
+            payment = Payment.objects.select_for_update().get(pk=existing.pk)
+            if payment.status == 'refunded':
+                return Response(PaymentSerializer(payment).data)
+            if payment.status not in ['paid', 'refund_requested']:
+                return Response({'detail': 'Payment is not refundable.'}, status=409)
+            payment.status = 'refunded'
+            payment.refund_reason = serializer.validated_data['reason']
+            payment.refunded_at = timezone.now()
+            payment.save(update_fields=['status', 'refund_reason', 'refunded_at', 'updated_at'])
+            apply_refund(payment.order, 0, full=True)
+        return Response(PaymentSerializer(payment).data)
+    if existing.provider == 'freedompay':
+        from .hosted import hosted_refund
+        return hosted_refund(request, existing)
+    from django.conf import settings
+    if existing.method == 'online' and not settings.PAYMENTS_ALLOW_LEGACY_SIMULATION:
+        return Response({'detail': 'Legacy simulated payment: no real refund can be issued.'}, status=409)
     with transaction.atomic():
         payment = get_object_or_404(
             Payment.objects.select_for_update().select_related('order', 'order__customer'),
@@ -157,9 +187,12 @@ def refund_payment(request, payment_id):
                 {'detail': 'Only paid payments can be refunded.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        payment.refunded_amount = payment.amount
         payment.status = 'refunded'
         payment.refund_reason = serializer.validated_data['reason']
         payment.refunded_at = timezone.now()
-        payment.save(update_fields=['status', 'refund_reason', 'refunded_at', 'updated_at'])
+        payment.save(update_fields=['status', 'refunded_amount', 'refund_reason', 'refunded_at', 'updated_at'])
+        from loyalty.services import apply_refund
+        apply_refund(payment.order, payment.amount, full=True)
 
     return Response(PaymentSerializer(payment).data)

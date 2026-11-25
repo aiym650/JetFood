@@ -24,6 +24,7 @@ def luhn_is_valid(card_number):
 
 
 class PaymentSerializer(serializers.ModelSerializer):
+    customer = serializers.IntegerField(source='order.customer_id', read_only=True)
     order_number = serializers.CharField(source='order.order_number', read_only=True)
     customer_name = serializers.CharField(source='order.customer.username', read_only=True)
     order_status = serializers.CharField(source='order.status', read_only=True)
@@ -31,7 +32,7 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = [
-            'id', 'order', 'order_number', 'order_status', 'customer_name',
+            'id', 'provider', 'is_test', 'refunded_amount', 'order', 'order_number', 'order_status', 'customer', 'customer_name',
             'method', 'status', 'amount', 'transaction_id', 'card_brand',
             'card_last4', 'failure_reason', 'refund_reason', 'created_at',
             'paid_at', 'refunded_at',

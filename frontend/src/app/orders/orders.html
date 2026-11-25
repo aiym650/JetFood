@@ -108,7 +108,12 @@
                 <div *ngIf="order.delivery_confirmed_at"><span>{{ i18n.t('deliveryConfirmedAt') }}</span><strong>{{ order.delivery_confirmed_at | date:'dd.MM.yyyy HH:mm' }}</strong></div>
               </div>
               <section *ngIf="currentUser?.role === 'customer' && order.status === 'delivered'" class="review-section">
-                <button *ngIf="!reviewForm[order.id] && !reviewSuccess[order.id]" type="button" class="details-button" (click)="beginReview(order.id)">{{ i18n.t('leaveReview') }}</button>
+                <button *ngIf="!ownReviews[order.id] && !reviewForm[order.id] && !reviewSuccess[order.id]" type="button" class="details-button" (click)="beginReview(order.id)">{{ i18n.t('leaveReview') }}</button>
+                <div *ngIf="ownReviews[order.id] as review" class="commerce-panel">
+<strong>{{ reviewStatus(review.status) }}</strong><p>{{ review.comment }}</p>
+<p *ngIf="review.moderation_reason">{{ i18n.t('reviewReason') }}: {{ review.moderation_reason }}</p>
+<button *ngIf="canEditReview(review)" type="button" class="ui-button" (click)="beginEditReview(review)">{{ i18n.t('reviewEdit') }}</button>
+<p>{{ i18n.t('reviewRevisionNotice') }}</p></div>
                 <app-review-form
                   *ngIf="reviewForm[order.id]"
                   [value]="reviewForm[order.id]"

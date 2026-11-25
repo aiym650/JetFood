@@ -1,0 +1,13 @@
+Found 186 test(s).
+System check identified no issues (0 silenced).
+Created 5 demo restaurants. Existing records were preserved.
+Created 0 demo restaurants. Existing records were preserved.
+Creating test database for alias 'default'...
+
+..........................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 186 tests in 4.296s
+
+OK
+Destroying test database for alias 'default'...
+

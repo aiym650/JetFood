@@ -1,3 +1,4 @@
+import { Loyalty } from '../loyalty';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
@@ -16,7 +17,7 @@ describe('ProfilePage', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ProfilePage],
-      providers: [
+      providers: [{ provide: Loyalty, useValue: { account: () => of({ available: '0.00', reserved: '0.00', debt: '0.00', policy: { base_percent: '3', promotional_percent: '7', spend_percent: '30', milestone_every: '5', milestone_minimum: '3000', milestone_bonus: '500' }, entries: [] }) } },
         provideRouter([]),
         {
           provide: Auth,

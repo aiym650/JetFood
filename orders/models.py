@@ -54,6 +54,7 @@ class PromoRedemption(models.Model):
 
 
 class MenuItem(models.Model):
+    cashback_promotional = models.BooleanField(default=False, help_text="Use the promotional cashback rate for new checkouts.")
     menu_category = models.ForeignKey('restaurants.MenuCategory', on_delete=models.PROTECT, null=True, blank=True, related_name='items')
     demo_key = models.CharField(max_length=80, unique=True, null=True, blank=True, editable=False)
     name = models.CharField(max_length=200)

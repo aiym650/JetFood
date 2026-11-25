@@ -1,11 +1,12 @@
-import { ChangeDetectorRef, Component, DestroyRef, OnInit } from '@angular/core';
+import { LoyaltyPanel } from '../profile/loyalty-panel';
+import { ChangeDetectorRef, Component, DestroyRef, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Auth } from '../auth';
 import { CartQuote, Orders } from '../orders';
-import { CardPaymentInput, CardPaymentResult, Payments } from '../payments';
+import { PaymentRecord, Payments } from '../payments';
 import { FoodItem, Menu } from '../menu';
 import { Restaurant, Restaurants } from '../restaurants';
 import { I18nService } from '../i18n/i18n.service';
@@ -23,11 +24,12 @@ interface StoredCartLine {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, LoyaltyPanel],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
 export class Dashboard implements OnInit {
+  @ViewChild(LoyaltyPanel) jetPointsPanel?: LoyaltyPanel;
   promoDraft = '';
   appliedPromo = '';
   promoError = '';
@@ -43,14 +45,10 @@ export class Dashboard implements OnInit {
   maxPrice: number | null = null;
   deliveryAddress = '';
   paymentMethod: 'online' | 'cash' = 'cash';
-  cardNumber = '';
-  cardExpiry = '';
-  cardCvv = '';
-  cardholderName = '';
-  cardValidationAttempted = false;
+  cashbackAmount = 0;
   pendingPaymentOrderId: number | null = null;
   paymentError = '';
-  paymentResult: CardPaymentResult | null = null;
+  paymentResult: PaymentRecord | null = null;
   savedAddresses: DeliveryAddress[] = [];
   selectedAddressId: number | null = null;
   savedAddressError = '';
@@ -206,69 +204,11 @@ export class Dashboard implements OnInit {
       this.paymentMethod = value;
       this.paymentError = '';
       this.paymentResult = null;
-      this.clearCardDetails();
     }
-  }
-
-  formatCardNumber(value: string): void {
-    const digits = value.replace(/\D/g, '').slice(0, 16);
-    this.cardNumber = (digits.match(/.{1,4}/g) ?? []).join(' ');
-  }
-
-  formatCardExpiry(value: string): void {
-    const digits = value.replace(/\D/g, '').slice(0, 4);
-    this.cardExpiry = digits.length > 2
-      ? `${digits.slice(0, 2)}/${digits.slice(2)}`
-      : digits;
-  }
-
-  formatCardCvv(value: string): void {
-    this.cardCvv = value.replace(/\D/g, '').slice(0, 3);
-  }
-
-  formatCardholderName(value: string): void {
-    this.cardholderName = value
-      .toUpperCase()
-      .replace(/[^A-Z\s-]/g, '')
-      .replace(/\s{2,}/g, ' ')
-      .slice(0, 120);
-  }
-
-  cardNumberError(): string {
-    if (!this.cardValidationAttempted) return '';
-    const digits = this.cardNumber.replace(/\s/g, '');
-    return this.isLuhnValid(digits) ? '' : this.i18n.t('invalidCardNumber');
-  }
-
-  cardExpiryError(): string {
-    if (!this.cardValidationAttempted) return '';
-    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(this.cardExpiry)) {
-      return this.i18n.t('invalidCardExpiry');
-    }
-    const [monthText, yearText] = this.cardExpiry.split('/');
-    const month = Number(monthText);
-    const year = 2000 + Number(yearText);
-    const now = new Date();
-    return year < now.getFullYear() || (year === now.getFullYear() && month < now.getMonth() + 1)
-      ? this.i18n.t('expiredCard')
-      : '';
-  }
-
-  cardCvvError(): string {
-    if (!this.cardValidationAttempted) return '';
-    return /^\d{3}$/.test(this.cardCvv) ? '' : this.i18n.t('invalidCvv');
-  }
-
-  cardholderError(): string {
-    if (!this.cardValidationAttempted) return '';
-    return /^[A-Z]+(?:[ -][A-Z]+)*$/.test(this.cardholderName.trim())
-      ? ''
-      : this.i18n.t('cardholderRequired');
   }
 
   retryPayment(): void {
     this.paymentError = '';
-    this.cardValidationAttempted = false;
     this.paymentResult = null;
   }
 
@@ -519,30 +459,22 @@ export class Dashboard implements OnInit {
       return;
     }
 
-    if (this.paymentMethod === 'online') {
-      this.cardValidationAttempted = true;
-      if (
-        this.cardNumberError()
-        || this.cardExpiryError()
-        || this.cardCvvError()
-        || this.cardholderError()
-      ) {
-        return;
-      }
+    if (this.paymentMethod === 'online' && this.cartQuote?.online_payment_configured === false && +this.cartQuote.total_amount > 0) {
+      this.checkoutError = this.i18n.t('paymentNotConfigured'); return;
     }
-
     this.checkoutError = '';
     this.checkoutSuccess = '';
     this.paymentError = '';
     this.paymentResult = null;
 
     if (this.pendingPaymentOrderId !== null) {
-      this.submitCardPayment(this.pendingPaymentOrderId);
+      this.submitHostedPayment(this.pendingPaymentOrderId);
       return;
     }
 
     this.submittingOrder = true;
     const input = {
+      cashback_amount: this.cashbackAmount,
       delivery_address: this.deliveryAddress.trim(),
       payment_method: this.paymentMethod,
       promo_code: this.appliedPromo,
@@ -559,9 +491,10 @@ export class Dashboard implements OnInit {
     sessionStorage.setItem(requestStorageKey, JSON.stringify(saved));
     this.ordersService.createOrder(input, saved!.key).subscribe({
       next: (order) => {
+        this.jetPointsPanel?.load();
         if (this.paymentMethod === 'online') {
           this.pendingPaymentOrderId = order.id;
-          this.submitCardPayment(order.id);
+          this.submitHostedPayment(order.id);
           return;
         }
         this.submittingOrder = false;
@@ -573,8 +506,7 @@ export class Dashboard implements OnInit {
       error: (error) => {
         this.checkoutError = this.orderError(error);
         this.submittingOrder = false;
-        this.clearCardDetails();
-        this.changeDetector.markForCheck();
+          this.changeDetector.markForCheck();
       },
     });
   }
@@ -625,7 +557,7 @@ export class Dashboard implements OnInit {
     this.quoteLoading = false;
     if (!this.cart.length) return;
     this.quoteLoading = true;
-    this.ordersService.quote(this.cart.map(line => ({ item_id: line.item.id, quantity: line.quantity })), this.appliedPromo).subscribe({
+    this.ordersService.quote(this.cart.map(line => ({ item_id: line.item.id, quantity: line.quantity })), this.appliedPromo, this.cashbackAmount).subscribe({
       next: quote => {
         if (version !== this.quoteVersion) return;
         this.cartQuote = quote;
@@ -634,90 +566,44 @@ export class Dashboard implements OnInit {
       },
       error: error => {
         if (version !== this.quoteVersion) return;
-        this.promoError = this.promotionError(error);
+        this.promoError = error.error?.cashback_amount ? this.i18n.t("cashbackLimitError") : this.promotionError(error);
         this.quoteLoading = false;
         this.changeDetector.markForCheck();
       },
     });
   }
 
-  private submitCardPayment(orderId: number): void {
-    const card: CardPaymentInput = {
-      card_number: this.cardNumber.replace(/\s/g, ''),
-      expiry: this.cardExpiry,
-      cvv: this.cardCvv,
-      cardholder_name: this.cardholderName.trim(),
-    };
-    this.clearCardDetails();
+  private submitHostedPayment(orderId: number): void {
     this.submittingOrder = true;
-    this.paymentsService.payOrder(orderId, card).subscribe({
-      next: (payment) => {
-        this.paymentResult = payment;
+    const pendingKey = `jetfood-payment-order-${orderId}`;
+    if (!sessionStorage.getItem(pendingKey)) sessionStorage.setItem(pendingKey, JSON.stringify({
+      userId: this.currentUser.id,
+      cart: localStorage.getItem(`jetfood-cart-${this.currentUser.id}`),
+      checkout: sessionStorage.getItem(`jetfood-checkout-${this.currentUser.id}`),
+    }));
+    this.paymentsService.startCheckout(orderId).subscribe({
+      next: result => {
         this.submittingOrder = false;
-        if (payment.status === 'paid') {
+        if (result.payment.status === 'paid') {
+          this.paymentResult = result.payment;
           this.pendingPaymentOrderId = null;
           this.clearCart();
-          this.deliveryAddress = '';
-          this.checkoutSuccess = this.i18n.t('paymentApproved');
+          this.checkoutSuccess = this.i18n.t('paymentConfirmed');
+        } else if (result.redirect_url) {
+          this.openPaymentPage(result.redirect_url);
         } else {
-          this.paymentError = this.translatePaymentMessage(payment.failure_reason || payment.message);
+          this.paymentError = this.i18n.t('paymentChecking');
         }
         this.changeDetector.markForCheck();
       },
-      error: (error: { error?: unknown }) => {
-        this.paymentError = this.extractPaymentError(error.error);
-        this.submittingOrder = false;
-        this.changeDetector.markForCheck();
-      },
+      error: () => { this.submittingOrder = false; this.paymentError = this.i18n.t('paymentUnavailable'); this.changeDetector.markForCheck(); },
     });
   }
 
-  private clearCardDetails(): void {
-    this.cardNumber = '';
-    this.cardExpiry = '';
-    this.cardCvv = '';
-    this.cardholderName = '';
-    this.cardValidationAttempted = false;
-  }
-
-  private isLuhnValid(cardNumber: string): boolean {
-    if (!/^\d{16}$/.test(cardNumber)) return false;
-    let sum = 0;
-    let doubleDigit = false;
-    for (let index = cardNumber.length - 1; index >= 0; index -= 1) {
-      let digit = Number(cardNumber[index]);
-      if (doubleDigit) {
-        digit *= 2;
-        if (digit > 9) digit -= 9;
-      }
-      sum += digit;
-      doubleDigit = !doubleDigit;
-    }
-    return sum % 10 === 0;
-  }
-
-  private extractPaymentError(error: unknown): string {
-    if (error && typeof error === 'object') {
-      const values = Object.values(error as Record<string, unknown>).flat();
-      const message = values.find(value => typeof value === 'string');
-      if (typeof message === 'string') return this.translatePaymentMessage(message);
-    }
-    return this.i18n.t('cardPaymentFailed');
-  }
-
-  private translatePaymentMessage(message: string): string {
-    const translations: Record<string, string> = {
-      'Card declined': 'cardDeclined',
-      'Card declined.': 'cardDeclined',
-      'Insufficient funds': 'insufficientFunds',
-      'Enter a valid card number.': 'invalidCardNumber',
-      'Enter expiry as MM/YY.': 'invalidCardExpiry',
-      'Card expiry must be in the future.': 'expiredCard',
-      'Enter a 3 digit CVV.': 'invalidCvv',
-      'Enter the cardholder name.': 'cardholderRequired',
-    };
-    const translationKey = translations[message];
-    return translationKey ? this.i18n.t(translationKey) : message;
+  openPaymentPage(url: string): void {
+    const parsed = new URL(url);
+    if (parsed.protocol === 'https:' && parsed.hostname.endsWith('.freedompay.kz')) window.location.assign(url);
+    else this.paymentError = this.i18n.t('paymentUnavailable');
   }
 
   paymentCardLabel(brand: string | null, last4: string | null): string {

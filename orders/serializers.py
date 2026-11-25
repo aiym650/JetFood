@@ -23,7 +23,7 @@ class MenuItemSerializer(serializers.ModelSerializer):
             "rating",
             "restaurant",
             "restaurant_name",
-            "is_active",
+            "is_active", "cashback_promotional",
         ]
         read_only_fields = ["id", "rating", "restaurant_name"]
         extra_kwargs = {'category': {'required': False}}
@@ -36,6 +36,8 @@ class MenuItemSerializer(serializers.ModelSerializer):
         if category and category.restaurant_id != restaurant.pk:
             raise serializers.ValidationError({'menu_category': 'Category belongs to another restaurant.'})
         user = self.context['request'].user
+        if 'cashback_promotional' in attrs and attrs['cashback_promotional'] != getattr(self.instance, 'cashback_promotional', False) and user.role != 'admin' and not user.is_superuser:
+            raise PermissionDenied('Only administrators can select promotional cashback dishes.')
         if user.role not in ['admin', 'manager']:
             raise PermissionDenied('Only admins and restaurant owners can manage menus.')
         if user.role != 'admin' and restaurant.owner_id != user.pk:
@@ -87,10 +89,19 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    cashback = serializers.SerializerMethodField()
+
+    def get_cashback(self, obj):
+        from loyalty.models import LoyaltyOrder
+        record = LoyaltyOrder.objects.filter(order=obj).first()
+        from loyalty.amounts import display
+        return {'amount': display(record.reserved), 'state': record.state, 'earned': display(record.percentage_reward + record.milestone_reward), 'returned': display(record.returned_bonus), 'amount_minor': record.reserved, 'earned_minor': record.percentage_reward + record.milestone_reward} if record else None
+
+    cashback_amount = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal("0"), required=False, default=Decimal("0"), write_only=True)
     promo_code = serializers.CharField(max_length=50, required=False, allow_blank=True)
     items = OrderItemSerializer(many=True)
     payment_method = serializers.ChoiceField(
-        choices=[("online", "Online simulation"), ("cash", "Cash on delivery")],
+        choices=[("online", "Online hosted payment"), ("cash", "Cash on delivery")],
         required=False,
         default="cash",
         write_only=True,
@@ -121,7 +132,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "items",
-            "payment_method",
+            "payment_method", "cashback_amount", "cashback",
         ]
         read_only_fields = [
             "id",
@@ -139,13 +150,14 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
-        if self.instance and ('items' in attrs or 'promo_code' in attrs):
+        if self.instance and ('items' in attrs or 'promo_code' in attrs or 'cashback_amount' in attrs):
             raise serializers.ValidationError({'items': 'Use the order modification endpoint. Promo snapshots cannot be edited.'})
         return attrs
 
     def create(self, validated_data):
         items_data = validated_data.pop("items")
         validated_data.pop("payment_method", "cash")
+        validated_data.pop("cashback_amount", None)
         order = Order.objects.create(**validated_data)
         for item_data in items_data:
             menu_item = item_data.pop("menu_item")

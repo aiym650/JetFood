@@ -1,0 +1,2 @@
+# Additional backend dependency for local .env loading; existing Django/DRF dependencies remain required.
+python-dotenv==1.2.2

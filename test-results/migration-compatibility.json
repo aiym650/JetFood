@@ -1,0 +1,42 @@
+{
+  "auth_user": {
+    "previous_count": 8,
+    "current_count": 8,
+    "existing_columns_preserved": true
+  },
+  "orders_order": {
+    "previous_count": 14,
+    "current_count": 14,
+    "existing_columns_preserved": true
+  },
+  "orders_orderitem": {
+    "previous_count": 18,
+    "current_count": 18,
+    "existing_columns_preserved": true
+  },
+  "orders_menuitem": {
+    "previous_count": 8,
+    "current_count": 8,
+    "existing_columns_preserved": true
+  },
+  "payments_payment": {
+    "previous_count": 13,
+    "current_count": 13,
+    "existing_columns_preserved": true
+  },
+  "reviews_review": {
+    "previous_count": 0,
+    "current_count": 0,
+    "existing_columns_preserved": true
+  },
+  "support_supportcase": {
+    "previous_count": 4,
+    "current_count": 4,
+    "existing_columns_preserved": true
+  },
+  "support_supportmessage": {
+    "previous_count": 19,
+    "current_count": 19,
+    "existing_columns_preserved": true
+  }
+}

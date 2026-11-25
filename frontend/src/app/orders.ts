@@ -18,6 +18,7 @@ interface OrderItem {
 }
 
 interface OrderInput {
+  cashback_amount?: number;
   promo_code?: string;
   delivery_address: string;
   delivery_notes?: string;
@@ -49,6 +50,8 @@ export interface OrderRecord {
 }
 
 export interface CartQuote {
+  online_payment_configured?: boolean; payment_test_mode?: boolean;
+  cashback_amount?: string; cashback_max?: string; cashback_balance?: string; cashback_forecast?: string; cashback_spend_percent?: string;
   items_amount: string;
   discount_amount: string;
   delivery_fee: string;
@@ -111,8 +114,8 @@ export class Orders {
     return this.http.post<OrderRecord>(`${this.apiUrl}/`, order, { headers });
   }
 
-  quote(items: OrderItemInput[], promo_code: string): Observable<CartQuote> {
-    return this.http.post<CartQuote>(`${this.apiUrl}/quote/`, { items, promo_code }, { headers: this.getHeaders() });
+  quote(items: OrderItemInput[], promo_code: string, cashback_amount = 0): Observable<CartQuote> {
+    return this.http.post<CartQuote>(`${this.apiUrl}/quote/`, { items, promo_code, cashback_amount }, { headers: this.getHeaders() });
   }
 
   modifyOrder(orderId: number, changes: {

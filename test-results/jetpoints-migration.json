@@ -1,0 +1,15 @@
+{
+  "isolated_database": true,
+  "synthetic_fixture": true,
+  "checks": {
+    "available_value_preserved_exactly": true,
+    "reserved_value_preserved_exactly": true,
+    "debt_value_preserved_exactly": true,
+    "old_entry_preserved_exactly": true,
+    "old_reward_preserved_exactly": true,
+    "legacy_version_preserved": true,
+    "line_currency_converted_exactly": true,
+    "ledger_reconciles_all_balances": true,
+    "no_legacy_entries_deleted": true
+  }
+}

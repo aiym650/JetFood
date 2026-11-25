@@ -32,10 +32,8 @@ export class ReviewForm {
   constructor(public i18n: I18nService) {}
 
   get complete(): boolean {
-    return !!this.value?.restaurant_rating
-      && !!this.value?.food_rating
-      && !!this.value?.courier_rating
-      && !!this.value?.delivery_speed_rating;
+    return !!this.value && [this.value.restaurant_rating, this.value.food_rating, this.value.courier_rating, this.value.delivery_speed_rating].every(x => Number.isInteger(x) && x! >= 1 && x! <= 5)
+      && this.value.comment.trim().length >= 10 && this.value.comment.trim().length <= 1000;
   }
 
   submit(): void {
