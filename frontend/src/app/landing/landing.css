@@ -100,6 +100,18 @@
   color: white;
 }
 
+/* The hero has a purple background; the header keeps its blue outline button. */
+.hero-buttons .btn-outline {
+  background: #fff;
+  color: #0052cc;
+  border-color: #fff;
+}
+
+.hero-buttons .btn-outline:hover {
+  background: #f0f4ff;
+  color: #0052cc;
+}
+
 .btn-large {
   padding: 16px 32px;
   font-size: 16px;
@@ -367,6 +379,12 @@
 }
 
 /* Responsive */
+@media (max-width: 560px) {
+  .navbar-content { flex-wrap: wrap; gap: 12px; }
+  .nav-buttons { flex-wrap: wrap; gap: 8px; }
+  .hero-section { padding-top: 200px; }
+}
+
 @media (max-width: 768px) {
   .hero-content {
     grid-template-columns: 1fr;

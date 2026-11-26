@@ -485,7 +485,7 @@ summary:focus-visible {
 @media (max-width: 768px) {
   :host {
     right: 12px;
-    bottom: 84px;
+    bottom: calc(84px + env(safe-area-inset-bottom, 0px));
   }
   .support-panel {
     width: min(430px, calc(100vw - 24px));
@@ -515,7 +515,7 @@ summary:focus-visible {
   .support-panel {
     position: fixed;
     top: 8px;
-    bottom: 76px;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
     right: 12px;
     height: auto;
   }
