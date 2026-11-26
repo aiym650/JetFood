@@ -11,6 +11,8 @@
 
   <div class="payments-list" *ngIf="payments.length">
     <article class="payment-card" *ngFor="let payment of payments">
+      <p *ngIf="payment.method === 'online' && payment.provider === 'legacy'" class="commerce-notice">{{ i18n.t('legacyPaymentNotice') }}</p>
+      <p *ngIf="payment.method === 'online' && payment.provider === 'freedompay' && payment.is_test" class="commerce-notice">{{ i18n.t('paymentTestMode') }}</p>
       <div class="payment-heading">
         <div>
           <strong>{{ payment.order_number }}</strong>
@@ -41,17 +43,20 @@
         </dl>
       </details>
       <div class="payment-actions">
+<a *ngIf="currentUser?.role === 'customer' && payment.method === 'online' && ['pending', 'failed'].includes(payment.status)" class="ui-button" routerLink="/payments/return" [queryParams]="{ order: payment.order }">{{ i18n.t("paymentVerify") }}</a>
         <button *ngIf="canConfirmCash && payment.method === 'cash' && payment.status === 'pending'"
           type="button" [disabled]="saving" (click)="confirmCash(payment)">
           {{ i18n.t('confirmCashPayment') }}
         </button>
-        <button *ngIf="canManage && ['paid', 'refund_requested'].includes(payment.status) && refundPaymentId !== payment.id"
+        <button *ngIf="canManage && ['paid', 'refund_requested', 'partially_refunded'].includes(payment.status) && refundPaymentId !== payment.id"
           type="button" class="secondary" (click)="beginRefund(payment)">
           {{ i18n.t('issueRefund') }}
         </button>
       </div>
       <form *ngIf="refundPaymentId === payment.id" class="refund-form" (ngSubmit)="submitRefund(payment.id)">
-        <label>{{ i18n.t('refundReason') }}
+        <label *ngIf="payment.provider === 'freedompay'">{{ i18n.t('refundAmountOptional') }}
+<input class="ui-input" type="number" name="refundAmount" min="0.01" step="0.01" [max]="+payment.amount - +(payment.refunded_amount ?? 0)" [(ngModel)]="refundAmount" /></label>
+<label>{{ i18n.t('refundReason') }}
           <textarea name="refundReason" [(ngModel)]="refundReason" required maxlength="1000"></textarea>
         </label>
         <button type="submit" [disabled]="saving">{{ saving ? i18n.t('saving') : i18n.t('issueRefund') }}</button>

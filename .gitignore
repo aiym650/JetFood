@@ -221,3 +221,4 @@ __marimo__/
 
 # Local feature verification databases and runtime files
 .jetfood-qa/
+.jetfood-tools/

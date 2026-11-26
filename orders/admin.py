@@ -6,16 +6,25 @@ from restaurants.admin_permissions import RestaurantScopeAdmin
 @admin.register(MenuItem)
 class MenuItemAdmin(RestaurantScopeAdmin, admin.ModelAdmin):
     readonly_fields = ['category', 'rating']
-    list_display = ['name', 'restaurant', 'menu_category', 'price', 'rating', 'is_active']
+    list_display = ['name', 'restaurant', 'menu_category', 'price', 'rating', 'is_active', 'cashback_promotional']
     list_filter = ['restaurant', 'menu_category', 'is_active']
     list_editable = ['price', 'is_active']
     search_fields = ['name', 'description']
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = list(super().get_readonly_fields(request, obj))
+        if request.user.role != 'admin' and not request.user.is_superuser:
+            fields.append('cashback_promotional')
+        return fields
 
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ['subtotal']
+    readonly_fields = [f.name for f in OrderItem._meta.fields]
+    can_delete = False
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(Order)
@@ -30,6 +39,11 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
+    readonly_fields = [f.name for f in OrderItem._meta.fields]
+    def has_add_permission(self, request):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False
     list_display = ['order', 'item_name', 'quantity', 'price_per_item', 'subtotal']
     search_fields = ['item_name']
 

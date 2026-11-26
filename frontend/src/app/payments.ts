@@ -1,16 +1,19 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { ApiListResponse, getApiListResults } from './shared/api-list';
 
 export interface PaymentRecord {
+  customer?: number;
+  is_test?: boolean;
+  provider?: string; refunded_amount?: string;
   id: number;
   order: number;
   order_number: string;
   order_status?: string;
   customer_name: string;
   method: 'online' | 'cash';
-  status: 'pending' | 'failed' | 'paid' | 'refund_requested' | 'refunded' | 'cancelled';
+  status: 'pending' | 'failed' | 'paid' | 'refund_requested' | 'refunded' | 'cancelled' | 'expired' | 'partially_refunded';
   amount: string;
   transaction_id: string;
   card_brand: string | null;
@@ -35,6 +38,9 @@ export interface CardPaymentResult extends PaymentRecord {
 
 @Injectable({ providedIn: 'root' })
 export class Payments {
+  startCheckout(orderId: number) { return this.http.post<{ payment: PaymentRecord; redirect_url: string; test_mode: boolean }>(`${this.apiUrl}${orderId}/checkout/`, {}); }
+  verifyPayment(orderId: number) { return this.http.post<{ payment: PaymentRecord; test_mode: boolean }>(`${this.apiUrl}${orderId}/verify/`, {}); }
+
   private readonly apiUrl = 'http://localhost:8000/api/payments/';
 
   constructor(private http: HttpClient) {}
@@ -56,7 +62,7 @@ export class Payments {
     return this.http.post<PaymentRecord>(`${this.apiUrl}${id}/confirm-cash/`, {});
   }
 
-  refundPayment(id: number, reason: string): Observable<PaymentRecord> {
-    return this.http.post<PaymentRecord>(`${this.apiUrl}${id}/refund/`, { reason });
+  refundPayment(id: number, reason: string, amount?: number | null, key: string = crypto.randomUUID()): Observable<PaymentRecord> {
+    return this.http.post<PaymentRecord>(`${this.apiUrl}${id}/refund/`, { reason, ...(amount == null ? {} : { amount: amount.toFixed(2) }) }, { headers: new HttpHeaders({ 'Idempotency-Key': key }) });
   }
 }

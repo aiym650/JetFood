@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -11,6 +11,7 @@ from .serializers import luhn_is_valid
 User = get_user_model()
 
 
+@override_settings(PAYMENTS_ALLOW_LEGACY_SIMULATION=True)
 class PaymentApiTests(TestCase):
     def setUp(self):
         self.customer = User.objects.create_user(

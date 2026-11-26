@@ -57,9 +57,16 @@ export class AdminComponent implements OnInit {
     });
   }
 
+  reviewReasons: Record<number, string> = {};
+  moderationError = '';
+
   setReviewStatus(reviewId: number, reviewStatus: 'published' | 'hidden'): void {
-    this.http.patch(`http://localhost:8000/api/admin/reviews/${reviewId}/status`, { status: reviewStatus }).subscribe({
+    if (reviewStatus === 'hidden' && !this.reviewReasons[reviewId]?.trim()) return;
+    this.moderationError = '';
+    const review = this.moderationReviews.find(item => item.id === reviewId);
+    this.http.patch(`http://localhost:8000/api/admin/reviews/${reviewId}/status`, { status: reviewStatus, reason: this.reviewReasons[reviewId] ?? "", updated_at: review?.updated_at }).subscribe({
       next: () => this.loadModeration(),
+      error: () => { this.moderationError = this.i18n.t('reviewDecisionConflict'); this.loadModeration(); },
     });
   }
 

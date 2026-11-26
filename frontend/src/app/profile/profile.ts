@@ -1,3 +1,4 @@
+import { LoyaltyPanel } from './loyalty-panel';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -18,7 +19,7 @@ interface AddressForm extends DeliveryAddressInput {}
 
 @Component({
   selector: 'app-profile',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LoyaltyPanel],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })

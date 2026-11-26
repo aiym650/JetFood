@@ -34,6 +34,7 @@ class Review(models.Model):
     delivery_speed_rating = models.PositiveSmallIntegerField()
     overall_rating = models.DecimalField(max_digits=3, decimal_places=2)
     comment = models.TextField(max_length=1000, null=True, blank=True)
+    moderation_reason = models.CharField(max_length=500, blank=True)
     sentiment = models.CharField(max_length=8, choices=SENTIMENT_CHOICES, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -98,3 +99,17 @@ class ReviewReminder(models.Model):
 
     class Meta:
         indexes = [models.Index(fields=["due_at", "sent_at"], name="review_reminder_due_idx")]
+
+
+class ReviewDecision(models.Model):
+    review = models.ForeignKey(Review, null=True, blank=True, on_delete=models.SET_NULL, related_name='decisions')
+    review_reference = models.PositiveBigIntegerField()
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    previous_status = models.CharField(max_length=20, blank=True)
+    status = models.CharField(max_length=20)
+    reason = models.CharField(max_length=500)
+    comment_snapshot = models.TextField(max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']

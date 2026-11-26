@@ -18,8 +18,9 @@ from users.models import User
 from users.notifications import notify_review_reminder
 from .models import Review, ReviewPhoto, ReviewReply, ReviewReport, ReviewReminder
 from .serializers import ReviewSerializer, ReplySerializer
-from .moderation import contains_profanity, analyze_sentiment_async
+from .moderation import analyze_sentiment_async
 from .services import recalculate_rating
+from .policy import screen, record_decision, decide
 
 
 def _rating_fields(data):
@@ -31,7 +32,9 @@ def _rating_fields(data):
     for field in fields:
         try:
             value = int(data[field])
-        except (TypeError, ValueError):
+            if isinstance(data[field], bool) or Decimal(str(data[field])) != value:
+                raise ValueError
+        except (TypeError, ValueError, ArithmeticError):
             raise ValidationError({field: "Rating must be an integer from 1 to 5."})
         if value < 1 or value > 5:
             raise ValidationError({field: "Rating must be between 1 and 5."})
@@ -65,10 +68,8 @@ def _save_photos(request, review):
             if image.mode not in ("RGB", "RGBA"):
                 image = image.convert("RGB")
             image.save(path, quality=82, optimize=True)
-        except Exception:
-            with open(path, "wb") as target:
-                for chunk in uploaded.chunks():
-                    target.write(chunk)
+        except Exception as exc:
+            raise ValidationError({"photos": "Invalid image file."}) from exc
         relative_url = f"{settings.MEDIA_URL}review_photos/{filename}"
         absolute_url = request.build_absolute_uri(relative_url)
         ReviewPhoto.objects.create(review=review, url=absolute_url)
@@ -88,11 +89,9 @@ def create_review(request, order_id):
         return Response({"detail": "A review already exists for this order."}, status=status.HTTP_409_CONFLICT)
 
     ratings, average = _rating_fields(request.data)
-    comment = request.data.get("comment")
-    if comment is not None:
-        comment = html.escape(str(comment).strip())
-        if len(comment) > 1000:
-            raise ValidationError({"comment": "Comment must not exceed 1000 characters."})
+    comment = str(request.data.get("comment") or "").strip()
+    if not 10 <= len(comment) <= 1000:
+        raise ValidationError({"comment": "Comment must contain 10 to 1000 characters."})
 
     menu_item = order.items.select_related("menu_item__restaurant").exclude(menu_item=None).first()
     restaurant = menu_item.menu_item.restaurant if menu_item and menu_item.menu_item else None
@@ -100,7 +99,7 @@ def create_review(request, order_id):
         return Response({"detail": "Order has no associated restaurant."}, status=status.HTTP_409_CONFLICT)
 
     average = Decimal(str(average)).quantize(Decimal("0.01"))
-    review_status = Review.STATUS_PENDING if contains_profanity(comment) else Review.STATUS_PUBLISHED
+    review_status, reason = screen(comment)
     try:
         with transaction.atomic():
             review = Review.objects.create(
@@ -111,8 +110,10 @@ def create_review(request, order_id):
                 overall_rating=average,
                 comment=comment,
                 status=review_status,
+                moderation_reason=reason,
                 **ratings,
             )
+            record_decision(review, "", reason)
             _save_photos(request, review)
             recalculate_rating(restaurant.id, order.delivery_person_id)
     except IntegrityError:
@@ -133,7 +134,7 @@ def create_review(request, order_id):
         )
 
     transaction.on_commit(lambda: analyze_sentiment_async(review.id))
-    return Response(ReviewSerializer(review).data, status=status.HTTP_201_CREATED)
+    return Response(ReviewSerializer(review, context={"request": request}).data, status=status.HTTP_201_CREATED)
 
 
 @api_view(["PUT", "PATCH", "DELETE"])
@@ -146,34 +147,28 @@ def update_review(request, review_id):
         return Response({"detail": "Review not found."}, status=status.HTTP_404_NOT_FOUND)
     if review.user_id != request.user.id:
         return Response({"detail": "You can only edit your own review."}, status=status.HTTP_403_FORBIDDEN)
-    if timezone.now() - review.created_at > timezone.timedelta(hours=24):
-        return Response({"detail": "The 24-hour review editing period has expired."}, status=status.HTTP_403_FORBIDDEN)
-
-    serializer = ReviewSerializer(review, data=request.data, partial=True)
+    serializer = ReviewSerializer(review, data=request.data, partial=True, context={"request": request})
     serializer.is_valid(raise_exception=True)
     comment = serializer.validated_data.get("comment", review.comment)
-    if comment is not None:
-        comment = html.escape(str(comment).strip())
-        if len(comment) > 1000:
-            raise ValidationError({"comment": "Comment must not exceed 1000 characters."})
     ratings = {field: serializer.validated_data.get(field, getattr(review, field)) for field in (
         "restaurant_rating", "food_rating", "courier_rating", "delivery_speed_rating"
     )}
     overall = Decimal(str(sum(ratings.values()) / 4)).quantize(Decimal("0.01"))
-    status_value = Review.STATUS_PENDING if contains_profanity(comment) else (
-        Review.STATUS_HIDDEN if review.status == Review.STATUS_HIDDEN else Review.STATUS_PUBLISHED
-    )
+    status_value, reason = screen(comment, edited=True)
+    previous = review.status
     with transaction.atomic():
         for field, value in ratings.items():
             setattr(review, field, value)
         review.comment = comment
         review.overall_rating = overall
         review.status = status_value
+        review.moderation_reason = reason
         review.save()
+        record_decision(review, previous, reason, request.user)
         _save_photos(request, review)
         recalculate_rating(review.restaurant_id, review.courier_id)
     transaction.on_commit(lambda: analyze_sentiment_async(review.id))
-    return Response(ReviewSerializer(review).data)
+    return Response(ReviewSerializer(review, context={"request": request}).data)
 
 
 @api_view(["DELETE"])
@@ -303,9 +298,7 @@ def report_review(request, review_id):
         with transaction.atomic():
             report = ReviewReport.objects.create(review=review, reporter=request.user, reason=html.escape(reason))
             if review.reports.filter(status=ReviewReport.STATUS_OPEN).count() >= 3:
-                review.status = Review.STATUS_PENDING
-                review.save(update_fields=["status", "updated_at"])
-                recalculate_rating(review.restaurant_id, review.courier_id)
+                decide(review.pk, Review.STATUS_PENDING, "Multiple user reports require administrator review.", request.user)
     except IntegrityError:
         return Response({"detail": "You have already reported this review."}, status=status.HTTP_409_CONFLICT)
     return Response({"id": report.id, "status": report.status}, status=status.HTTP_201_CREATED)
@@ -342,8 +335,19 @@ def admin_review_status(request, review_id):
     review_status = request.data.get("status")
     if review_status not in (Review.STATUS_PUBLISHED, Review.STATUS_HIDDEN):
         raise ValidationError({"status": "Status must be published or hidden."})
-    with transaction.atomic():
-        review.status = review_status
-        review.save(update_fields=["status", "updated_at"])
-        recalculate_rating(review.restaurant_id, review.courier_id)
-    return Response(ReviewSerializer(review).data)
+    reason = str(request.data.get("reason", "")).strip()
+    if review_status == Review.STATUS_HIDDEN and not reason:
+        raise ValidationError({"reason": "Explain why the review was rejected."})
+    if len(reason) > 500:
+        raise ValidationError({"reason": "Reason must not exceed 500 characters."})
+    if not request.data.get('updated_at'):
+        raise ValidationError({'updated_at': 'Send the timestamp of the reviewed version.'})
+    review = decide(review.pk, review_status, reason or "Approved by administrator.", request.user, expected_updated_at=request.data['updated_at'])
+    return Response(ReviewSerializer(review, context={"request": request}).data)
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def own_reviews(request):
+    reviews = Review.objects.filter(user=request.user).select_related("user").prefetch_related("photos", "reply")[:100]
+    return Response(ReviewSerializer(reviews, many=True, context={"request": request}).data)

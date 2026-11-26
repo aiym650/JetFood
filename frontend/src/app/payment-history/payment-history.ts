@@ -1,3 +1,4 @@
+import { RouterLink } from '@angular/router';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,7 +8,7 @@ import { PaymentRecord, Payments } from '../payments';
 
 @Component({
   selector: 'app-payment-history',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './payment-history.html',
   styleUrl: './payment-history.css',
 })
@@ -19,6 +20,8 @@ export class PaymentHistoryPage implements OnInit {
   actionError = '';
   refundPaymentId: number | null = null;
   refundReason = '';
+  refundAmount: number | null = null;
+  private refundKey = '';
   saving = false;
 
   get canManage(): boolean {
@@ -60,18 +63,21 @@ export class PaymentHistoryPage implements OnInit {
 
   beginRefund(payment: PaymentRecord): void {
     this.refundPaymentId = payment.id;
+    this.refundKey = crypto.randomUUID();
+    this.refundAmount = null;
     this.refundReason = '';
     this.actionError = '';
   }
 
   submitRefund(paymentId: number): void {
+    if (this.saving) return;
     if (!this.refundReason.trim()) {
       this.actionError = this.i18n.t('refundReasonRequired');
       return;
     }
     this.saving = true;
     this.actionError = '';
-    this.paymentsService.refundPayment(paymentId, this.refundReason.trim()).subscribe({
+    this.paymentsService.refundPayment(paymentId, this.refundReason.trim(), this.refundAmount, this.refundKey).subscribe({
       next: () => {
         this.refundPaymentId = null;
         this.refundReason = '';
@@ -103,10 +109,12 @@ export class PaymentHistoryPage implements OnInit {
   }
 
   paymentMethodLabel(method: string): string {
-    return this.i18n.t(method === 'online' ? 'onlinePaymentSimulation' : 'cashOnDelivery');
+    return this.i18n.t(method === 'online' ? 'hostedPayment' : 'cashOnDelivery');
   }
 
   paymentStatusLabel(status: string): string {
+    if (status === 'expired') return this.i18n.t('paymentExpired');
+    if (status === 'partially_refunded') return this.i18n.t('paymentPartialRefund');
     return this.i18n.t(`paymentStatuses.${status}`);
   }
 
