@@ -681,6 +681,10 @@ def preview_promotion(request):
     totals, _ = quote(request.user, serializer.validated_data['items'], serializer.validated_data.get('promo_code', ''))
     from loyalty.services import quote_bonus
     bonus, _ = quote_bonus(request.user, serializer.validated_data['items'], totals, serializer.validated_data.get('cashback_amount', 0))
-    from payments.freedompay import configured
     from django.conf import settings
-    return Response({**{key: str(value) if isinstance(value, Decimal) else value for key, value in totals.items()}, **bonus, 'online_payment_configured': configured(), 'payment_test_mode': settings.FREEDOMPAY_TEST_MODE})
+    return Response({
+        **{key: str(value) if isinstance(value, Decimal) else value for key, value in totals.items()},
+        **bonus,
+        'online_payment_configured': settings.PAYMENTS_ALLOW_LEGACY_SIMULATION,
+        'payment_test_mode': settings.PAYMENTS_ALLOW_LEGACY_SIMULATION,
+    })

@@ -66,24 +66,13 @@ def pay_order(request, order_id):
         payment.card_brand = detect_card_brand(card_number)
         payment.card_last4 = card_number[-4:]
 
-        if card_number in ['4000000000000002', '4000000000009995']:
-            payment.status = 'failed'
-            payment.paid_at = None
-            payment.transaction_id = ''
-            payment.failure_reason = (
-                'Card declined'
-                if card_number == '4000000000000002'
-                else 'Insufficient funds'
-            )
-            result_message = payment.failure_reason
-        else:
-            payment.status = 'paid'
-            payment.paid_at = timezone.now()
-            payment.transaction_id = create_simulated_transaction_id()
-            payment.failure_reason = ''
-            order.status = 'confirmed'
-            order.save(update_fields=['status', 'updated_at'])
-            result_message = 'Payment approved.'
+        payment.status = 'paid'
+        payment.paid_at = timezone.now()
+        payment.transaction_id = create_simulated_transaction_id()
+        payment.failure_reason = ''
+        order.status = 'confirmed'
+        order.save(update_fields=['status', 'updated_at'])
+        result_message = 'Payment approved.'
 
         payment.save(update_fields=[
             'status', 'paid_at', 'transaction_id', 'card_brand', 'card_last4',

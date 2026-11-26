@@ -64,11 +64,12 @@ def cancel_customer_order(order_id, customer, reason):
 
         if payment:
             if payment.method == "online" and payment.status == "paid":
+                payment.refunded_amount = payment.amount
                 payment.status = "refunded"
                 payment.refunded_at = timezone.now()
                 payment.refund_reason = reason
                 payment.save(update_fields=[
-                    "status", "refunded_at", "refund_reason", "updated_at",
+                    "status", "refunded_amount", "refunded_at", "refund_reason", "updated_at",
                 ])
             elif payment.status in {"pending", "failed", "paid"}:
                 payment.status = "cancelled"
@@ -224,11 +225,16 @@ def decide_refund_request(request_id, manager, decision, decision_note="", refun
             if request.request_type == "cancel" and not cancel_as_refund and payment.method == "cash":
                 payment.status = "cancelled"
             else:
+                previous_refunded = payment.refunded_amount
+                payment.refunded_amount = min(payment.amount, previous_refunded + amount)
                 payment.status = "refunded"
                 payment.refunded_at = now
             payment.save(update_fields=[
-                "status", "refund_reason", "refunded_at", "updated_at",
+                "status", "refunded_amount", "refund_reason", "refunded_at", "updated_at",
             ])
+            if payment.status in {"refunded", "partially_refunded"}:
+                from loyalty.services import apply_refund
+                apply_refund(order, payment.refunded_amount, full=payment.refunded_amount >= payment.amount)
 
         if request.request_type == "cancel" and not cancel_as_refund:
             order.status = "cancelled"

@@ -46,7 +46,66 @@ export class Dashboard implements OnInit {
   maxPrice: number | null = null;
   deliveryAddress = '';
   paymentMethod: 'online' | 'cash' = 'cash';
+  cardNumber = '';
+  cardExpiry = '';
+  cardCvv = '';
+  cardholderName = '';
   cashbackAmount = 0;
+
+  formatCardNumber(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, 16);
+    this.cardNumber = digits.replace(/(.{4})(?=.)/g, '$1 ');
+  }
+
+  formatCardExpiry(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, 4);
+    this.cardExpiry = digits.length > 2
+      ? `${digits.slice(0, 2)}\/${digits.slice(2)}`
+      : digits;
+  }
+
+  formatCardCvv(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.cardCvv = input.value.replace(/\D/g, '').slice(0, 3);
+  }
+
+  formatCardholderName(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.cardholderName = input.value
+      .replace(/[^A-Za-z -]/g, '')
+      .replace(/\s+/g, ' ')
+      .toUpperCase();
+  }
+
+  private validCardForm(): boolean {
+    if (this.cardNumber.replace(/\D/g, '').length !== 16) {
+      this.checkoutError = this.i18n.t('invalidCardNumber');
+      return false;
+    }
+    if (!/^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(this.cardExpiry)) {
+      this.checkoutError = this.i18n.t('invalidCardExpiry');
+      return false;
+    }
+    const [monthText, yearText] = this.cardExpiry.split('/');
+    const month = Number(monthText);
+    const year = 2000 + Number(yearText);
+    const today = new Date();
+    if (year < today.getFullYear() || (year === today.getFullYear() && month < today.getMonth() + 1)) {
+      this.checkoutError = this.i18n.t('expiredCard');
+      return false;
+    }
+    if (!/^[0-9]{3}$/.test(this.cardCvv)) {
+      this.checkoutError = this.i18n.t('invalidCvv');
+      return false;
+    }
+    if (!/^[A-Z]+(?:[ -][A-Z]+)*$/.test(this.cardholderName)) {
+      this.checkoutError = this.i18n.t('cardholderRequired');
+      return false;
+    }
+    return true;
+  }
   pendingPaymentOrderId: number | null = null;
   paymentError = '';
   paymentResult: PaymentRecord | null = null;
@@ -243,6 +302,7 @@ export class Dashboard implements OnInit {
   retryPayment(): void {
     this.paymentError = '';
     this.paymentResult = null;
+    if (this.pendingPaymentOrderId !== null) this.submitLegacyPayment(this.pendingPaymentOrderId);
   }
 
   loadMenu(): void {
@@ -491,6 +551,9 @@ export class Dashboard implements OnInit {
       this.checkoutError = this.i18n.t('missingDeliveryAddress');
       return;
     }
+    if (this.paymentMethod === 'online' && !this.validCardForm()) {
+      return;
+    }
 
     if (this.paymentMethod === 'online' && this.cartQuote?.online_payment_configured === false && +this.cartQuote.total_amount > 0) {
       this.checkoutError = this.i18n.t('paymentNotConfigured'); return;
@@ -501,7 +564,7 @@ export class Dashboard implements OnInit {
     this.paymentResult = null;
 
     if (this.pendingPaymentOrderId !== null) {
-      this.submitHostedPayment(this.pendingPaymentOrderId);
+      this.submitLegacyPayment(this.pendingPaymentOrderId);
       return;
     }
 
@@ -527,7 +590,7 @@ export class Dashboard implements OnInit {
         this.jetPointsPanel?.load();
         if (this.paymentMethod === 'online') {
           this.pendingPaymentOrderId = order.id;
-          this.submitHostedPayment(order.id);
+          this.submitLegacyPayment(order.id);
           return;
         }
         this.submittingOrder = false;
@@ -606,37 +669,37 @@ export class Dashboard implements OnInit {
     });
   }
 
-  private submitHostedPayment(orderId: number): void {
+  private submitLegacyPayment(orderId: number): void {
     this.submittingOrder = true;
-    const pendingKey = `jetfood-payment-order-${orderId}`;
-    if (!sessionStorage.getItem(pendingKey)) sessionStorage.setItem(pendingKey, JSON.stringify({
-      userId: this.currentUser.id,
-      cart: localStorage.getItem(`jetfood-cart-${this.currentUser.id}`),
-      checkout: sessionStorage.getItem(`jetfood-checkout-${this.currentUser.id}`),
-    }));
-    this.paymentsService.startCheckout(orderId).subscribe({
+    this.paymentsService.payOrder(orderId, {
+      card_number: this.cardNumber,
+      expiry: this.cardExpiry,
+      cvv: this.cardCvv,
+      cardholder_name: this.cardholderName,
+    }).subscribe({
       next: result => {
         this.submittingOrder = false;
-        if (result.payment.status === 'paid') {
-          this.paymentResult = result.payment;
-          this.pendingPaymentOrderId = null;
+        this.pendingPaymentOrderId = null;
+        if (result.status === 'paid') {
+          this.paymentResult = result;
           this.clearCart();
-          this.checkoutSuccess = this.i18n.t('paymentConfirmed');
-        } else if (result.redirect_url) {
-          this.openPaymentPage(result.redirect_url);
+          this.checkoutSuccess = this.i18n.t('paymentApproved');
         } else {
-          this.paymentError = this.i18n.t('paymentChecking');
+          this.paymentError = this.i18n.t('cardPaymentFailed');
         }
         this.changeDetector.markForCheck();
       },
-      error: () => { this.submittingOrder = false; this.paymentError = this.i18n.t('paymentUnavailable'); this.changeDetector.markForCheck(); },
+      error: error => {
+        this.submittingOrder = false;
+        this.pendingPaymentOrderId = null;
+        this.paymentError = error?.error?.card_number?.[0]
+          ?? error?.error?.expiry?.[0]
+          ?? error?.error?.cvv?.[0]
+          ?? error?.error?.cardholder_name?.[0]
+          ?? this.i18n.t('cardPaymentFailed');
+        this.changeDetector.markForCheck();
+      },
     });
-  }
-
-  openPaymentPage(url: string): void {
-    const parsed = new URL(url);
-    if (parsed.protocol === 'https:' && parsed.hostname.endsWith('.freedompay.kz')) window.location.assign(url);
-    else this.paymentError = this.i18n.t('paymentUnavailable');
   }
 
   paymentCardLabel(brand: string | null, last4: string | null): string {
