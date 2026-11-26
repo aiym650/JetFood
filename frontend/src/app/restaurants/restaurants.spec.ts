@@ -162,6 +162,50 @@ describe('RestaurantsPage', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Register a restaurant');
   });
 
+  it('translates real menu items and branch addresses into English and Kazakh', () => {
+    const i18n = TestBed.inject(I18nService);
+    component.currentUser = { role: 'customer' };
+    component.selectedRestaurant = {
+      ...component.restaurants[0],
+      address: 'проспект Абая, 89',
+      branches: [{
+        id: 11,
+        address: 'проспект Абая, 89',
+        phone: '',
+        opening_time: null,
+        closing_time: null,
+        working_days: [],
+        is_active: true,
+        delivery_available: null,
+        delivery_info: '',
+        source_url: '',
+      }],
+    };
+    component.menuItems = [{
+      id: 12,
+      name: 'Комбо чизбургер курица',
+      description: 'Бургер с куриной котлетой с сыром, картофель фри, напиток и соус на выбор.',
+      category: 'Бургеры',
+      price: 2800,
+      image_url: '',
+      rating: 0,
+      restaurant: 1,
+      is_active: true,
+    }];
+
+    i18n.setLanguage('en');
+    fixture.changeDetectorRef.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Abay Avenue, 89');
+    expect(fixture.nativeElement.textContent).toContain('Chicken Cheeseburger Combo');
+    expect(fixture.nativeElement.textContent).toContain('Chicken cheeseburger, fries, a drink, and a sauce of your choice.');
+
+    i18n.setLanguage('kk');
+    fixture.changeDetectorRef.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Абай даңғылы, 89');
+    expect(fixture.nativeElement.textContent).toContain('Тауық чизбургер комбо');
+    expect(fixture.nativeElement.textContent).toContain('Ірімшігі бар тауық чизбургері, фри, сусын және таңдауыңыз бойынша тұздық.');
+  });
+
   it('renders restaurant and review labels in Kazakh', () => {
     TestBed.inject(I18nService).setLanguage('kk');
     fixture.changeDetectorRef.detectChanges();

@@ -1,0 +1,47 @@
+<section class="jp-panel" [class.jp-compact]="compact" aria-labelledby="jetpoints-title" [attr.aria-busy]="loading">
+  <header class="jp-header">
+    <div><span class="jp-eyebrow">{{ i18n.t('jpEyebrow') }}</span><h2 id="jetpoints-title">JetPoints</h2></div>
+    <a *ngIf="compact" routerLink="/profile" class="ui-text-button">{{ i18n.t('jpDetails') }} →</a>
+    <button *ngIf="!compact" class="ui-button" type="button" (click)="load()" [disabled]="loading">{{ i18n.t('jpRefresh') }}</button>
+  </header>
+  <p *ngIf="loading" role="status">{{ i18n.t('cashbackLoading') }}</p>
+  <div *ngIf="error" class="jp-error" role="alert">{{ i18n.t('cashbackError') }} <button class="ui-button" (click)="load()">{{ i18n.t('retryLoad') }}</button></div>
+  <ng-container *ngIf="account">
+    <div class="jp-grid">
+      <article class="jp-balance">
+        <span>{{ i18n.t('cashbackBalance') }}</span>
+        <strong>{{ account.available }} <small>JP</small></strong>
+        <p>{{ account.available }} ₸ · 1 JetPoint = 1 ₸</p>
+        <div class="jp-subtotals"><span>{{ i18n.t('cashbackReserved') }}: {{ account.reserved }}</span><span>{{ i18n.t('cashbackDebt') }}: {{ account.debt }}</span></div>
+      </article>
+      <article class="jp-level" *ngIf="account.level as level" [attr.data-level]="level.code">
+        <div class="jp-level-heading"><span>{{ i18n.t('jpLevel') }}</span><strong>{{ i18n.t('jpLevels.' + level.code) }}</strong></div>
+        <p class="jp-rate">{{ level.cashback_percent }}% <span>{{ i18n.t('jpCashback') }}</span></p>
+        <div class="jp-progress" role="progressbar" [attr.aria-label]="i18n.t('jpLevelProgress')" [attr.aria-valuenow]="level.progress_percent" aria-valuemin="0" aria-valuemax="100"><span [style.width.%]="level.progress_percent"></span></div>
+        <p>{{ level.completed_orders }} / {{ level.target_orders ?? level.completed_orders }} · {{ level.month }}</p>
+        <small *ngIf="level.next_level">{{ i18n.t('jpUntilNext') }} {{ i18n.t('jpLevels.' + level.next_level) }}: {{ level.orders_remaining }}</small>
+        <small *ngIf="!level.next_level">{{ i18n.t('jpTopLevel') }}</small>
+      </article>
+      <article class="jp-retention" *ngIf="account.second_order as promotion" [attr.data-status]="promotionStatus">
+        <span class="jp-pill">{{ i18n.t('jpSecondTitle') }}</span>
+        <strong>+{{ points(promotion.reward_minor) }} JP</strong>
+        <p role="status">{{ i18n.t('jpSecondStatuses.' + promotionStatus) }}</p>
+        <p *ngIf="promotionStatus === 'eligible'" class="jp-countdown">{{ i18n.t('jpRemaining') }}: {{ countdown }}</p>
+        <small *ngIf="promotion.deadline && promotionStatus === 'eligible'">{{ promotion.deadline | date:'dd.MM.yyyy HH:mm' }}</small>
+      </article>
+    </div>
+    <ng-container *ngIf="!compact">
+      <div class="jp-totals"><article><span>{{ i18n.t('jpTotalEarned') }}</span><strong>{{ points(account.total_earned_minor) }} JP</strong></article><article><span>{{ i18n.t('jpTotalRedeemed') }}</span><strong>{{ points(account.total_redeemed_minor) }} JP</strong></article></div>
+      <details class="jp-rules"><summary>{{ i18n.t('jpRulesTitle') }}</summary><p>{{ i18n.t('cashbackRules') }}</p><p>{{ i18n.t('jpLevelsRule') }}</p><p>{{ i18n.t('jpSecondRule') }}</p><p>{{ i18n.t('jpRoundingRule') }}</p><p>{{ i18n.t('spendingLimit') }}: {{ account.policy.spend_percent }}%</p></details>
+      <section *ngIf="account.completed_rewards?.length" class="jp-earned-orders"><h3>{{ i18n.t('jpCompletedRewards') }}</h3><div *ngFor="let order of account.completed_rewards"><span>{{ order.order_number }}</span><strong>+{{ points(order.earned_minor) }} JP</strong></div></section>
+      <h3>{{ i18n.t('cashbackHistory') }}</h3>
+      <p *ngIf="!account.entries.length" class="jp-empty">{{ i18n.t('cashbackEmpty') }}</p>
+      <ul class="jp-ledger"><li *ngFor="let entry of account.entries">
+        <div><strong>{{ i18n.t(entry.category === 'opening' ? 'jpOpeningBalance' : entry.category === 'second_order' ? 'jpSecondAward' : entry.category === 'second_order_reversal' ? 'jpSecondReversal' : 'ledgerKinds.' + entry.kind) }}</strong><small>{{ entry.created_at | date:'dd.MM.yyyy HH:mm' }} · {{ entry.order_number ?? entry.order_id ?? '—' }}</small></div>
+        <span class="jp-ledger-amount">{{ entry.amount_minor !== undefined ? points(entry.amount_minor) : entry.available_delta }} JP<small>{{ i18n.t('cashbackReserved') }}: {{ entry.reserved_delta }} · {{ i18n.t('cashbackDebt') }}: {{ entry.debt_delta }}</small></span>
+      </li></ul>
+      <p *ngIf="moreError" role="alert">{{ i18n.t('cashbackError') }}</p>
+      <button *ngIf="account.has_more" type="button" class="ui-button" (click)="loadMore()" [disabled]="moreLoading">{{ i18n.t('jpLoadMore') }}</button>
+    </ng-container>
+  </ng-container>
+</section>

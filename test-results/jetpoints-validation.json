@@ -1,0 +1,33 @@
+{
+  "date": "2026-11-25",
+  "timezone": "Asia/Qyzylorda",
+  "backend": {
+    "status": "PASS",
+    "tests": 218,
+    "artifact": "jetpoints-backend.txt"
+  },
+  "frontend": {
+    "status": "PASS",
+    "tests": 166,
+    "passed": 166,
+    "mock_api": true,
+    "artifact": "jetpoints-frontend.json",
+    "started_at": "2026-11-25T16:48:08.361000+05:00"
+  },
+  "production_build": {
+    "status": "PASS",
+    "warnings": "Existing initial bundle/CSS warning budgets exceeded; hard budgets were not raised."
+  },
+  "migration": {
+    "status": "PASS",
+    "applied_to_local_database": true,
+    "old_schema_conversion_checks": 9,
+    "artifact": "jetpoints-migration.json",
+    "working_records_preserved": true
+  },
+  "not_run": [
+    "manual browser desktop/mobile",
+    "PostgreSQL concurrency",
+    "real bank payments"
+  ]
+}

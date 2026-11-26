@@ -1,0 +1,269 @@
+
+> frontend@0.0.0 test
+> ng test --watch=false
+
+Using Vitest configuration file: C:\Users\tald1\Desktop\JetFood\frontend\vitest.config.mjs
+> Building...
+√ Building...
+Initial chunk files                             | Names                                        |  Raw size
+spec-app-orders-orders.js                       | spec-app-orders-orders                       | 185.08 kB | 
+chunk-6CRGIMUZ.js                               | -                                            | 162.53 kB | 
+spec-app-dashboard-dashboard.js                 | spec-app-dashboard-dashboard                 | 146.19 kB | 
+spec-app-support-chat-support-chat.js           | spec-app-support-chat-support-chat           | 128.35 kB | 
+spec-app-restaurants-restaurants.js             | spec-app-restaurants-restaurants             |  92.34 kB | 
+spec-app-profile-profile.js                     | spec-app-profile-profile                     |  65.49 kB | 
+chunk-NUOTQASH.js                               | -                                            |  42.59 kB | 
+spec-app-payment-history-payment-history.js     | spec-app-payment-history-payment-history     |  38.63 kB | 
+spec-app-landing-landing.js                     | spec-app-landing-landing                     |  34.69 kB | 
+spec-app-shared-sidebar-sidebar.js              | spec-app-shared-sidebar-sidebar              |  32.67 kB | 
+spec-app-auth-register-register.js              | spec-app-auth-register-register              |  30.54 kB | 
+styles.css                                      | styles                                       |  28.51 kB | 
+spec-app-notifications-notifications.js         | spec-app-notifications-notifications         |  26.59 kB | 
+chunk-UYVHGBXZ.js                               | -                                            |  22.04 kB | 
+spec-app-shared-search-search-bar-search-bar.js | spec-app-shared-search-search-bar-search-bar |  21.63 kB | 
+spec-app-auth-login-login.js                    | spec-app-auth-login-login                    |  21.36 kB | 
+spec-app-reports-reports.js                     | spec-app-reports-reports                     |  21.22 kB | 
+spec-app-analytics-analytics.js                 | spec-app-analytics-analytics                 |  14.98 kB | 
+spec-app-info-page-info-page.js                 | spec-app-info-page-info-page                 |   9.09 kB | 
+chunk-RSTWSNOR.js                               | -                                            |   4.75 kB | 
+chunk-VK3G4LJ4.js                               | -                                            |   4.72 kB | 
+chunk-FHHAGQUU.js                               | -                                            |   4.47 kB | 
+spec-app-integration-integration.component.js   | spec-app-integration-integration.component   |   3.61 kB | 
+spec-app-orders-api.js                          | spec-app-orders-api                          |   3.58 kB | 
+spec-app-orders-delivery-route-map.js           | spec-app-orders-delivery-route-map           |   3.49 kB | 
+spec-app-auth.js                                | spec-app-auth                                |   3.25 kB | 
+chunk-BL6HZFLA.js                               | -                                            |   3.25 kB | 
+spec-app-integration.js                         | spec-app-integration                         |   2.96 kB | 
+spec-app-payments.js                            | spec-app-payments                            |   2.95 kB | 
+spec-app-auth.interceptor.js                    | spec-app-auth.interceptor                    |   2.84 kB | 
+chunk-UL7GXSL3.js                               | -                                            |   2.24 kB | 
+chunk-T4RULR74.js                               | -                                            |   2.20 kB | 
+chunk-UTU3ILNG.js                               | -                                            |   2.14 kB | 
+spec-app-app.js                                 | spec-app-app                                 |   1.94 kB | 
+chunk-DLLB2OEP.js                               | -                                            |   1.85 kB | 
+spec-app-auth.guard.js                          | spec-app-auth.guard                          |   1.84 kB | 
+spec-app-menu.js                                | spec-app-menu                                |   1.80 kB | 
+chunk-2H3P6ZBD.js                               | -                                            |   1.64 kB | 
+chunk-SGFJXMVX.js                               | -                                            |   1.59 kB | 
+spec-app-support.js                             | spec-app-support                             |   1.54 kB | 
+spec-app-integration-integration.js             | spec-app-integration-integration             |   1.50 kB | 
+chunk-WLYBV22R.js                               | -                                            |   1.49 kB | 
+chunk-72CQYNFQ.js                               | -                                            |   1.35 kB | 
+chunk-HYHXKHCI.js                               | -                                            |   1.32 kB | 
+spec-app-shared-search-search.js                | spec-app-shared-search-search                |   1.27 kB | 
+init-testbed.js                                 | init-testbed                                 |   1.21 kB | 
+vitest-mock-patch.js                            | vitest-mock-patch                            | 974 bytes | 
+setup-test-setup.js                             | setup-test-setup                             | 728 bytes | 
+spec-app-analytics.js                           | spec-app-analytics                           | 570 bytes | 
+spec-app-reports.js                             | spec-app-reports                             | 560 bytes | 
+spec-app-orders.js                              | spec-app-orders                              | 555 bytes | 
+spec-app-shared-api-list.js                     | spec-app-shared-api-list                     | 554 bytes | 
+chunk-IUSBPLTM.js                               | -                                            | 211 bytes | 
+
+                                                | Initial total                                |   1.20 MB
+
+Application bundle generation complete. [13.106 seconds] - 2026-11-23T13:09:46.976Z
+
+
+ RUN  v4.1.12 C:/Users/tald1/Desktop/JetFood/frontend
+
+ ❯ |frontend| src/app/dashboard/dashboard.spec.ts (20 tests | 4 failed) 1607ms
+     × validates card details before creating an online order 52ms
+     × shows a success receipt and clears card details after payment 85ms
+     × retries a declined payment on the same order 48ms
+     × recalculates the applied code after quantity changes and ignores stale quotes 23ms
+ ❯ |frontend| src/app/profile/profile.spec.ts (2 tests | 2 failed) 132ms
+     × loads the profile and account settings 88ms
+     × rejects mismatched password confirmation before making a request 44ms
+npm.cmd : 
+At line:2 char:1
++ npm.cmd test -- --watch=false *> ../.jetfood-qa/assignment-20261123/f ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |frontend| src/app/dashboard/dashboard.spec.ts > Dashboard > validates card details before creating an online 
+order
+AssertionError: expected "createOrder" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st createOrder call:
+
+    Array [
+      Object {
+        "cashback_amount": 0,
+        "delivery_address": "Test address",
+        "items": Array [
+          Object {
+            "item_id": 1,
+            "quantity": 1,
+          },
+        ],
+        "payment_method": "online",
+        "promo_code": "",
+      },
+      "9a3b4b77-5e26-4c3d-b48c-0fee6aa66d96",
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/app/dashboard/dashboard.spec.ts:165:29
+    163|     component.checkout();
+    164|
+    165|     expect(createOrder).not.toHaveBeenCalled();
+       |                             ^
+    166|     expect(component.cardNumberError()).toBe(component.i18n.t('invalid…
+    167|     expect(component.cardExpiryError()).toBe(component.i18n.t('invalid…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  |frontend| src/app/dashboard/dashboard.spec.ts > Dashboard > shows a success receipt and clears card details 
+after payment
+AssertionError: expected "payOrder" to be called with arguments: [ 77, { …(4) } ]
+
+Number of calls: 0
+
+ ❯ src/app/dashboard/dashboard.spec.ts:229:22
+    227|
+    228|     expect(createOrder).toHaveBeenCalledOnce();
+    229|     expect(payOrder).toHaveBeenCalledWith(77, {
+       |                      ^
+    230|       card_number: '4242424242424242',
+    231|       expiry: '12/99',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  |frontend| src/app/dashboard/dashboard.spec.ts > Dashboard > retries a declined payment on the same order
+AssertionError: expected '' to be 'Банк отклонил карту.' // Object.is equality
+
+- Expected
++ Received
+
+- Банк отклонил карту.
+
+ ❯ src/app/dashboard/dashboard.spec.ts:308:36
+    306|
+    307|     component.checkout();
+    308|     expect(component.paymentError).toBe(component.i18n.t('cardDeclined…
+       |                                    ^
+    309|     expect(component.cardNumber).toBe('');
+    310|     expect(component.pendingPaymentOrderId).toBe(78);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  |frontend| src/app/dashboard/dashboard.spec.ts > Dashboard > recalculates the applied code after quantity 
+changes and ignores stale quotes
+AssertionError: expected last "quote" call to have been called with [ …(2) ]
+
+- Expected
++ Received
+
+@@ -4,6 +4,7 @@
+        "item_id": 1,
+        "quantity": 2,
+      },
+    ],
+    "SAVE",
++   0,
+  ]
+
+ ❯ src/app/dashboard/dashboard.spec.ts:441:19
+    439|     component.addToCart(component.foodItems[0]);
+    440|     component.changeQuantity(component.cart[0], 1);
+    441|     expect(quote).toHaveBeenLastCalledWith([{ item_id: 1, quantity: 2 …
+       |                   ^
+    442|     second.next({ total_amount: '1602.00' });
+    443|     first.next({ total_amount: '801.00' });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  |frontend| src/app/profile/profile.spec.ts > ProfilePage > loads the profile and account settings
+ FAIL  |frontend| src/app/profile/profile.spec.ts > ProfilePage > rejects mismatched password confirmation before 
+making a request
+TypeError: Cannot read properties of undefined (reading 'base_percent')
+ ❯ LoyaltyPanel_ng_container_5_Template src/app/profile/loyalty-panel.ts:16:12
+ ❯ templateFn ../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/shared.ts:107:4
+ ❯ executeTemplate 
+../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/change_detection.ts:232:6
+ ❯ refreshView 
+../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/change_detection.ts:497:4
+ ❯ detectChangesInView 
+../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/change_detection.ts:445:2
+ ❯ detectChangesInViewIfAttached 
+../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/change_detection.ts:387:6
+ ❯ detectChangesInEmbeddedViews 
+../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/change_detection.ts:264:4
+ ❯ refreshView 
+../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/change_detection.ts:497:4
+ ❯ detectChangesInView 
+../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/change_detection.ts:445:2
+ ❯ detectChangesInViewIfAttached 
+../darwin_arm64-fastbuild-ST-fdfa778d11ba/bin/packages/core/src/render3/instructions/change_detection.ts:430:4
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 3 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+TypeError: this.paymentsService.startCheckout is not a function
+ ❯ _Dashboard.submitCardPayment src/app/dashboard/dashboard.ts:637:26
+ ❯ Object.next src/app/dashboard/dashboard.ts:554:16
+ ❯ ConsumerObserver.next node_modules/rxjs/dist/cjs/internal/Subscriber.js:113:33
+ ❯ SafeSubscriber.Subscriber._next node_modules/rxjs/dist/cjs/internal/Subscriber.js:80:26
+ ❯ SafeSubscriber.Subscriber.next node_modules/rxjs/dist/cjs/internal/Subscriber.js:51:18
+ ❯ Observable._subscribe node_modules/rxjs/dist/cjs/internal/observable/innerFrom.js:109:24
+ ❯ Observable._trySubscribe node_modules/rxjs/dist/cjs/internal/Observable.js:41:25
+ ❯ node_modules/rxjs/dist/cjs/internal/Observable.js:35:31
+ ❯ Object.errorContext node_modules/rxjs/dist/cjs/internal/util/errorContext.js:22:9
+ ❯ Observable.subscribe node_modules/rxjs/dist/cjs/internal/Observable.js:26:24
+
+ Test Files  2 failed | 30 passed (32)
+      Tests  6 failed | 117 passed (123)
+     Errors  3 errors
+   Start at  18:09:47
+   Duration  11.56s (transform 2.59s, setup 3.93s, import 3.86s, tests 5.07s, environment 104.22s)
+
+
+This error originated in "src/app/dashboard/dashboard.spec.ts" test file. It doesn't mean the error was thrown inside 
+the file itself, but while it was running.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+TypeError: this.paymentsService.startCheckout is not a function
+ ❯ _Dashboard.submitCardPayment src/app/dashboard/dashboard.ts:637:26
+ ❯ Object.next src/app/dashboard/dashboard.ts:554:16
+ ❯ ConsumerObserver.next node_modules/rxjs/dist/cjs/internal/Subscriber.js:113:33
+ ❯ SafeSubscriber.Subscriber._next node_modules/rxjs/dist/cjs/internal/Subscriber.js:80:26
+ ❯ SafeSubscriber.Subscriber.next node_modules/rxjs/dist/cjs/internal/Subscriber.js:51:18
+ ❯ Observable._subscribe node_modules/rxjs/dist/cjs/internal/observable/innerFrom.js:109:24
+ ❯ Observable._trySubscribe node_modules/rxjs/dist/cjs/internal/Observable.js:41:25
+ ❯ node_modules/rxjs/dist/cjs/internal/Observable.js:35:31
+ ❯ Object.errorContext node_modules/rxjs/dist/cjs/internal/util/errorContext.js:22:9
+ ❯ Observable.subscribe node_modules/rxjs/dist/cjs/internal/Observable.js:26:24
+
+This error originated in "src/app/dashboard/dashboard.spec.ts" test file. It doesn't mean the error was thrown inside 
+the file itself, but while it was running.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+TypeError: this.paymentsService.startCheckout is not a function
+ ❯ _Dashboard.submitCardPayment src/app/dashboard/dashboard.ts:637:26
+ ❯ Object.next src/app/dashboard/dashboard.ts:554:16
+ ❯ ConsumerObserver.next node_modules/rxjs/dist/cjs/internal/Subscriber.js:113:33
+ ❯ SafeSubscriber.Subscriber._next node_modules/rxjs/dist/cjs/internal/Subscriber.js:80:26
+ ❯ SafeSubscriber.Subscriber.next node_modules/rxjs/dist/cjs/internal/Subscriber.js:51:18
+ ❯ Observable._subscribe node_modules/rxjs/dist/cjs/internal/observable/innerFrom.js:109:24
+ ❯ Observable._trySubscribe node_modules/rxjs/dist/cjs/internal/Observable.js:41:25
+ ❯ node_modules/rxjs/dist/cjs/internal/Observable.js:35:31
+ ❯ Object.errorContext node_modules/rxjs/dist/cjs/internal/util/errorContext.js:22:9
+ ❯ Observable.subscribe node_modules/rxjs/dist/cjs/internal/Observable.js:26:24
+
+This error originated in "src/app/dashboard/dashboard.spec.ts" test file. It doesn't mean the error was thrown inside 
+the file itself, but while it was running.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+

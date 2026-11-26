@@ -281,7 +281,6 @@ app-dashboard .back-to-restaurants:hover {
 @media (max-width: 768px) {
   body:has(.cart-sidebar) app-support-chat:not(:has(.support-panel)) { visibility: hidden; }
 }
-
 :root {
   --jf-primary: #ff6b35;
   --jf-primary-hover: #e85a28;
@@ -308,5 +307,91 @@ app-dashboard .back-to-restaurants:hover {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+.commerce-panel {
+  background: #fff;
+  border: 1px solid #e4e8ee;
+  border-radius: 20px;
+  padding: clamp(18px, 3vw, 30px);
+  margin: 20px 0;
+  color: #253044;
+}
+
+.commerce-panel h2,
+.commerce-panel h3 {
+  margin: 0 0 16px;
+}
+
+.commerce-panel details {
+  margin: 20px 0;
+  line-height: 1.65;
+}
+
+.commerce-panel summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.commerce-balance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.commerce-balance strong {
+  font-size: 30px;
+  color: #c74625;
+}
+
+.commerce-ledger {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.commerce-ledger li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid #edf0f5;
+  padding: 14px 0;
+}
+
+.commerce-ledger small {
+  display: block;
+  margin-top: 5px;
+  color: #657184;
+}
+
+.commerce-notice {
+  padding: 16px;
+  margin: 14px 0;
+  border-radius: 14px;
+  background: #fff5e9;
+  line-height: 1.6;
+  color: #764322;
+}
+
+.payment-result {
+  max-width: 740px;
+  margin: 36px auto;
+}
+
+.payment-result .ui-button {
+  margin: 8px 10px 0 0;
+}
+
+@media (max-width: 600px) {
+  .commerce-ledger li {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .commerce-panel {
+    border-radius: 14px;
   }
 }

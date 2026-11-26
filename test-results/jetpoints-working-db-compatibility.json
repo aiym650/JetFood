@@ -1,0 +1,46 @@
+{
+  "backup_created_before_migration": true,
+  "unchanged_business_tables": {
+    "auth_user": {
+      "old_count": 8,
+      "new_count": 8,
+      "old_fields_unchanged": true
+    },
+    "orders_order": {
+      "old_count": 15,
+      "new_count": 15,
+      "old_fields_unchanged": true
+    },
+    "orders_orderitem": {
+      "old_count": 19,
+      "new_count": 19,
+      "old_fields_unchanged": true
+    },
+    "orders_menuitem": {
+      "old_count": 8,
+      "new_count": 8,
+      "old_fields_unchanged": true
+    },
+    "payments_payment": {
+      "old_count": 14,
+      "new_count": 14,
+      "old_fields_unchanged": true
+    },
+    "reviews_review": {
+      "old_count": 0,
+      "new_count": 0,
+      "old_fields_unchanged": true
+    },
+    "support_supportcase": {
+      "old_count": 4,
+      "new_count": 4,
+      "old_fields_unchanged": true
+    },
+    "support_supportmessage": {
+      "old_count": 27,
+      "new_count": 27,
+      "old_fields_unchanged": true
+    }
+  },
+  "existing_wallets_preserved_exactly": true
+}

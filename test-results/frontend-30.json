@@ -1,0 +1,401 @@
+{
+  "numTotalTestSuites": 1,
+  "numPassedTestSuites": 1,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 30,
+  "numPassedTests": 30,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1795441535601,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Acceptance T01–T06 Support AI (mock backend)"
+          ],
+          "fullName": "Acceptance T01–T06 Support AI (mock backend) T01 Sends a question and displays the reply",
+          "status": "passed",
+          "title": "T01 Sends a question and displays the reply",
+          "duration": 245.39440000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T01–T06 Support AI (mock backend)"
+          ],
+          "fullName": "Acceptance T01–T06 Support AI (mock backend) T02 Rejects a whitespace-only question",
+          "status": "passed",
+          "title": "T02 Rejects a whitespace-only question",
+          "duration": 61.6913999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T01–T06 Support AI (mock backend)"
+          ],
+          "fullName": "Acceptance T01–T06 Support AI (mock backend) T03 Shows waiting state and prevents duplicate submission",
+          "status": "passed",
+          "title": "T03 Shows waiting state and prevents duplicate submission",
+          "duration": 59.94239999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T01–T06 Support AI (mock backend)"
+          ],
+          "fullName": "Acceptance T01–T06 Support AI (mock backend) T04 Explains service unavailability and offers retry",
+          "status": "passed",
+          "title": "T04 Explains service unavailability and offers retry",
+          "duration": 57.75059999999985,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T01–T06 Support AI (mock backend)"
+          ],
+          "fullName": "Acceptance T01–T06 Support AI (mock backend) T05 Restores conversation history when reopened",
+          "status": "passed",
+          "title": "T05 Restores conversation history when reopened",
+          "duration": 48.758800000000065,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T01–T06 Support AI (mock backend)"
+          ],
+          "fullName": "Acceptance T01–T06 Support AI (mock backend) T06 Displays an honest lack-of-information answer safely",
+          "status": "passed",
+          "title": "T06 Displays an honest lack-of-information answer safely",
+          "duration": 40.7804000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T07–T12 Reviews (mock API)"
+          ],
+          "fullName": "Acceptance T07–T12 Reviews (mock API) T07 Submits a valid review and shows acknowledgement",
+          "status": "passed",
+          "title": "T07 Submits a valid review and shows acknowledgement",
+          "duration": 100.1577000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T07–T12 Reviews (mock API)"
+          ],
+          "fullName": "Acceptance T07–T12 Reviews (mock API) T08 Displays the rejection reason to the author",
+          "status": "passed",
+          "title": "T08 Displays the rejection reason to the author",
+          "duration": 24.91449999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T07–T12 Reviews (mock API)"
+          ],
+          "fullName": "Acceptance T07–T12 Reviews (mock API) T09 Edits own review through the existing endpoint",
+          "status": "passed",
+          "title": "T09 Edits own review through the existing endpoint",
+          "duration": 19.229399999999714,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T07–T12 Reviews (mock API)"
+          ],
+          "fullName": "Acceptance T07–T12 Reviews (mock API) T10 Does not offer editing another user review",
+          "status": "passed",
+          "title": "T10 Does not offer editing another user review",
+          "duration": 19.13000000000011,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T07–T12 Reviews (mock API)"
+          ],
+          "fullName": "Acceptance T07–T12 Reviews (mock API) T11 Validates rating bounds and comment length in the form",
+          "status": "passed",
+          "title": "T11 Validates rating bounds and comment length in the form",
+          "duration": 55.170500000000175,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T07–T12 Reviews (mock API)"
+          ],
+          "fullName": "Acceptance T07–T12 Reviews (mock API) T12 Displays pending moderation after a revision",
+          "status": "passed",
+          "title": "T12 Displays pending moderation after a revision",
+          "duration": 28.378700000000208,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T13–T20 Payment result (mock provider through backend)"
+          ],
+          "fullName": "Acceptance T13–T20 Payment result (mock provider through backend) T13 Displays the amount received from the backend",
+          "status": "passed",
+          "title": "T13 Displays the amount received from the backend",
+          "duration": 19.425000000000182,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T13–T20 Payment result (mock provider through backend)"
+          ],
+          "fullName": "Acceptance T13–T20 Payment result (mock provider through backend) T14 Opens the provider payment page returned by the backend",
+          "status": "passed",
+          "title": "T14 Opens the provider payment page returned by the backend",
+          "duration": 10.921599999999671,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T13–T20 Payment result (mock provider through backend)"
+          ],
+          "fullName": "Acceptance T13–T20 Payment result (mock provider through backend) T15 Shows success only after backend confirms payment",
+          "status": "passed",
+          "title": "T15 Shows success only after backend confirms payment",
+          "duration": 19.732200000000375,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T13–T20 Payment result (mock provider through backend)"
+          ],
+          "fullName": "Acceptance T13–T20 Payment result (mock provider through backend) T16 Shows a confirmed payment failure",
+          "status": "passed",
+          "title": "T16 Shows a confirmed payment failure",
+          "duration": 5.6361000000001695,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T13–T20 Payment result (mock provider through backend)"
+          ],
+          "fullName": "Acceptance T13–T20 Payment result (mock provider through backend) T17 Shows cancellation without success",
+          "status": "passed",
+          "title": "T17 Shows cancellation without success",
+          "duration": 5.710000000000036,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T13–T20 Payment result (mock provider through backend)"
+          ],
+          "fullName": "Acceptance T13–T20 Payment result (mock provider through backend) T18 Blocks repeated payment clicks while creating a payment",
+          "status": "passed",
+          "title": "T18 Blocks repeated payment clicks while creating a payment",
+          "duration": 7.095600000000104,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T13–T20 Payment result (mock provider through backend)"
+          ],
+          "fullName": "Acceptance T13–T20 Payment result (mock provider through backend) T19 Keeps pending after a success redirect before backend confirmation",
+          "status": "passed",
+          "title": "T19 Keeps pending after a success redirect before backend confirmation",
+          "duration": 4.932500000000346,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T13–T20 Payment result (mock provider through backend)"
+          ],
+          "fullName": "Acceptance T13–T20 Payment result (mock provider through backend) T20 Allows retry only after a confirmed failure",
+          "status": "passed",
+          "title": "T20 Allows retry only after a confirmed failure",
+          "duration": 5.820299999999861,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T21–T30 Cashback and combined flow (mock APIs)"
+          ],
+          "fullName": "Acceptance T21–T30 Cashback and combined flow (mock APIs) T21 Displays the available cashback balance",
+          "status": "passed",
+          "title": "T21 Displays the available cashback balance",
+          "duration": 93.5898000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T21–T30 Cashback and combined flow (mock APIs)"
+          ],
+          "fullName": "Acceptance T21–T30 Cashback and combined flow (mock APIs) T22 Applies an allowed bonus amount through the backend",
+          "status": "passed",
+          "title": "T22 Applies an allowed bonus amount through the backend",
+          "duration": 22.908300000000054,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T21–T30 Cashback and combined flow (mock APIs)"
+          ],
+          "fullName": "Acceptance T21–T30 Cashback and combined flow (mock APIs) T23 Displays and enforces the server merchandise spending limit",
+          "status": "passed",
+          "title": "T23 Displays and enforces the server merchandise spending limit",
+          "duration": 22.008499999999913,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T21–T30 Cashback and combined flow (mock APIs)"
+          ],
+          "fullName": "Acceptance T21–T30 Cashback and combined flow (mock APIs) T24 Explains insufficient balance returned by the backend",
+          "status": "passed",
+          "title": "T24 Explains insufficient balance returned by the backend",
+          "duration": 21.59179999999924,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T21–T30 Cashback and combined flow (mock APIs)"
+          ],
+          "fullName": "Acceptance T21–T30 Cashback and combined flow (mock APIs) T25 Keeps delivery separate from redeemed merchandise bonuses",
+          "status": "passed",
+          "title": "T25 Keeps delivery separate from redeemed merchandise bonuses",
+          "duration": 21.825800000000527,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T21–T30 Cashback and combined flow (mock APIs)"
+          ],
+          "fullName": "Acceptance T21–T30 Cashback and combined flow (mock APIs) T26 Updates the total from the backend after bonuses change",
+          "status": "passed",
+          "title": "T26 Updates the total from the backend after bonuses change",
+          "duration": 24.002599999999802,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T21–T30 Cashback and combined flow (mock APIs)"
+          ],
+          "fullName": "Acceptance T21–T30 Cashback and combined flow (mock APIs) T27 Displays the server cashback earnings forecast",
+          "status": "passed",
+          "title": "T27 Displays the server cashback earnings forecast",
+          "duration": 20.500500000000102,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T21–T30 Cashback and combined flow (mock APIs)"
+          ],
+          "fullName": "Acceptance T21–T30 Cashback and combined flow (mock APIs) T28 Displays ledger operations and programme conditions",
+          "status": "passed",
+          "title": "T28 Displays ledger operations and programme conditions",
+          "duration": 32.884500000000116,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T21–T30 Cashback and combined flow (mock APIs)"
+          ],
+          "fullName": "Acceptance T21–T30 Cashback and combined flow (mock APIs) T29 Translates new interfaces into English and Russian",
+          "status": "passed",
+          "title": "T29 Translates new interfaces into English and Russian",
+          "duration": 20.4991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptance T21–T30 Cashback and combined flow (mock APIs)"
+          ],
+          "fullName": "Acceptance T21–T30 Cashback and combined flow (mock APIs) T30 Cart → bonuses → hosted test payment → backend order status",
+          "status": "passed",
+          "title": "T30 Cart → bonuses → hosted test payment → backend order status",
+          "duration": 20.23610000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1795441538819,
+      "endTime": 1795441539961.236,
+      "status": "passed",
+      "message": "",
+      "name": "C:/Users/tald1/Desktop/JetFood/frontend/src/app/commerce.acceptance.spec.ts"
+    }
+  ],
+  "extracted_from": "frontend-all.json"
+}

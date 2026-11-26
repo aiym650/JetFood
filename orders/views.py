@@ -93,7 +93,11 @@ class OrderListCreateView(generics.ListCreateAPIView):
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             data = serializer.validated_data
+            if data.get('cashback_amount', 0) > 0 and not key:
+                raise DRFValidationError({'detail': 'Idempotency-Key is required when redeeming bonuses.'})
             totals, promo = quote(request.user, data['items'], data.get('promo_code', ''), consume=True)
+            from loyalty.services import quote_bonus, reserve_order
+            bonus_quote, bonus_lines = quote_bonus(request.user, data['items'], totals, data.get('cashback_amount', 0))
             try:
                 validate_user_pending_orders(request.user)
                 validate_order_amount(totals['items_amount'])
@@ -106,6 +110,7 @@ class OrderListCreateView(generics.ListCreateAPIView):
                 idempotency_key=key or None, request_fingerprint=fingerprint, **totals)
             if promo:
                 PromoRedemption.objects.create(promo=promo, user=request.user, order=order)
+            reserve_order(order, bonus_quote['cashback_amount'], bonus_lines)
             create_order_payment(order, data.get('payment_method', 'cash'))
         return Response(OrderSerializer(order).data, status=201)
 
@@ -191,7 +196,14 @@ class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
     def perform_destroy(self, instance):
         if self.request.user.role not in ["admin", "manager"]:
             raise PermissionDenied("Only admins and managers can delete orders")
-        instance.delete()
+        from django.db.models.deletion import ProtectedError
+        from rest_framework.exceptions import APIException
+        try:
+            instance.delete()
+        except ProtectedError as error:
+            conflict = APIException('This order has permanent loyalty or payment history. Use the order status workflow instead.')
+            conflict.status_code = 409
+            raise conflict from error
 
 
 @api_view(["POST"])
@@ -259,6 +271,10 @@ def update_order_status(request, order_id):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
+    if target_status == "cancelled":
+        from payments.models import PaymentAttempt
+        if PaymentAttempt.objects.filter(payment__order=order, status__in=["unknown", "pending"]).exists():
+            return Response({"detail": "Payment result is not final. Reconcile the payment before cancellation."}, status=409)
     order.status = target_status
 
     if order.status == "delivered":
@@ -281,6 +297,8 @@ def update_order_status(request, order_id):
             elif payment.status == "pending":
                 payment.status = "cancelled"
             payment.save(update_fields=["status", "updated_at"])
+    from loyalty.services import synchronize
+    synchronize(order)
     return Response({"message": f"Order status updated to {order.status}"})
 
 
@@ -525,6 +543,8 @@ def modify_order(request, order_id):
             raise DRFValidationError(error.messages) from error
 
     with transaction.atomic():
+        from loyalty.services import lock_wallet
+        lock_wallet(request.user.pk)
         order = get_object_or_404(
             Order.objects.select_for_update().filter(customer=request.user),
             id=order_id,
@@ -536,12 +556,19 @@ def modify_order(request, order_id):
             )
 
         if modified_items is not None:
-            from payments.models import Payment
-            if order.promo_code or Payment.objects.filter(order=order, status='paid').exists():
-                raise DRFValidationError({'items': 'Discounted or paid orders cannot change items. Cancel a pending order and place a new one.'})
+            from payments.models import Payment, PaymentAttempt
+            from loyalty.models import LoyaltyOrder
+            loyalty_record = LoyaltyOrder.objects.filter(order=order).first()
+            if order.promo_code or (loyalty_record and loyalty_record.reserved) or Payment.objects.filter(order=order, paid_at__isnull=False).exists() or PaymentAttempt.objects.filter(payment__order=order).exists():
+                raise DRFValidationError({'items': 'Orders with a promotion, redeemed bonuses or an initiated payment cannot change items. Cancel an unpaid order after payment verification and place a new one.'})
             from .promotions import quote
             lines = [{'menu_item': i['item_id'], 'quantity': i['quantity']} for i in modified_items]
             totals, _ = quote(request.user, lines, consume=True)
+            if loyalty_record:
+                from loyalty.services import quote_bonus
+                _, bonus_lines = quote_bonus(request.user, lines, totals, 0)
+                loyalty_record.lines = bonus_lines
+                loyalty_record.save(update_fields=['lines'])
             total_amount = totals['items_amount'] + order.delivery_fee
             for item, line in zip(modified_items, lines):
                 item['item_id'] = line['menu_item']
@@ -652,4 +679,12 @@ def preview_promotion(request):
     serializer = OrderSerializer(data={**request.data, 'delivery_address': 'preview'})
     serializer.is_valid(raise_exception=True)
     totals, _ = quote(request.user, serializer.validated_data['items'], serializer.validated_data.get('promo_code', ''))
-    return Response({key: str(value) if isinstance(value, Decimal) else value for key, value in totals.items()})
+    from loyalty.services import quote_bonus
+    bonus, _ = quote_bonus(request.user, serializer.validated_data['items'], totals, serializer.validated_data.get('cashback_amount', 0))
+    from django.conf import settings
+    return Response({
+        **{key: str(value) if isinstance(value, Decimal) else value for key, value in totals.items()},
+        **bonus,
+        'online_payment_configured': settings.PAYMENTS_ALLOW_LEGACY_SIMULATION,
+        'payment_test_mode': settings.PAYMENTS_ALLOW_LEGACY_SIMULATION,
+    })

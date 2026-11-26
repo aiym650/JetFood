@@ -2,7 +2,7 @@
   <div *ngIf="success" class="review-success" role="status">
     <div class="success-icon" aria-hidden="true">✓</div>
     <h2 id="review-title">{{ i18n.t('reviewSuccessTitle') }}</h2>
-    <p>{{ i18n.t('reviewSuccessSubtitle') }}</p>
+    <p>{{ i18n.t('reviewSaved') }}</p>
   </div>
 
   <ng-container *ngIf="!success">
@@ -40,7 +40,7 @@
         />
       </div>
       <p *ngIf="attempted && !complete" class="validation-message" role="alert">
-        {{ i18n.t('ratingValidation') }}
+        {{ i18n.t('reviewTextValidation') }}
       </p>
 
       <div class="review-field">

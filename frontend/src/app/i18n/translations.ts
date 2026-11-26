@@ -1,3 +1,4 @@
+import { commerceTranslations } from './commerce-translations';
 import { featureTranslations } from './feature-translations';
 const baseTranslations = {
   en: {
@@ -1257,7 +1258,7 @@ const baseTranslations = {
 };
 
 export const translations = {
- en: { ...baseTranslations.en, ...featureTranslations.en },
- ru: { ...baseTranslations.ru, ...featureTranslations.ru },
- kk: { ...baseTranslations.en, ...featureTranslations.kk },
+ en: { ...baseTranslations.en, ...featureTranslations.en, ...commerceTranslations.en },
+ ru: { ...baseTranslations.ru, ...featureTranslations.ru, ...commerceTranslations.ru },
+ kk: { ...baseTranslations.en, ...featureTranslations.kk, ...commerceTranslations.en },
 };

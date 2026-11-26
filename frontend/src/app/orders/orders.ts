@@ -77,6 +77,20 @@ export class OrdersPage implements OnInit {
   statusActionErrors: Record<number, string> = {};
   updatingStatusOrderId: number | null = null;
   courierLoadError = '';
+  ownReviews: Record<number, any> = {};
+  editingReviews: Record<number, number> = {};
+  loadOwnReviews(): void {
+    this.http.get<any[]>("http://localhost:8000/api/reviews/mine/").subscribe({ next: reviews => { this.ownReviews = Object.fromEntries(reviews.map(r => [r.order, r])); this.changeDetector.markForCheck(); }, error: () => {} });
+  }
+  canEditReview(review: any): boolean { return !!review && review.user_id === this.currentUser?.id; }
+  beginEditReview(review: any): void {
+    if (!this.canEditReview(review)) return;
+    this.editingReviews[review.order] = review.id;
+    this.reviewSuccess[review.order] = "";
+    this.reviewForm[review.order] = { ...review, photos: [] };
+  }
+  reviewStatus(status: string): string { return this.i18n.t(status === "published" ? "reviewApproved" : status === "hidden" ? "reviewRejected" : "reviewPending"); }
+
   reviewForm: Record<number, any> = {};
   reviewSubmitting: Record<number, boolean> = {};
   reviewError: Record<number, string> = {};
@@ -202,6 +216,7 @@ export class OrdersPage implements OnInit {
   loadOrders(): void {
     this.loading = true;
     this.error = '';
+    if (this.currentUser?.role === 'customer') this.loadOwnReviews();
     this.ordersService.getOrders().pipe(
       timeout({ first: 12000 }),
       takeUntilDestroyed(this.destroyRef)
@@ -818,7 +833,9 @@ export class OrdersPage implements OnInit {
     for (const photo of form.photos.slice(0, 3)) {
       multipart.append('photos', photo.file);
     }
-    this.http.post(`http://localhost:8000/api/orders/${orderId}/review`, multipart).subscribe({
+    const reviewId = this.editingReviews[orderId];
+    const submission = reviewId ? this.http.patch(`http://localhost:8000/api/reviews/${reviewId}`, multipart) : this.http.post(`http://localhost:8000/api/orders/${orderId}/review`, multipart);
+    submission.subscribe({
       next: () => {
         this.reviewSubmitting[orderId] = false;
         this.reviewSuccess[orderId] = 'success';
@@ -827,7 +844,7 @@ export class OrdersPage implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.reviewSubmitting[orderId] = false;
-        this.reviewError[orderId] = error.error?.detail ?? 'Could not submit review';
+        this.reviewError[orderId] = error.error?.detail ?? Object.values(error.error ?? {}).flat().join(' ') ?? this.i18n.t('reviewTextValidation');
         this.changeDetector.markForCheck();
       },
     });

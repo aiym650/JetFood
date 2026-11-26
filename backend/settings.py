@@ -13,9 +13,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 from corsheaders.defaults import default_headers
+from .environment import load_project_environment, public_origin_host
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_project_environment(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -27,7 +29,13 @@ SECRET_KEY = "django-insecure-4d_5$0&4b*i(4jyaho9r87zuz+9qyh)(&(913qj4twdtz4-7n+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
+ALLOWED_HOSTS += [host.strip() for host in os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',') if host.strip()]
+if os.getenv('PAYMENTS_PUBLIC_URL'):
+    try:
+        ALLOWED_HOSTS.append(public_origin_host(os.environ['PAYMENTS_PUBLIC_URL']))
+    except ValueError:
+        pass  # check_payments explains the invalid origin; hosted checkout stays disabled.
 
 
 # Application definition
@@ -52,6 +60,7 @@ INSTALLED_APPS = [
     "reports",
     "support",
     "reviews",
+    "loyalty",
 ]
 
 
@@ -184,3 +193,14 @@ SUPPORT_OLLAMA_TIMEOUT = int(os.environ.get("SUPPORT_OLLAMA_TIMEOUT", "60"))
 ORDER_DELIVERY_FEE = os.environ.get('ORDER_DELIVERY_FEE', '0.00')
 
 SUPPORT_OLLAMA_API_KEY = os.environ.get('SUPPORT_OLLAMA_API_KEY', '')
+
+# Hosted payments; production must explicitly disable test mode after merchant activation.
+FREEDOMPAY_MERCHANT_ID = os.getenv('FREEDOMPAY_MERCHANT_ID', '')
+FREEDOMPAY_SECRET_KEY = os.getenv('FREEDOMPAY_SECRET_KEY', '')
+FREEDOMPAY_TEST_MODE = os.getenv('FREEDOMPAY_TEST_MODE', '1') == '1'
+FREEDOMPAY_TIMEOUT = min(30, max(1, int(os.getenv('FREEDOMPAY_TIMEOUT', '15'))))
+PAYMENTS_PUBLIC_URL = os.getenv('PAYMENTS_PUBLIC_URL', '')
+PAYMENTS_RETURN_URL = os.getenv('PAYMENTS_RETURN_URL', 'http://localhost:4200/payments/return')
+PAYMENTS_ALLOW_LEGACY_SIMULATION = os.getenv('PAYMENTS_ALLOW_LEGACY_SIMULATION', '1') == '1'
+REVIEW_MODERATION_PROVIDER = os.getenv('REVIEW_MODERATION_PROVIDER', 'local')
+JETPOINTS_TIME_ZONE = os.getenv('JETPOINTS_TIME_ZONE', 'Asia/Qyzylorda')

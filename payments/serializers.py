@@ -6,24 +6,8 @@ from rest_framework import serializers
 from .models import Payment
 
 
-def luhn_is_valid(card_number):
-    if len(card_number) != 16 or any(
-        character not in '0123456789' for character in card_number
-    ):
-        return False
-    checksum = 0
-    reversed_digits = card_number[::-1]
-    for index, character in enumerate(reversed_digits):
-        digit = int(character)
-        if index % 2:
-            digit *= 2
-            if digit > 9:
-                digit -= 9
-        checksum += digit
-    return checksum % 10 == 0
-
-
 class PaymentSerializer(serializers.ModelSerializer):
+    customer = serializers.IntegerField(source='order.customer_id', read_only=True)
     order_number = serializers.CharField(source='order.order_number', read_only=True)
     customer_name = serializers.CharField(source='order.customer.username', read_only=True)
     order_status = serializers.CharField(source='order.status', read_only=True)
@@ -31,7 +15,7 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = [
-            'id', 'order', 'order_number', 'order_status', 'customer_name',
+            'id', 'provider', 'is_test', 'refunded_amount', 'order', 'order_number', 'order_status', 'customer', 'customer_name',
             'method', 'status', 'amount', 'transaction_id', 'card_brand',
             'card_last4', 'failure_reason', 'refund_reason', 'created_at',
             'paid_at', 'refunded_at',
@@ -47,12 +31,8 @@ class CardPaymentSerializer(serializers.Serializer):
 
     def validate_card_number(self, value):
         card_number = value.replace(' ', '')
-        if (
-            not card_number.isdigit()
-            or len(card_number) != 16
-            or not luhn_is_valid(card_number)
-        ):
-            raise serializers.ValidationError('Enter a valid card number.')
+        if not card_number.isdigit() or len(card_number) != 16:
+            raise serializers.ValidationError('Enter a 16-digit card number.')
         return card_number
 
     def validate_expiry(self, value):

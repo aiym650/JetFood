@@ -89,15 +89,15 @@
     <p *ngIf="selectedRestaurant.catalog_key && menuItems.length" class="menu-price-disclaimer">
       {{ i18n.t('menuPriceDisclaimer') }}
     </p>
-    <select class="ui-input menu-category-select" *ngIf="menuItems.length" [(ngModel)]="category" [attr.aria-label]="i18n.t('category')"><option value="">{{ i18n.t('allCategories') }}</option><option *ngFor="let value of categories">{{ value }}</option></select>
+    <select class="ui-input menu-category-select" *ngIf="menuItems.length" [(ngModel)]="category" [attr.aria-label]="i18n.t('category')"><option value="">{{ i18n.t('allCategories') }}</option><option *ngFor="let value of categories" [value]="value">{{ i18n.catalogLabel(value) }}</option></select>
     <ul class="menu-list" *ngIf="menuItems.length">
       <li *ngFor="let item of filteredMenu">
-        <img *ngIf="item.image_url" class="dish-photo" [src]="item.image_url" [alt]="item.name" loading="lazy">
+        <img *ngIf="item.image_url" class="dish-photo" [src]="item.image_url" [alt]="i18n.catalogLabel(item.name)" loading="lazy">
         <span *ngIf="!item.image_url" class="dish-placeholder" aria-hidden="true">JF</span>
         <div>
-          <strong>{{ item.name }}</strong>
+          <strong>{{ i18n.catalogLabel(item.name) }}</strong>
           <span>{{ i18n.catalogLabel(item.category) }} · {{ item.price }} ₸</span>
-          <span *ngIf="item.description">{{ item.description }}</span>
+          <span *ngIf="item.description">{{ i18n.catalogLabel(item.description) }}</span>
           <span *ngIf="canManage" [class.closed]="!item.is_active">
             {{ item.is_active ? i18n.t('available') : i18n.t('unavailable') }}
           </span>
