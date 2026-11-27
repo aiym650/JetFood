@@ -62,4 +62,23 @@ describe('NotificationsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('On the way');
     expect(fixture.nativeElement.querySelector('a')?.getAttribute('href')).toBe('/orders?orderId=17');
   });
+
+  it('translates existing delivery notifications and controls into Kazakh', () => {
+    TestBed.inject(I18nService).setLanguage('kk');
+    httpTesting.expectOne('http://localhost:8000/api/auth/notifications/').flush([{
+      id: 18,
+      notification_type: 'order_status',
+      title: 'Delivery status updated',
+      message: 'Order ORD-18 status is now On the way.',
+      is_read: false,
+      link: '/orders?orderId=18',
+      created_at: '2026-11-09T10:00:00Z',
+    }]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Хабарландырулар');
+    expect(fixture.nativeElement.textContent).toContain('Жеткізу күйі жаңартылды');
+    expect(fixture.nativeElement.textContent).toContain('ORD-18 тапсырысының күйі: Жолда.');
+    expect(fixture.nativeElement.textContent).toContain('Барлығын оқылды деп белгілеу');
+  });
 });

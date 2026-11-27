@@ -10,7 +10,11 @@
   <p *ngIf="loading" class="notice" role="status">{{ i18n.t('loading') }}</p>
   <div *ngIf="!selectedRestaurant" class="catalog-filters">
     <input class="ui-input" type="search" [(ngModel)]="search" [attr.aria-label]="i18n.t('searchRestaurants')" [placeholder]="i18n.t('searchRestaurants')">
-    <select class="ui-input" [(ngModel)]="cuisine" [attr.aria-label]="i18n.t('cuisine')"><option value="">{{ i18n.t('allCuisines') }}</option><option *ngFor="let value of cuisines">{{ value }}</option></select>
+    <select class="ui-input" [(ngModel)]="cuisine" [attr.aria-label]="i18n.t('cuisine')"><option value="">{{ i18n.t('allCuisines') }}</option><option *ngFor="let value of cuisines" [value]="value">{{ i18n.catalogLabel(value) }}</option></select>
+    <select class="ui-input" [(ngModel)]="sortBy" [attr.aria-label]="i18n.t('sortBy')">
+      <option value="name">{{ i18n.t('sortName') }}</option>
+      <option value="rating">{{ i18n.t('sortRating') }}</option>
+    </select>
   </div>
   <p *ngIf="error" class="notice error" role="alert">{{ error }}</p>
   <div *ngIf="!selectedRestaurant && !loading && !error && restaurants.length === 0" class="notice">{{ i18n.t('noRestaurants') }}</div>
@@ -23,11 +27,19 @@
         <span class="restaurant-placeholder" *ngIf="!restaurant.image_url" aria-hidden="true">JF</span>
         <span class="restaurant-info">
           <strong>{{ i18n.catalogLabel(restaurant.name) }}</strong>
-          <span>{{ restaurant.cuisine }}</span>
+          <span>{{ i18n.catalogLabel(restaurant.cuisine ?? '') }}</span>
+          <span class="restaurant-rating" *ngIf="restaurant.reviews_count && restaurant.avg_rating !== undefined && restaurant.avg_rating !== null">
+            <span aria-hidden="true">★</span> {{ restaurant.avg_rating | number:'1.1-1' }}
+            <small>({{ restaurant.reviews_count }})</small>
+          </span>
           <span *ngIf="restaurant.demo_key">{{ i18n.t('demoNotice') }}</span>
-          <span>{{ i18n.catalogLabel(restaurant.address) }}</span>
-          <span>{{ restaurant.opening_time.slice(0, 5) }}–{{ restaurant.closing_time.slice(0, 5) }}</span>
-          <span>{{ i18n.catalogLabel(restaurant.description) }}</span>
+          <span *ngIf="restaurant.branches?.length">{{ restaurant.branches?.length }} {{ i18n.t('locations') }}</span>
+          <span *ngFor="let branch of restaurant.branches?.slice(0, 2)">📍 {{ i18n.catalogLabel(branch.address) }}</span>
+          <span *ngIf="!restaurant.branches?.length">{{ i18n.catalogLabel(restaurant.address) }}</span>
+          <span *ngIf="restaurant.opening_time && restaurant.closing_time">
+            {{ restaurant.opening_time.slice(0, 5) }}–{{ restaurant.closing_time.slice(0, 5) }}
+          </span>
+          <span *ngIf="restaurant.description">{{ i18n.catalogLabel(restaurant.description) }}</span>
           <span class="view-menu-label">{{ i18n.t('viewMenu') }}</span>
         </span>
       </button>
@@ -48,7 +60,22 @@
         <p class="eyebrow">{{ i18n.t('menu') }}</p>
         <h2>{{ i18n.catalogLabel(selectedRestaurant.name) }}</h2>
         <p *ngIf="selectedRestaurant.demo_key">{{ i18n.t('demoNotice') }}</p>
-        <p>{{ i18n.catalogLabel(selectedRestaurant.description) }}</p>
+        <p *ngIf="selectedRestaurant.description">{{ i18n.catalogLabel(selectedRestaurant.description) }}</p>
+        <div class="branch-list" *ngIf="selectedRestaurant.branches?.length">
+          <article class="branch-card" *ngFor="let branch of selectedRestaurant.branches">
+            <strong>{{ i18n.catalogLabel(branch.address) }}</strong>
+            <span *ngIf="branch.opening_time && branch.closing_time">
+              {{ branch.opening_time.slice(0, 5) }}–{{ branch.closing_time.slice(0, 5) }}
+            </span>
+            <span *ngIf="branch.delivery_available === true">{{ i18n.t('deliveryAvailable') }}</span>
+            <span *ngIf="branch.delivery_available === false">{{ i18n.t('deliveryUnavailable') }}</span>
+            <span *ngIf="!branch.is_active" class="closed">{{ i18n.t('branchUnavailable') }}</span>
+            <span *ngIf="branch.delivery_info">{{ i18n.catalogLabel(branch.delivery_info) }}</span>
+            <a *ngIf="branch.source_url" [href]="branch.source_url" target="_blank" rel="noopener noreferrer">
+              {{ i18n.t('branchSource') }}
+            </a>
+          </article>
+        </div>
       </div>
       <span class="availability" [class.closed]="!selectedRestaurant.is_active">
         {{ selectedRestaurant.is_active ? i18n.t('available') : i18n.t('unavailable') }}
@@ -56,16 +83,21 @@
     </div>
     <p *ngIf="menuLoading" class="notice" role="status">{{ i18n.t('loading') }}</p>
     <p *ngIf="menuError" class="notice error" role="alert">{{ menuError }}</p>
-    <p *ngIf="!menuLoading && !menuError && menuItems.length === 0" class="notice">{{ i18n.t('restaurantMenuEmpty') }}</p>
-    <select class="ui-input menu-category-select" *ngIf="menuItems.length" [(ngModel)]="category" [attr.aria-label]="i18n.t('category')"><option value="">{{ i18n.t('allCategories') }}</option><option *ngFor="let value of categories">{{ value }}</option></select>
+    <p *ngIf="!menuLoading && !menuError && menuItems.length === 0" class="notice">
+      {{ selectedRestaurant.catalog_key ? i18n.t('menuNotVerified') : i18n.t('restaurantMenuEmpty') }}
+    </p>
+    <p *ngIf="selectedRestaurant.catalog_key && menuItems.length" class="menu-price-disclaimer">
+      {{ i18n.t('menuPriceDisclaimer') }}
+    </p>
+    <select class="ui-input menu-category-select" *ngIf="menuItems.length" [(ngModel)]="category" [attr.aria-label]="i18n.t('category')"><option value="">{{ i18n.t('allCategories') }}</option><option *ngFor="let value of categories" [value]="value">{{ i18n.catalogLabel(value) }}</option></select>
     <ul class="menu-list" *ngIf="menuItems.length">
       <li *ngFor="let item of filteredMenu">
-        <img *ngIf="item.image_url" class="dish-photo" [src]="item.image_url" [alt]="item.name" loading="lazy">
+        <img *ngIf="item.image_url" class="dish-photo" [src]="item.image_url" [alt]="i18n.catalogLabel(item.name)" loading="lazy">
         <span *ngIf="!item.image_url" class="dish-placeholder" aria-hidden="true">JF</span>
         <div>
-          <strong>{{ item.name }}</strong>
-          <span>{{ item.category }} · {{ item.price }} ₸</span>
-          <span *ngIf="item.description">{{ item.description }}</span>
+          <strong>{{ i18n.catalogLabel(item.name) }}</strong>
+          <span>{{ i18n.catalogLabel(item.category) }} · {{ item.price }} ₸</span>
+          <span *ngIf="item.description">{{ i18n.catalogLabel(item.description) }}</span>
           <span *ngIf="canManage" [class.closed]="!item.is_active">
             {{ item.is_active ? i18n.t('available') : i18n.t('unavailable') }}
           </span>
@@ -80,23 +112,23 @@
   </section>
 
   <section class="management-card" *ngIf="selectedRestaurant">
-    <h2>Reviews</h2>
+    <h2>{{ i18n.t('reviews') }}</h2>
     <p *ngIf="reviewsLoading" role="status">{{ i18n.t('loading') }}</p>
     <div *ngIf="reviewRating">
       <strong>{{ reviewRating.average | number:'1.1-2' }} / 5</strong>
-      <span> · {{ reviewRating.reviews_count }} reviews</span>
+      <span> · {{ reviewRating.reviews_count }} {{ i18n.t('reviewsCount') }}</span>
     </div>
-    <p *ngIf="!reviewsLoading && reviews.length === 0" class="notice">No published reviews yet.</p>
+    <p *ngIf="!reviewsLoading && reviews.length === 0" class="notice">{{ i18n.t('noPublishedReviews') }}</p>
     <article *ngFor="let review of reviews" class="review-card">
       <strong>{{ review.user_name }} · {{ review.overall_rating }} / 5</strong>
       <p>{{ review.comment }}</p>
       <div *ngIf="review.photos?.length">
-        <img *ngFor="let photo of review.photos" [src]="photo.url" alt="Review photo" style="max-width:120px;max-height:120px;margin-right:8px">
+        <img *ngFor="let photo of review.photos" [src]="photo.url" [alt]="i18n.t('reviewPhotoAlt')" style="max-width:120px;max-height:120px;margin-right:8px">
       </div>
-      <p *ngIf="review.reply"><strong>Restaurant reply:</strong> {{ review.reply.text }}</p>
+      <p *ngIf="review.reply"><strong>{{ i18n.t('restaurantReply') }}</strong> {{ review.reply.text }}</p>
       <form *ngIf="canManage && !review.reply" (ngSubmit)="submitReply(review.id)">
-        <input name="replyText" [(ngModel)]="replyText[review.id]" maxlength="1000" placeholder="Reply to this review">
-        <button type="submit">Reply</button>
+        <input name="replyText" [(ngModel)]="replyText[review.id]" maxlength="1000" [placeholder]="i18n.t('replyToReview')">
+        <button type="submit">{{ i18n.t('reply') }}</button>
       </form>
     </article>
   </section>
@@ -111,8 +143,8 @@
       <label>{{ i18n.t('phone') }}<input name="restaurantPhone" [(ngModel)]="restaurantForm.phone"></label>
       <label>{{ i18n.t('imageUrl') }}<input name="restaurantImage" type="text" [(ngModel)]="restaurantForm.image_url"></label>
       <div class="time-fields">
-        <label>{{ i18n.t('opensAt') }}<input name="opensAt" type="time" [(ngModel)]="restaurantForm.opening_time" required></label>
-        <label>{{ i18n.t('closesAt') }}<input name="closesAt" type="time" [(ngModel)]="restaurantForm.closing_time" required></label>
+        <label>{{ i18n.t('opensAt') }}<input name="opensAt" type="time" [(ngModel)]="restaurantForm.opening_time"></label>
+        <label>{{ i18n.t('closesAt') }}<input name="closesAt" type="time" [(ngModel)]="restaurantForm.closing_time"></label>
       </div>
       <fieldset>
         <legend>{{ i18n.t('workingDays') }}</legend>

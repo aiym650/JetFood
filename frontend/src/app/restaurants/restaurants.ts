@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FoodItem, FoodItemInput, Menu } from '../menu';
-import { Restaurant, RestaurantInput, Restaurants } from '../restaurants';
+import { Restaurant, RestaurantInput, RestaurantSort, Restaurants } from '../restaurants';
 import { Auth } from '../auth';
 import { I18nService } from '../i18n/i18n.service';
 import { HttpClient } from '@angular/common/http';
@@ -17,12 +17,34 @@ import { HttpClient } from '@angular/common/http';
 export class RestaurantsPage implements OnInit {
   search = '';
   cuisine = '';
+  sortBy: RestaurantSort = 'name';
   category = '';
   get cuisines(): string[] { return [...new Set(this.restaurants.map(r => r.cuisine ?? '').filter(Boolean))]; }
   get filteredRestaurants(): Restaurant[] {
     const term = this.search.trim().toLocaleLowerCase();
-    return this.restaurants.filter(r => (!this.cuisine || r.cuisine === this.cuisine)
-      && [r.name, r.description, r.cuisine].join(' ').toLocaleLowerCase().includes(term));
+    const filtered = this.restaurants.filter(r => (!this.cuisine || r.cuisine === this.cuisine)
+      && [
+        r.name,
+        this.i18n.catalogLabel(r.name),
+        r.description,
+        this.i18n.catalogLabel(r.description),
+        r.cuisine,
+        this.i18n.catalogLabel(r.cuisine ?? ''),
+        r.address,
+        this.i18n.catalogLabel(r.address),
+        ...(r.branches ?? []).map(branch => branch.address),
+        ...(r.branches ?? []).map(branch => this.i18n.catalogLabel(branch.address)),
+      ]
+        .join(' ').toLocaleLowerCase().includes(term));
+    const nameOrder = (left: Restaurant, right: Restaurant) => left.name.localeCompare(right.name, this.i18n.getCurrentLang());
+    if (this.sortBy === 'rating') {
+      return filtered.sort((left, right) => {
+        const leftRating = left.reviews_count ? Number(left.avg_rating ?? 0) : -1;
+        const rightRating = right.reviews_count ? Number(right.avg_rating ?? 0) : -1;
+        return rightRating - leftRating || nameOrder(left, right);
+      });
+    }
+    return filtered.sort(nameOrder);
   }
   get categories(): string[] { return [...new Set(this.menuItems.map(i => i.category))]; }
   get filteredMenu(): FoodItem[] { return this.menuItems.filter(i => !this.category || i.category === this.category); }
@@ -184,15 +206,26 @@ export class RestaurantsPage implements OnInit {
 
   saveRestaurant(): void {
     this.restaurantFormError = '';
-    if (this.restaurantForm.working_days.length === 0) {
+    const openingTime = (this.restaurantForm.opening_time ?? '').trim();
+    const closingTime = (this.restaurantForm.closing_time ?? '').trim();
+    if (Boolean(openingTime) !== Boolean(closingTime)) {
+      this.restaurantFormError = this.i18n.t('scheduleRequiresBothTimes');
+      return;
+    }
+    if (openingTime && this.restaurantForm.working_days.length === 0) {
       this.restaurantFormError = this.i18n.t('chooseWorkingDay');
       return;
     }
 
     this.saving = true;
+    const input: RestaurantInput = {
+      ...this.restaurantForm,
+      opening_time: openingTime || null,
+      closing_time: closingTime || null,
+    };
     const request = this.editingRestaurantId
-      ? this.restaurantsService.updateRestaurant(this.editingRestaurantId, this.restaurantForm)
-      : this.restaurantsService.createRestaurant(this.restaurantForm);
+      ? this.restaurantsService.updateRestaurant(this.editingRestaurantId, input)
+      : this.restaurantsService.createRestaurant(input);
     request.subscribe({
       next: (restaurant) => {
         this.resetRestaurantForm();
@@ -217,8 +250,8 @@ export class RestaurantsPage implements OnInit {
       address: restaurant.address,
       phone: restaurant.phone,
       image_url: restaurant.image_url,
-      opening_time: restaurant.opening_time.slice(0, 5),
-      closing_time: restaurant.closing_time.slice(0, 5),
+      opening_time: restaurant.opening_time?.slice(0, 5) ?? '',
+      closing_time: restaurant.closing_time?.slice(0, 5) ?? '',
       working_days: [...restaurant.working_days],
       is_active: restaurant.is_active,
     };

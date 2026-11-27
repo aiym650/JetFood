@@ -110,7 +110,7 @@ orders/{models,serializers,views,admin,promotions,urls}.py;
 support/{models,serializers,views,assistant,admin,urls}.py;
 users/serializers.py, users/constraints.py, backend/settings.py,
 backend/image_references.py; .env.example.
-Команды: restaurants/management/commands/seed_demo_catalog.py,
+Команды: restaurants/management/commands/seed_restaurant_catalog.py,
 users/management/commands/repair_merge_history.py.
 Frontend: dashboard, restaurants, support-chat, auth/register, shared/sidebar,
 сервисы orders.ts, restaurants.ts, support.ts; i18n; language-switcher;
@@ -120,7 +120,7 @@ support/test_language_permissions.py, users/test_registration_contacts.py,
 users/test_migration_repair.py, shared/sidebar/sidebar.spec.ts.
 Ресурсы: frontend/public/assets/demo-food/fries.jpg и SOURCES.md.
 
-НОВЫЕ МИГРАЦИИ (8)
+МИГРАЦИИ, ДОБАВЛЕННЫЕ ПРИ ПРЕДЫДУЩЕМ РЕДИЗАЙНЕ (8)
 
 restaurants/0005_restaurant_cuisine_restaurant_demo_key_menucategory.py
 restaurants/0006_alter_restaurant_image_url.py
@@ -131,42 +131,38 @@ support/0002_faq_supportcase_language_and_more.py
 support/0003_initial_faq.py
 support/0004_supportcase_ai_busy_until.py
 
+МИГРАЦИИ КАТАЛОГА
+
+restaurants/0007_restaurant_catalog_key_restaurant_menu_source_url_and_more.py
+orders/0015_menuitem_catalog_key_menuitem_source_url.py
+
 ЗАПУСК И МИГРАЦИИ
 
 На согласованной базе, из корня JetFood:
     python manage.py migrate
-    python manage.py seed_demo_catalog
+    python manage.py seed_restaurant_catalog
 
-Команда наполнения создаёт 5 вымышленных ресторанов и 50 блюд, отмеченных demo_key.
-Все цены демонстрационные, не являются актуальными предложениями реальных мест.
-Повтор не перезаписывает существующие записи, включая вручную изменённые цены.
-Автоматически при старте/в production команда не запускается. При DEBUG=False
-требует явного --allow-production; используйте это только в демонстрационной среде.
+Команда seed_restaurant_catalog создаёт или обновляет девять подтверждённых брендов
+Алматы, 27 адресов филиалов и 21 позицию из опубликованных меню. Блюда добавляются только из опубликованных меню:
+для брендов без проверенного меню товары не создаются. Неопубликованные часы и
+доступность доставки остаются неизвестными, а не заполняются предположениями.
+Опубликованные цены могут измениться после проверки источника.
 
-Исходная локальная db.sqlite3 имеет несогласованную ИСТОРИЮ миграций:
-применена orders.0010, но не отмечен orders.0009_merge_20261113_1340.
-Исходную базу и её историю в ходе работы не изменяли. Обычный migrate на ней
-пока остановится с InconsistentMigrationHistory. Для неё:
+Старые демонстрационные рестораны и их блюда переводятся в неактивное состояние
+миграцией, а не удаляются: это сохраняет связи исторических заказов и промокодов.
+Повтор seed-команды не создаёт дубликаты. Автоматически при старте команда не
+запускается; при DEBUG=False требует явного --allow-production.
 
-1. Остановить процессы, пишущие в базу, и сделать резервную копию SQLite.
-2. Выполнить read-only аудит:
-       python manage.py repair_merge_history
-3. После проверки результата и наличия копии:
-       python manage.py repair_merge_history --apply
-       python manage.py migrate
-       python manage.py seed_demo_catalog
-
-repair_merge_history допускает ТОЛЬКО отсутствующие merge-миграции с пустым
-operations, от которых зависят уже применённые миграции. Если отсутствует
-миграция с изменением схемы/данных, команда откажется. --apply добавляет только
-записи в django_migrations, не удаляя записи приложения и не меняя схему.
-Аудит не требует ручного редактирования SQLite и не делает fake произвольных миграций.
+Для локальной db.sqlite3 перед миграцией остановить процессы записи и создать
+резервную копию. Read-only аудит repair_merge_history для этой базы не выявил
+отсутствующих merge-миграций. На другой базе сначала выполните этот аудит и
+следуйте его результату; не добавляйте записи django_migrations вручную.
 
 Для независимого демо без изменения исходной базы (PowerShell):
     New-Item -ItemType Directory -Force .jetfood-qa
     $env:JETFOOD_DATABASE_NAME="$PWD\.jetfood-qa\demo.sqlite3"
     python manage.py migrate
-    python manage.py seed_demo_catalog
+    python manage.py seed_restaurant_catalog
     python manage.py runserver
 В другом терминале:
     cd frontend
@@ -246,13 +242,12 @@ operations, от которых зависят уже применённые м�
 
 ФОТОГРАФИИ И ОГРАНИЧЕНИЯ
 
-Добавлена одна реальная локальная фотография картофеля фри StockSnap (CC0):
+Добавлена одна локальная фотография картофеля фри StockSnap (CC0), используемая
+как общая иллюстрация hero-секции, а не изображение конкретного блюда или ресторана:
 https://commons.wikimedia.org/wiki/File:French_Fries.JPG
-Источник, лицензия и статус попытки загрузки пиццы записаны в
-frontend/public/assets/demo-food/SOURCES.md. Wikimedia отклонила вторую загрузку
-HTTP 429. Для остальных 49 demo-блюд и фасадов ресторанов нужны соответствующие
-разрешённые фотографии; сейчас используются нейтральные заглушки. Ни сгенерированные,
-ни несоответствующие изображения не подставлены.
+Источник и лицензия записаны в frontend/public/assets/demo-food/SOURCES.md.
+Для ресторанов и блюд без разрешённых соответствующих фотографий используются
+нейтральные заглушки; чужие или несоответствующие изображения не подставляются.
 
 QA-базы, результаты проб AI и тестовый пользователь находятся только в
 игнорируемой .jetfood-qa. Исходная db.sqlite3 сохранена. Серверы, запущенные

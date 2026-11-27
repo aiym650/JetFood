@@ -4,11 +4,12 @@ from decimal import Decimal
 from threading import Barrier
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
+from django.core.cache import cache
 from django.db import close_old_connections
 from django.test import TestCase, TransactionTestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
-from restaurants.models import Restaurant, MenuCategory
+from restaurants.models import Restaurant, RestaurantBranch, MenuCategory
 from .models import MenuItem, Order, PromoCode, PromoRedemption
 
 User = get_user_model()
@@ -24,6 +25,7 @@ def setup_catalog():
 @override_settings(ORDER_DELIVERY_FEE='500.00')
 class PromotionTests(TestCase):
     def setUp(self):
+        cache.clear()
         self.user, self.restaurant, self.dish = setup_catalog()
         self.client = APIClient()
         self.client.force_authenticate(self.user)
@@ -133,7 +135,10 @@ class PromotionTests(TestCase):
         self.promo.save()
         first = self.create_order()
         order_id = first.data['id']
-        self.assertEqual(self.client.post(f'/api/orders/{order_id}/status/', {'status': 'cancelled'}).status_code, 200)
+        self.assertEqual(self.client.post(
+            f'/api/orders/{order_id}/status/',
+            {'status': 'cancelled', 'reason': 'I no longer need this order.'},
+        ).status_code, 200)
         self.assertEqual(self.create_order(key='two').status_code, 400)
         other = User.objects.create_user(username='intruder')
         self.client.force_authenticate(other)
@@ -153,19 +158,39 @@ class PromotionTests(TestCase):
         response = self.client.patch(f'/api/orders/menu/{self.dish.pk}/', {'menu_category': category.pk}, format='json')
         self.assertEqual(response.status_code, 400)
 
-    def test_demo_seed_is_idempotent_and_preserves_edits(self):
-        call_command('seed_demo_catalog', verbosity=0, allow_production=True)
-        self.assertEqual(Restaurant.objects.filter(demo_key__isnull=False).count(), 5)
-        self.assertEqual(MenuItem.objects.filter(demo_key__isnull=False).count(), 50)
-        item = MenuItem.objects.filter(demo_key__isnull=False).first()
-        item.price = Decimal('9876')
-        item.name = 'Manually edited'
-        item.save()
-        call_command('seed_demo_catalog', verbosity=0, allow_production=True)
-        item.refresh_from_db()
-        self.assertEqual(item.price, Decimal('9876'))
-        self.assertEqual(item.name, 'Manually edited')
-        self.assertEqual(MenuItem.objects.filter(demo_key__isnull=False).count(), 50)
+    def test_verified_catalog_seed_is_idempotent(self):
+        call_command('seed_restaurant_catalog', verbosity=0, allow_production=True)
+        restaurants = Restaurant.objects.filter(catalog_key__startswith='almaty-')
+        branches = RestaurantBranch.objects.filter(restaurant__catalog_key__startswith='almaty-')
+        dishes = MenuItem.objects.filter(catalog_key__startswith='almaty-')
+        self.assertEqual(restaurants.count(), 9)
+        self.assertEqual(branches.count(), 27)
+        self.assertEqual(dishes.count(), 21)
+        self.assertEqual(
+            set(restaurants.values_list('name', flat=True)),
+            {
+                'Doner na Abaya', 'Doner na Satpaeva', 'Popeyes', 'Bahandi Burger',
+                'Okadzaki', 'Samurai', 'Kausar', 'Salam Bro', "Wendy's",
+            },
+        )
+        self.assertFalse(dishes.filter(restaurant__name='Popeyes').exists())
+        bahandi = restaurants.get(name='Bahandi Burger')
+        bahandi_branch = RestaurantBranch.objects.get(
+            restaurant=bahandi,
+            catalog_key='almaty-bahandi-burger-abay-27',
+        )
+        self.assertTrue(bahandi_branch.delivery_available)
+        self.assertEqual(str(bahandi_branch.opening_time), '11:00:00')
+        self.assertEqual(str(bahandi_branch.closing_time), '23:45:00')
+        self.assertEqual(
+            bahandi.menu_source_url,
+            'https://takeaway-web.choco.kz/filials/6219',
+        )
+
+        call_command('seed_restaurant_catalog', verbosity=0, allow_production=True)
+        self.assertEqual(restaurants.count(), 9)
+        self.assertEqual(branches.count(), 27)
+        self.assertEqual(dishes.count(), 21)
 
 
 class ConcurrentPromotionTests(TransactionTestCase):

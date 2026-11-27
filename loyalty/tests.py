@@ -2,6 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
 import time
 from django.db import close_old_connections, OperationalError, transaction
+from django.core.cache import cache
 from django.test import TestCase, TransactionTestCase, override_settings
 from rest_framework.test import APIClient
 from orders.models import MenuItem, Order
@@ -13,6 +14,7 @@ from .services import allocate, apply_refund, journal, lock_wallet, synchronize
 
 class CashbackTests(TestCase):
     def setUp(self):
+        cache.clear()
         self.user = User.objects.create_user(username='buyer', password='safe-password')
         self.other = User.objects.create_user(username='another', password='safe-password')
         self.restaurant = Restaurant.objects.create(name='Kitchen', address='Test', opening_time='09:00', closing_time='22:00')

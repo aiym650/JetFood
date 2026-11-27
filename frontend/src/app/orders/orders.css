@@ -375,3 +375,189 @@
     min-width: 560px;
   }
 }
+
+.orders-container {
+  min-height: calc(100vh - 76px);
+  border-radius: 0;
+  background: #fff9f2;
+  color: #242424;
+}
+
+.orders-heading h1 {
+  color: #242424;
+  font-weight: 780;
+}
+
+.orders-heading .page-eyebrow,
+.order-details .details-heading > span {
+  color: #d85631;
+}
+
+.retry-button,
+.checkout-button,
+.edit-actions .checkout-button {
+  border-radius: 12px;
+  background: #ff6b35;
+  box-shadow: 0 5px 13px rgba(255, 107, 53, 0.15);
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.retry-button:hover:not(:disabled),
+.checkout-button:hover:not(:disabled),
+.edit-actions .checkout-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #e85a28;
+}
+
+.orders-table {
+  border: 1px solid #f0e5dc;
+  border-radius: 18px;
+  box-shadow: 0 8px 26px rgba(71, 48, 34, 0.055);
+}
+
+.orders-table thead {
+  background: #fff4e8;
+  color: #625950;
+}
+
+.orders-table th,
+.orders-table td {
+  border-bottom-color: #f3ece6;
+}
+
+.orders-table tbody tr:hover {
+  background: #fffaf5;
+}
+
+.order-status.status-confirmed,
+.order-status.status-preparing,
+.order-status.status-ready_for_pickup {
+  background: #fff0df;
+  color: #a45b25;
+}
+
+.order-status.status-delivering {
+  background: #fff5d8;
+  color: #85610e;
+}
+
+.order-progress li.completed,
+.order-progress li.current {
+  color: #25834e;
+}
+
+.order-progress li.completed .progress-marker,
+.order-progress li.current .progress-marker {
+  border-color: #35a86b;
+  background: #35a86b;
+}
+
+.details-button {
+  border-color: #f1dfd3;
+  border-radius: 10px;
+  color: #c94f2d;
+}
+
+.details-button:hover {
+  background: #fff2eb;
+}
+
+.details-row > td {
+  background: #fffaf5;
+}
+
+.order-details {
+  border-bottom-color: #f0e5dc;
+}
+
+.delivery-route,
+.delivery-confirmation,
+.order-edit {
+  border-color: #f0e5dc;
+  border-radius: 15px;
+  background: #fff;
+}
+
+.delivery-confirmed,
+.edit-success {
+  color: #25834e;
+}
+
+@media (max-width: 700px) {
+  .orders-container {
+    padding: 22px 14px;
+  }
+
+  .orders-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .retry-button {
+    width: 100%;
+  }
+}
+
+.refund-requests-panel, .refund-request-card, .request-status-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #f0e5dc;
+  border-radius: 14px;
+  background: #fff;
+}
+.refund-requests-panel { margin-bottom: 24px; }
+.request-card-heading { display: flex; justify-content: space-between; gap: 12px; }
+.request-card-heading > div { display: grid; gap: 4px; }
+.request-muted, .request-paid { color: #737b85; font-size: 13px; }
+.request-decision-fields {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.7fr) minmax(200px, 1.3fr);
+  gap: 12px;
+}
+.request-decision-fields label, .dialog-field {
+  display: grid;
+  gap: 6px;
+  color: #625950;
+  font-size: 13px;
+  font-weight: 600;
+}
+.request-decision-fields input, .request-decision-fields textarea, .dialog-field textarea, .dialog-field select {
+  width: 100%;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #eadfd6;
+  border-radius: 9px;
+  background: #fff;
+  color: #242424;
+  font: inherit;
+}
+.request-decision-fields textarea, .dialog-field textarea { min-height: 70px; resize: vertical; }
+.request-actions, .dialog-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.action-dialog-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(36, 36, 36, 0.48);
+}
+.action-dialog {
+  width: min(100%, 500px);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 22px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 20px 70px rgba(25, 20, 17, 0.24);
+}
+.action-dialog h2 { margin: 0; font-size: 21px; }
+.action-dialog form { display: grid; gap: 15px; }
+.dialog-actions .checkout-button, .dialog-actions .details-button { min-width: 130px; padding: 10px 14px; }
+.dialog-actions button:disabled { cursor: wait; opacity: 0.65; }
+
+@media (max-width: 600px) {
+  .request-decision-fields { grid-template-columns: 1fr; }
+  .dialog-actions > button { flex: 1 1 100%; }
+}

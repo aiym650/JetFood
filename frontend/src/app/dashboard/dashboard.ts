@@ -8,7 +8,7 @@ import { Auth } from '../auth';
 import { CartQuote, Orders } from '../orders';
 import { PaymentRecord, Payments } from '../payments';
 import { FoodItem, Menu } from '../menu';
-import { Restaurant, Restaurants } from '../restaurants';
+import { Restaurant, RestaurantSort, Restaurants } from '../restaurants';
 import { I18nService } from '../i18n/i18n.service';
 import { Addresses, DeliveryAddress } from '../addresses';
 
@@ -38,6 +38,7 @@ export class Dashboard implements OnInit {
   private quoteVersion = 0;
   currentUser: any = null;
   role = '';
+  readonly categoryIcons = ['🍕', '🍔', '🍣', '🍜', '🥗', '🍰', '🥤'];
   cart: CartLine[] = [];
   cartOpen = false;
   searchTerm = '';
@@ -45,7 +46,66 @@ export class Dashboard implements OnInit {
   maxPrice: number | null = null;
   deliveryAddress = '';
   paymentMethod: 'online' | 'cash' = 'cash';
+  cardNumber = '';
+  cardExpiry = '';
+  cardCvv = '';
+  cardholderName = '';
   cashbackAmount = 0;
+
+  formatCardNumber(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, 16);
+    this.cardNumber = digits.replace(/(.{4})(?=.)/g, '$1 ');
+  }
+
+  formatCardExpiry(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, 4);
+    this.cardExpiry = digits.length > 2
+      ? `${digits.slice(0, 2)}\/${digits.slice(2)}`
+      : digits;
+  }
+
+  formatCardCvv(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.cardCvv = input.value.replace(/\D/g, '').slice(0, 3);
+  }
+
+  formatCardholderName(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.cardholderName = input.value
+      .replace(/[^A-Za-z -]/g, '')
+      .replace(/\s+/g, ' ')
+      .toUpperCase();
+  }
+
+  private validCardForm(): boolean {
+    if (this.cardNumber.replace(/\D/g, '').length !== 16) {
+      this.checkoutError = this.i18n.t('invalidCardNumber');
+      return false;
+    }
+    if (!/^(0[1-9]|1[0-2])\/[0-9]{2}$/.test(this.cardExpiry)) {
+      this.checkoutError = this.i18n.t('invalidCardExpiry');
+      return false;
+    }
+    const [monthText, yearText] = this.cardExpiry.split('/');
+    const month = Number(monthText);
+    const year = 2000 + Number(yearText);
+    const today = new Date();
+    if (year < today.getFullYear() || (year === today.getFullYear() && month < today.getMonth() + 1)) {
+      this.checkoutError = this.i18n.t('expiredCard');
+      return false;
+    }
+    if (!/^[0-9]{3}$/.test(this.cardCvv)) {
+      this.checkoutError = this.i18n.t('invalidCvv');
+      return false;
+    }
+    if (!/^[A-Z]+(?:[ -][A-Z]+)*$/.test(this.cardholderName)) {
+      this.checkoutError = this.i18n.t('cardholderRequired');
+      return false;
+    }
+    return true;
+  }
   pendingPaymentOrderId: number | null = null;
   paymentError = '';
   paymentResult: PaymentRecord | null = null;
@@ -57,6 +117,8 @@ export class Dashboard implements OnInit {
   cartNotice = '';
   submittingOrder = false;
   restaurants: Restaurant[] = [];
+  selectedCuisine = '';
+  restaurantSort: RestaurantSort = 'name';
   selectedRestaurant: Restaurant | null = null;
   restaurantsLoading = false;
   restaurantsError = '';
@@ -130,6 +192,7 @@ export class Dashboard implements OnInit {
   selectRestaurant(restaurant: Restaurant): void {
     this.selectedRestaurant = restaurant;
     this.selectedCategory = this.i18n.t('allCategories');
+    this.selectedCuisine = '';
     this.searchTerm = '';
     this.minPrice = null;
     this.maxPrice = null;
@@ -138,25 +201,54 @@ export class Dashboard implements OnInit {
   backToRestaurants(): void {
     this.selectedRestaurant = null;
     this.selectedCategory = this.i18n.t('allCategories');
+    this.selectedCuisine = '';
     this.searchTerm = '';
   }
 
   get filteredRestaurants(): Restaurant[] {
     const query = this.searchTerm.trim().toLocaleLowerCase('ru');
-    return this.restaurants.filter(restaurant =>
-      !query || [
+    const filtered = this.restaurants.filter(restaurant =>
+      (!this.selectedCuisine || restaurant.cuisine === this.selectedCuisine)
+      && (!query || [
         restaurant.name,
         this.i18n.catalogLabel(restaurant.name),
         restaurant.cuisine ?? "",
+        this.i18n.catalogLabel(restaurant.cuisine ?? ""),
         restaurant.description,
         this.i18n.catalogLabel(restaurant.description),
         restaurant.address,
         this.i18n.catalogLabel(restaurant.address),
+        ...(restaurant.branches ?? []).flatMap(branch => [
+          branch.address,
+          this.i18n.catalogLabel(branch.address),
+        ]),
       ]
         .join(' ')
         .toLocaleLowerCase('ru')
-        .includes(query),
+        .includes(query)),
     );
+    return this.sortRestaurants(filtered);
+  }
+
+  private sortRestaurants(restaurants: Restaurant[]): Restaurant[] {
+    const nameOrder = (left: Restaurant, right: Restaurant) =>
+      left.name.localeCompare(right.name, this.i18n.getCurrentLang());
+    if (this.restaurantSort === 'rating') {
+      return restaurants.sort((left, right) => {
+        const leftRating = left.reviews_count ? Number(left.avg_rating ?? 0) : -1;
+        const rightRating = right.reviews_count ? Number(right.avg_rating ?? 0) : -1;
+        return rightRating - leftRating || nameOrder(left, right);
+      });
+    }
+    return restaurants.sort(nameOrder);
+  }
+
+  get cuisineCategories(): string[] {
+    return [...new Set(
+      this.restaurants
+        .map(restaurant => restaurant.cuisine?.trim())
+        .filter((cuisine): cuisine is string => Boolean(cuisine)),
+    )].slice(0, this.categoryIcons.length);
   }
 
   restaurantItemCount(restaurant: Restaurant): number {
@@ -210,6 +302,7 @@ export class Dashboard implements OnInit {
   retryPayment(): void {
     this.paymentError = '';
     this.paymentResult = null;
+    if (this.pendingPaymentOrderId !== null) this.submitHostedPayment(this.pendingPaymentOrderId);
   }
 
   loadMenu(): void {

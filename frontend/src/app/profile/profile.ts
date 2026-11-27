@@ -25,11 +25,19 @@ interface AddressForm extends DeliveryAddressInput {}
 })
 export class ProfilePage implements OnInit {
   profile: ProfileInput = { username: '', email: '', phone: '', address: '' };
+  private savedProfile: ProfileInput = { username: '', email: '', phone: '', address: '' };
   addresses: DeliveryAddress[] = [];
   addressForm: AddressForm = this.emptyAddressForm();
   passwordForm = { old_password: '', new_password: '', confirm_password: '' };
   accountPassword = '';
   editingAddressId: number | null = null;
+  profileEditing = false;
+  addressFormOpen = false;
+  passwordFormOpen = false;
+  showCurrentPassword = false;
+  showNewPassword = false;
+  showConfirmPassword = false;
+  showDeletePassword = false;
   currentUser: AuthUser | null = null;
   profileLoading = false;
   addressesLoading = false;
@@ -75,6 +83,7 @@ export class ProfilePage implements OnInit {
           phone: user.phone ?? '',
           address: user.address ?? '',
         };
+        this.savedProfile = { ...this.profile };
         this.currentUser = user;
         this.auth.updateCurrentUser(user);
         this.profileLoading = false;
@@ -96,6 +105,8 @@ export class ProfilePage implements OnInit {
       next: (user) => {
         this.currentUser = user;
         this.auth.updateCurrentUser(user);
+        this.savedProfile = { ...this.profile };
+        this.profileEditing = false;
         this.profileMessage = this.i18n.t('profileSaved');
         this.profileSaving = false;
         this.changeDetector.markForCheck();
@@ -106,6 +117,19 @@ export class ProfilePage implements OnInit {
         this.changeDetector.markForCheck();
       },
     });
+  }
+
+  startProfileEdit(): void {
+    this.profileEditing = true;
+    this.profileError = '';
+    this.profileMessage = '';
+  }
+
+  cancelProfileEdit(): void {
+    this.profile = { ...this.savedProfile };
+    this.profileEditing = false;
+    this.profileError = '';
+    this.profileMessage = '';
   }
 
   loadAddresses(): void {
@@ -150,6 +174,9 @@ export class ProfilePage implements OnInit {
 
   editAddress(address: DeliveryAddress): void {
     this.editingAddressId = address.id;
+    this.addressFormOpen = true;
+    this.addressError = '';
+    this.addressMessage = '';
     this.addressForm = {
       label: address.label,
       recipient_name: address.recipient_name,
@@ -160,6 +187,13 @@ export class ProfilePage implements OnInit {
       instructions: address.instructions,
       is_default: address.is_default,
     };
+  }
+
+  openAddressForm(): void {
+    this.resetAddressForm();
+    this.addressError = '';
+    this.addressMessage = '';
+    this.addressFormOpen = true;
   }
 
   setDefaultAddress(address: DeliveryAddress): void {
@@ -210,6 +244,7 @@ export class ProfilePage implements OnInit {
     }).subscribe({
       next: () => {
         this.passwordForm = { old_password: '', new_password: '', confirm_password: '' };
+        this.passwordFormOpen = false;
         this.passwordMessage = this.i18n.t('passwordChanged');
         this.passwordSaving = false;
         this.changeDetector.markForCheck();
@@ -220,6 +255,16 @@ export class ProfilePage implements OnInit {
         this.changeDetector.markForCheck();
       },
     });
+  }
+
+  togglePasswordForm(): void {
+    this.passwordFormOpen = !this.passwordFormOpen;
+    this.passwordForm = { old_password: '', new_password: '', confirm_password: '' };
+    this.passwordError = '';
+    this.passwordMessage = '';
+    this.showCurrentPassword = false;
+    this.showNewPassword = false;
+    this.showConfirmPassword = false;
   }
 
   deleteAccount(): void {
@@ -244,6 +289,8 @@ export class ProfilePage implements OnInit {
   resetAddressForm(): void {
     this.editingAddressId = null;
     this.addressForm = this.emptyAddressForm();
+    this.addressFormOpen = false;
+    this.addressError = '';
   }
 
   private emptyAddressForm(): AddressForm {

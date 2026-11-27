@@ -9,7 +9,7 @@ import { Auth } from '../auth';
 import { OrderRecord, Orders } from '../orders';
 import { CardPaymentResult, Payments } from '../payments';
 import { Menu } from '../menu';
-import { Restaurants } from '../restaurants';
+import { Restaurant, Restaurants } from '../restaurants';
 import { Addresses } from '../addresses';
 import { I18nService } from '../i18n/i18n.service';
 
@@ -54,14 +54,29 @@ describe('Dashboard', () => {
     expect(component).toBeTruthy();
   });
 
+  it('places the search bar below the hero with a visible gap', () => {
+    const hero = fixture.nativeElement.querySelector('.hero-section');
+    const topBar = fixture.nativeElement.querySelector('.top-bar');
+
+    expect(hero.compareDocumentPosition(topBar) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(topBar.classList.contains('after-hero')).toBe(true);
+
+    component.selectRestaurant(component.restaurants[0]);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.top-bar').classList.contains('after-hero')).toBe(false);
+  });
+
   it('switches dashboard labels between English and Russian', () => {
     component.i18n.setLanguage('en');
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Restaurants');
     expect(fixture.nativeElement.textContent).toContain('North Kitchen');
     expect(fixture.nativeElement.textContent).not.toContain('Margherita Pizza');
-    (fixture.nativeElement.querySelector('.restaurant-card') as HTMLButtonElement).click();
-    fixture.detectChanges(false);
+    const cards = fixture.nativeElement.querySelectorAll('.restaurant-card') as NodeListOf<HTMLButtonElement>;
+    const northKitchenCard = Array.from(cards).find(card => card.textContent?.includes('North Kitchen'));
+    expect(northKitchenCard).toBeDefined();
+    northKitchenCard?.click();
+    fixture.detectChanges();
     expect(component.selectedRestaurant?.name).toBe('North Kitchen');
     expect(fixture.nativeElement.textContent).toContain('Margherita Pizza');
     expect(fixture.nativeElement.textContent).toContain('Pizza');
@@ -69,6 +84,22 @@ describe('Dashboard', () => {
     component.i18n.setLanguage('ru');
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('К списку ресторанов');
+  });
+
+  it('shows Kazakh translations for the hero and delivery information', () => {
+    component.i18n.setLanguage('kk');
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent;
+
+    expect(text).toContain('Қазір тапсырыс беру');
+    expect(text).toContain('Бүгін');
+    expect(text).toContain('Жеткізу уақыты — 30 минуттан бастап');
+    expect(text).toContain('Қаладағы үздік асханалардан жаңа тағамдар');
+    expect(text).toContain('Жеткізу шамамен 30–45 минутта');
+    expect(text).not.toContain('Order now');
+    expect(text).not.toContain('Delivery from 30 minutes');
+    expect(text).not.toContain('Fresh dishes from the best kitchens in town');
+    expect(text).not.toContain('Delivery in about 30–45 minutes');
   });
 
   it('filters menu items by category and search term', () => {
@@ -83,6 +114,55 @@ describe('Dashboard', () => {
     expect(component.filteredItems).toEqual([]);
     component.searchTerm = 'рамен';
     expect(component.filteredItems.map(item => item.name)).toEqual(['Рамен с курицей']);
+  });
+
+  it('filters restaurants by cuisine and branch address and sorts verified ratings', () => {
+    const makeRestaurant = (
+      id: number,
+      name: string,
+      cuisine: string,
+      rating: number,
+      reviews: number,
+      branchAddress: string,
+    ): Restaurant => ({
+      id,
+      name,
+      cuisine,
+      description: '',
+      address: branchAddress,
+      phone: '',
+      image_url: '',
+      opening_time: null,
+      closing_time: null,
+      working_days: [],
+      is_active: true,
+      avg_rating: rating,
+      reviews_count: reviews,
+      branches: [{
+        id: id * 10,
+        address: branchAddress,
+        phone: '',
+        opening_time: null,
+        closing_time: null,
+        working_days: [],
+        is_active: true,
+        delivery_available: null,
+        delivery_info: '',
+        source_url: '',
+      }],
+    });
+    component.restaurants = [
+      makeRestaurant(1, 'A Burger', 'Бургеры', 4.2, 2, 'Satpaeva 10'),
+      makeRestaurant(2, 'B Burger', 'Бургеры', 4.8, 1, 'Abay 20'),
+      makeRestaurant(3, 'C Kitchen', 'Донер и шаурма', 5, 0, 'Satpaeva 30'),
+    ];
+    component.selectedCuisine = 'Бургеры';
+    component.searchTerm = 'satpaeva';
+    expect(component.filteredRestaurants.map(item => item.name)).toEqual(['A Burger']);
+
+    component.searchTerm = '';
+    component.restaurantSort = 'rating';
+    expect(component.filteredRestaurants.map(item => item.name)).toEqual(['B Burger', 'A Burger']);
   });
 
   it('filters menu items by minimum and maximum price', () => {

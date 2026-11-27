@@ -9,6 +9,73 @@
       {{ refreshing ? i18n.t('refreshing') : i18n.t('refreshStatuses') }}
     </button>
   </div>
+  <section *ngIf="canManageOrderFlow()" class="refund-requests-panel">
+    <div class="details-heading">
+      <div>
+        <p class="page-eyebrow">{{ i18n.t('orderRequestsEyebrow') }}</p>
+        <h2>{{ i18n.t('orderRequestsTitle') }}</h2>
+      </div>
+    </div>
+    <p *ngIf="refundRequestsLoading" class="request-muted" role="status">{{ i18n.t('orderRequestsLoading') }}</p>
+    <p *ngIf="refundRequestsError" class="error" role="alert">{{ refundRequestsError }}</p>
+    <p *ngIf="!refundRequestsLoading && !refundRequestsError && pendingRefundRequests().length === 0" class="request-muted">
+      {{ i18n.t('noPendingOrderRequests') }}
+    </p>
+    <article *ngFor="let request of pendingRefundRequests()" class="refund-request-card">
+      <div class="request-card-heading">
+        <div>
+          <strong>{{ request.order_number }}</strong>
+          <span>{{ request.customer_name }} · {{ requestTypeLabel(request.request_type) }}</span>
+        </div>
+        <span class="order-status status-pending">{{ requestStatusLabel(request.status) }}</span>
+      </div>
+      <p class="request-reason">{{ request.reason_text }}</p>
+      <p *ngIf="request.request_type === 'refund'" class="request-muted">
+        {{ i18n.t('refundReasonCategory') }}: {{ i18n.t('refundReasonCategories.' + request.reason_category) }}
+      </p>
+      <p class="request-paid">{{ i18n.t('amountPaid') }}: {{ request.amount_paid }} ₸</p>
+      <div class="request-decision-fields">
+        <label>
+          {{ i18n.t('refundAmount') }}
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            [value]="decisionAmount(request)"
+            (input)="setDecisionAmount(request.id, $any($event.target).value)"
+            [disabled]="decidingRequestId === request.id"
+          >
+        </label>
+        <label>
+          {{ i18n.t('decisionNote') }}
+          <textarea
+            [value]="decisionNotes[request.id] || ''"
+            (input)="setDecisionNote(request.id, $any($event.target).value)"
+            [disabled]="decidingRequestId === request.id"
+          ></textarea>
+        </label>
+      </div>
+      <p *ngIf="decisionErrors[request.id]" class="error" role="alert">{{ decisionErrors[request.id] }}</p>
+      <div class="request-actions">
+        <button
+          type="button"
+          class="checkout-button"
+          [disabled]="decidingRequestId === request.id"
+          (click)="decideRequest(request, 'approve')"
+        >
+          {{ decidingRequestId === request.id ? i18n.t('saving') : i18n.t('approveRequest') }}
+        </button>
+        <button
+          type="button"
+          class="cancel-button"
+          [disabled]="decidingRequestId === request.id"
+          (click)="decideRequest(request, 'reject')"
+        >
+          {{ i18n.t('rejectRequest') }}
+        </button>
+      </div>
+    </article>
+  </section>
   <div *ngIf="loading" class="loading" role="status">
     <span class="loading-spinner" aria-hidden="true"></span>
     {{ i18n.t('ordersLoading') }}
@@ -60,15 +127,15 @@
               {{ i18n.t('editOrder') }}
             </button>
             <button
-              *ngIf="order.status === 'pending' || order.status === 'confirmed'"
+              *ngIf="orderActionKind(order) as actionKind"
               type="button"
-              class="cancel-button"
-              [disabled]="cancellingOrderId === order.id"
-              (click)="cancelOrder(order.id)"
+              [class.cancel-button]="actionKind === 'instantCancel'"
+              [class.details-button]="actionKind !== 'instantCancel'"
+              (click)="beginOrderAction(order)"
             >
-              {{ cancellingOrderId === order.id ? i18n.t('cancelling') : i18n.t('cancelOrderButton') }}
+              {{ i18n.t(actionKind === 'instantCancel' ? 'cancelOrderButton' : actionKind === 'cancelRequest' ? 'requestCancellation' : 'requestRefund') }}
             </button>
-            <span *ngIf="order.status !== 'pending' && order.status !== 'confirmed'" class="no-order-action">—</span>
+            <span *ngIf="!orderActionKind(order)" class="no-order-action">—</span>
           </td>
         </tr>
         <tr class="details-row" [hidden]="expandedOrderId !== order.id">
@@ -93,6 +160,18 @@
               <p *ngIf="order.status === 'cancelled'" class="order-cancelled" role="status">
                 {{ i18n.t('orderCancelledNotice') }}
               </p>
+              <section *ngIf="currentUser?.role === 'customer' && latestRequest(order.id) as orderRequest" class="request-status-card">
+                <div class="request-card-heading">
+                  <strong>{{ requestTypeLabel(orderRequest.request_type) }}</strong>
+                  <span class="order-status" [ngClass]="'status-' + orderRequest.status">
+                    {{ requestStatusLabel(orderRequest.status) }}
+                  </span>
+                </div>
+                <p>{{ orderRequest.reason_text }}</p>
+                <p *ngIf="orderRequest.decision_note" class="decision-note">
+                  <strong>{{ i18n.t('decisionNote') }}:</strong> {{ orderRequest.decision_note }}
+                </p>
+              </section>
               <ul class="order-items">
                 <li *ngFor="let item of order.items">
                   <span>{{ i18n.catalogLabel(item.item_name) }} <span class="item-quantity">× {{ item.quantity }}</span></span>
@@ -317,4 +396,50 @@
       </ng-container>
     </tbody>
   </table>
+  <div *ngIf="orderAction as actionOrder" class="action-dialog-backdrop">
+    <section class="action-dialog" role="dialog" aria-modal="true" [attr.aria-labelledby]="'order-action-title-' + actionOrder.id">
+      <div class="details-heading">
+        <div>
+          <p class="page-eyebrow">{{ i18n.t('orderNumber') }} {{ actionOrder.order_number }}</p>
+          <h2 [id]="'order-action-title-' + actionOrder.id">
+            {{ i18n.t(orderActionType === 'refund' ? 'requestRefund' : orderActionKind(actionOrder) === 'instantCancel' ? 'cancelOrderButton' : 'requestCancellation') }}
+          </h2>
+        </div>
+        <button type="button" class="details-button" [attr.aria-label]="i18n.t('close')" (click)="closeOrderAction()">×</button>
+      </div>
+      <form (ngSubmit)="submitOrderAction()">
+        <label *ngIf="orderActionType === 'refund'" class="dialog-field">
+          {{ i18n.t('refundReasonCategory') }}
+          <select [(ngModel)]="orderActionCategory" name="reasonCategory">
+            <option value="spoiled_food">{{ i18n.t('refundReasonCategories.spoiled_food') }}</option>
+            <option value="missing_items">{{ i18n.t('refundReasonCategories.missing_items') }}</option>
+            <option value="wrong_order">{{ i18n.t('refundReasonCategories.wrong_order') }}</option>
+            <option value="other">{{ i18n.t('refundReasonCategories.other') }}</option>
+          </select>
+        </label>
+        <label class="dialog-field">
+          {{ i18n.t(orderActionType === 'refund' ? 'requestReasonText' : 'cancellationReason') }}
+          <textarea
+            [(ngModel)]="orderActionReason"
+            name="reasonText"
+            rows="4"
+            [maxlength]="orderActionKind(actionOrder) === 'instantCancel' ? 1000 : 5000"
+            required
+          ></textarea>
+        </label>
+        <p *ngIf="orderActionType !== 'refund' && orderActionKind(actionOrder) !== 'instantCancel'" class="request-muted">
+          {{ i18n.t('requestReasonMinLengthHint') }}
+        </p>
+        <p *ngIf="orderActionError" class="error" role="alert">{{ orderActionError }}</p>
+        <div class="dialog-actions">
+          <button type="submit" class="checkout-button" [disabled]="submittingOrderAction">
+            {{ submittingOrderAction ? i18n.t('saving') : i18n.t(orderActionKind(actionOrder) === 'instantCancel' ? 'confirmCancellation' : 'submitOrderRequest') }}
+          </button>
+          <button type="button" class="details-button" [disabled]="submittingOrderAction" (click)="closeOrderAction()">
+            {{ i18n.t('cancel') }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
 </div>

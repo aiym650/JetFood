@@ -137,3 +137,75 @@
   color: #a1a2a8;
   text-align: center;
 }
+
+.help-view,
+.history-view {
+  color: #292521;
+}
+
+.help-view h3,
+.history-view h3 {
+  color: #292521;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+}
+
+.muted {
+  color: #77716c;
+}
+
+.faq-card {
+  border-color: #f0e5dc;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.faq-card p {
+  color: #6f6760;
+}
+
+.human-support {
+  border: 1px solid #f0e5dc;
+  border-radius: 18px;
+  background: #fff6ed;
+}
+
+.human-support > p {
+  color: #77716c;
+}
+
+.primary-button {
+  background: #ff6b35;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: #e85a28;
+}
+
+.secondary-button {
+  border-color: #f0e5dc;
+  color: #5e554d;
+}
+
+.text-button {
+  color: #c94f2d;
+}
+
+.operator-notice {
+  background: #edf8ef;
+  color: #267345;
+}
+
+.history-item {
+  border-bottom-color: #f0e5dc;
+}
+
+.history-icon {
+  border-radius: 13px;
+  background: #fff0e7;
+  color: #d85631;
+}
+
+.empty-history {
+  color: #827a73;
+}

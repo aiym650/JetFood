@@ -17,14 +17,17 @@ class Restaurant(models.Model):
         related_name="owned_restaurants",
     )
     name = models.CharField(max_length=200, unique=True)
+    catalog_key = models.CharField(max_length=100, unique=True, null=True, blank=True, editable=False)
     description = models.TextField(blank=True)
     cuisine = models.CharField(max_length=100, blank=True)
     demo_key = models.CharField(max_length=80, unique=True, null=True, blank=True, editable=False)
     address = models.CharField(max_length=500)
     phone = models.CharField(max_length=20, blank=True)
     image_url = models.CharField(max_length=500, blank=True, validators=[validate_image_reference])
-    opening_time = models.TimeField()
-    closing_time = models.TimeField()
+    source_url = models.URLField(max_length=500, blank=True)
+    menu_source_url = models.URLField(max_length=500, blank=True)
+    opening_time = models.TimeField(null=True, blank=True)
+    closing_time = models.TimeField(null=True, blank=True)
     working_days = models.JSONField(default=default_working_days)
     is_active = models.BooleanField(default=True)
     avg_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0)
@@ -44,6 +47,37 @@ class Restaurant(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class RestaurantBranch(models.Model):
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='branches')
+    catalog_key = models.CharField(max_length=120, unique=True, null=True, blank=True, editable=False)
+    address = models.CharField(max_length=500)
+    phone = models.CharField(max_length=20, blank=True)
+    opening_time = models.TimeField(null=True, blank=True)
+    closing_time = models.TimeField(null=True, blank=True)
+    working_days = models.JSONField(default=list)
+    is_active = models.BooleanField(default=True)
+    delivery_available = models.BooleanField(null=True, blank=True)
+    delivery_info = models.CharField(max_length=500, blank=True)
+    source_url = models.URLField(max_length=500, blank=True)
+
+    class Meta:
+        ordering = ['address', 'id']
+        constraints = [
+            models.UniqueConstraint(fields=['restaurant', 'address'], name='restaurant_branch_address_unique'),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(opening_time__isnull=True)
+                    | models.Q(closing_time__isnull=True)
+                    | ~models.Q(opening_time=F('closing_time'))
+                ),
+                name='branch_opening_differs_from_closing',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.restaurant}: {self.address}'
 
 
 class MenuCategory(models.Model):

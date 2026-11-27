@@ -5,7 +5,7 @@ import { vi } from 'vitest';
 
 import { Auth } from '../auth';
 import { Menu } from '../menu';
-import { Restaurants } from '../restaurants';
+import { Restaurant, Restaurants } from '../restaurants';
 import { I18nService } from '../i18n/i18n.service';
 import { RestaurantsPage } from './restaurants';
 
@@ -33,6 +33,7 @@ describe('RestaurantsPage', () => {
               working_days: [0, 1, 2, 3, 4, 5, 6],
               is_active: true,
             }]),
+          createRestaurant: () => of({} as Restaurant),
           },
         },
         { provide: Menu, useValue: { getItems: () => of([{
@@ -81,6 +82,75 @@ describe('RestaurantsPage', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/restaurants', 1]);
   });
 
+  it('searches branch addresses and sorts restaurants with verified ratings first', () => {
+    const makeRestaurant = (
+      id: number,
+      name: string,
+      rating: number,
+      reviews: number,
+      branchAddress: string,
+    ): Restaurant => ({
+      id,
+      name,
+      cuisine: 'Бургеры',
+      description: '',
+      address: branchAddress,
+      phone: '',
+      image_url: '',
+      opening_time: null,
+      closing_time: null,
+      working_days: [],
+      is_active: true,
+      avg_rating: rating,
+      reviews_count: reviews,
+      branches: [{
+        id: id * 10,
+        address: branchAddress,
+        phone: '',
+        opening_time: null,
+        closing_time: null,
+        working_days: [],
+        is_active: true,
+        delivery_available: null,
+        delivery_info: '',
+        source_url: '',
+      }],
+    });
+
+    component.restaurants = [
+      makeRestaurant(1, 'A Burger', 4.2, 2, 'Satpaeva 10'),
+      makeRestaurant(2, 'B Burger', 4.8, 1, 'Abay 20'),
+      makeRestaurant(3, 'C Burger', 0, 0, 'Main Street 30'),
+    ];
+    component.search = 'Satpaeva';
+    expect(component.filteredRestaurants.map(item => item.name)).toEqual(['A Burger']);
+
+    component.search = '';
+    component.sortBy = 'rating';
+    expect(component.filteredRestaurants.map(item => item.name)).toEqual(['B Burger', 'A Burger', 'C Burger']);
+  });
+
+  it('saves unknown opening hours as null rather than rejecting or submitting blanks', () => {
+    const createRestaurant = vi.spyOn(TestBed.inject(Restaurants), 'createRestaurant');
+    component.restaurantForm = {
+      ...component.restaurantForm,
+      name: 'Unknown Hours Kitchen',
+      address: 'Main Street 10',
+      opening_time: '',
+      closing_time: '',
+      working_days: [],
+    };
+
+    component.saveRestaurant();
+
+    expect(createRestaurant).toHaveBeenCalledWith(expect.objectContaining({
+      opening_time: null,
+      closing_time: null,
+      working_days: [],
+    }));
+    expect(component.restaurantFormError).toBe('');
+  });
+
   it('lets customers view dishes on a restaurant detail page', () => {
     component.currentUser = { role: 'customer' };
     component.selectedRestaurant = component.restaurants[0];
@@ -90,5 +160,63 @@ describe('RestaurantsPage', () => {
     expect(fixture.nativeElement.textContent).toContain('Soup');
     expect(fixture.nativeElement.textContent).not.toContain('Add dish');
     expect(fixture.nativeElement.textContent).not.toContain('Register a restaurant');
+  });
+
+  it('translates real menu items and branch addresses into English and Kazakh', () => {
+    const i18n = TestBed.inject(I18nService);
+    component.currentUser = { role: 'customer' };
+    component.selectedRestaurant = {
+      ...component.restaurants[0],
+      address: 'проспект Абая, 89',
+      branches: [{
+        id: 11,
+        address: 'проспект Абая, 89',
+        phone: '',
+        opening_time: null,
+        closing_time: null,
+        working_days: [],
+        is_active: true,
+        delivery_available: null,
+        delivery_info: '',
+        source_url: '',
+      }],
+    };
+    component.menuItems = [{
+      id: 12,
+      name: 'Комбо чизбургер курица',
+      description: 'Бургер с куриной котлетой с сыром, картофель фри, напиток и соус на выбор.',
+      category: 'Бургеры',
+      price: 2800,
+      image_url: '',
+      rating: 0,
+      restaurant: 1,
+      is_active: true,
+    }];
+
+    i18n.setLanguage('en');
+    fixture.changeDetectorRef.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Abay Avenue, 89');
+    expect(fixture.nativeElement.textContent).toContain('Chicken Cheeseburger Combo');
+    expect(fixture.nativeElement.textContent).toContain('Chicken cheeseburger, fries, a drink, and a sauce of your choice.');
+
+    i18n.setLanguage('kk');
+    fixture.changeDetectorRef.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Абай даңғылы, 89');
+    expect(fixture.nativeElement.textContent).toContain('Тауық чизбургер комбо');
+    expect(fixture.nativeElement.textContent).toContain('Ірімшігі бар тауық чизбургері, фри, сусын және таңдауыңыз бойынша тұздық.');
+  });
+
+  it('renders restaurant and review labels in Kazakh', () => {
+    TestBed.inject(I18nService).setLanguage('kk');
+    fixture.changeDetectorRef.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Мейрамханалар');
+    expect(fixture.nativeElement.textContent).toContain('Мейрамхана атауы');
+
+    component.selectedRestaurant = component.restaurants[0];
+    fixture.changeDetectorRef.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Пікірлер');
+    expect(fixture.nativeElement.textContent).toContain('Әзірге жарияланған пікірлер жоқ.');
+    expect(fixture.nativeElement.textContent).not.toContain('No published reviews yet.');
   });
 });

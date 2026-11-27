@@ -1,7 +1,8 @@
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
-from django.db.models import Q
-from .models import DeliveryRoute, MenuItem, Order, OrderItem
+from .models import DeliveryRoute, MenuItem, Order, OrderItem, RefundRequest
 from restaurants.models import MenuCategory
 from django.conf import settings
 from decimal import Decimal
@@ -20,12 +21,14 @@ class MenuItemSerializer(serializers.ModelSerializer):
             "category", "menu_category",
             "price",
             "image_url",
+            "catalog_key",
+            "source_url",
             "rating",
             "restaurant",
             "restaurant_name",
             "is_active", "cashback_promotional",
         ]
-        read_only_fields = ["id", "rating", "restaurant_name"]
+        read_only_fields = ["id", "catalog_key", "source_url", "rating", "restaurant_name"]
         extra_kwargs = {'category': {'required': False}}
 
     def validate(self, attrs):
@@ -254,3 +257,79 @@ class DeliveryRouteInputSerializer(serializers.Serializer):
     destination_longitude = serializers.FloatField(required=False, allow_null=True)
     route_distance_meters = serializers.IntegerField(required=False, allow_null=True, min_value=0)
     estimated_duration_seconds = serializers.IntegerField(required=False, allow_null=True, min_value=0)
+
+
+class InstantOrderCancellationSerializer(serializers.Serializer):
+    reason = serializers.CharField(max_length=1000, trim_whitespace=True)
+
+
+class RefundRequestCreateSerializer(serializers.Serializer):
+    request_type = serializers.ChoiceField(choices=["cancel", "refund"])
+    reason_category = serializers.CharField(required=False, allow_blank=True, max_length=20, default="")
+    reason_text = serializers.CharField(min_length=10, max_length=5000, trim_whitespace=True)
+
+    def validate(self, attrs):
+        request_type = attrs["request_type"]
+        category = attrs["reason_category"]
+        if request_type == "cancel" and category:
+            raise serializers.ValidationError({
+                "reason_category": "Cancellation requests do not use a refund category."
+            })
+        refund_categories = {value for value, _ in RefundRequest.REASON_CATEGORY_CHOICES}
+        if request_type == "refund" and category not in refund_categories:
+            raise serializers.ValidationError({
+                "reason_category": "Choose a valid refund reason category."
+            })
+        return attrs
+
+
+class RefundRequestDecisionSerializer(serializers.Serializer):
+    refund_amount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=Decimal("0"),
+        required=False,
+    )
+    decision_note = serializers.CharField(
+        max_length=1000,
+        trim_whitespace=True,
+        required=False,
+        allow_blank=True,
+        default="",
+    )
+
+
+class RefundRequestRejectionSerializer(serializers.Serializer):
+    decision_note = serializers.CharField(
+        min_length=1,
+        max_length=1000,
+        trim_whitespace=True,
+    )
+
+
+class RefundRequestSerializer(serializers.ModelSerializer):
+    order_number = serializers.CharField(source="order.order_number", read_only=True)
+    order_status = serializers.CharField(source="order.status", read_only=True)
+    customer_name = serializers.CharField(source="order.customer.username", read_only=True)
+    requested_by_name = serializers.CharField(source="requested_by.username", read_only=True)
+    decided_by_name = serializers.CharField(source="decided_by.username", read_only=True, allow_null=True)
+    amount_paid = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RefundRequest
+        fields = [
+            "id", "order", "order_number", "order_status", "customer_name",
+            "requested_by", "requested_by_name", "request_type", "reason_category",
+            "reason_text", "status", "decided_by", "decided_by_name", "decided_at",
+            "decision_note", "refund_amount", "amount_paid", "created_at",
+        ]
+        read_only_fields = fields
+
+    def get_amount_paid(self, request):
+        try:
+            payment = request.order.payment
+        except ObjectDoesNotExist:
+            return Decimal("0.00")
+        if payment.status not in {"paid", "refund_requested", "refunded"}:
+            return Decimal("0.00")
+        return payment.amount

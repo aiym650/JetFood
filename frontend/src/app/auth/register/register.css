@@ -234,3 +234,127 @@
 
 .optional-label { font-size: .8em; color: #777; font-weight: normal; }
 .contact-optional-note { background: #f3f5ff; border-left: 3px solid #667eea; padding: 12px; color: #49506a; }
+
+.register-container {
+  background: #fff9f2;
+  color: #242424;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.register-wrapper {
+  max-width: 1080px;
+  border: 1px solid #f0e5dc;
+  border-radius: 26px;
+  box-shadow: 0 24px 70px rgba(71, 48, 34, 0.12);
+}
+
+.register-left {
+  background: #fff0e4;
+  color: #292521;
+}
+
+.register-left .brand {
+  color: #292521;
+}
+
+.register-left .brand-icon {
+  border-radius: 14px;
+  background: #ff6b35;
+  color: #fff;
+}
+
+.register-left h1 {
+  font-size: clamp(30px, 4vw, 42px);
+  letter-spacing: -0.04em;
+}
+
+.register-left p {
+  color: #706760;
+  opacity: 1;
+}
+
+.benefit-icon {
+  background: #ffdfc8;
+  color: #bd5635;
+}
+
+.register-card h2 {
+  color: #292521;
+  letter-spacing: -0.035em;
+}
+
+.form-group label {
+  color: #4f4842;
+}
+
+.form-group input {
+  border: 1px solid #efdfd2;
+  border-radius: 12px;
+}
+
+.form-group input:focus {
+  border-color: #ff6b35;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.12);
+}
+
+.contact-optional-note {
+  border-left-color: #ff6b35;
+  border-radius: 8px;
+  background: #fff5eb;
+  color: #65584f;
+}
+
+.btn {
+  border-radius: 12px;
+}
+
+.btn-primary {
+  background: #c84b29;
+  box-shadow: 0 7px 16px rgba(255, 107, 53, 0.17);
+}
+
+.btn-primary:hover {
+  background: #ad3d20;
+  box-shadow: 0 9px 20px rgba(255, 107, 53, 0.22);
+}
+
+.register-footer {
+  border-top-color: #f0e5dc;
+}
+
+.register-footer p {
+  color: #77716c;
+}
+
+.register-footer a,
+.back-to-home a:hover {
+  color: #d85631;
+}
+
+@media (max-width: 768px) {
+  .register-container {
+    align-items: flex-start;
+    padding: 14px;
+  }
+
+  .register-wrapper {
+    max-width: 520px;
+    margin: auto;
+  }
+
+  .register-left {
+    padding: 30px 24px;
+  }
+
+  .register-left .brand {
+    margin-bottom: 22px;
+  }
+
+  .register-left p {
+    margin-bottom: 20px;
+  }
+
+  .register-right {
+    padding: 32px 24px;
+  }
+}

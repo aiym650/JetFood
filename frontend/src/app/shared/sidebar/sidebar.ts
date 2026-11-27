@@ -24,7 +24,7 @@ export class SidebarComponent {
     { icon: 'restaurants', label: 'restaurants', route: '/restaurants' },
     { icon: 'orders', label: 'orders', route: '/orders' },
     { icon: 'analytics', label: 'analytics', route: '/analytics', roles: ['admin', 'manager', 'analyst'] },
-    { icon: 'reports', label: 'reports', route: '/reports' },
+    { icon: 'reports', label: 'reports', route: '/reports', roles: ['admin', 'manager', 'analyst'] },
     { icon: 'integration', label: 'integration', route: '/integration', roles: ['admin', 'manager'] },
     { icon: 'notifications', label: 'notifications', route: '/notifications' },
   ];

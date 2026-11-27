@@ -39,6 +39,11 @@ describe('OrdersPage', () => {
   let ordersService: {
     getOrders: ReturnType<typeof vi.fn>;
     updateOrderStatus: ReturnType<typeof vi.fn>;
+    cancelOrder: ReturnType<typeof vi.fn>;
+    createRefundRequest: ReturnType<typeof vi.fn>;
+    getRefundRequests: ReturnType<typeof vi.fn>;
+    approveRefundRequest: ReturnType<typeof vi.fn>;
+    rejectRefundRequest: ReturnType<typeof vi.fn>;
     modifyOrder: ReturnType<typeof vi.fn>;
     getDeliveryRoute: ReturnType<typeof vi.fn>;
     saveDeliveryRoute: ReturnType<typeof vi.fn>;
@@ -56,6 +61,11 @@ describe('OrdersPage', () => {
     ordersService = {
       getOrders: vi.fn().mockReturnValue(of([])),
       updateOrderStatus: vi.fn().mockReturnValue(of({})),
+      cancelOrder: vi.fn().mockReturnValue(of({})),
+      createRefundRequest: vi.fn().mockReturnValue(of({})),
+      getRefundRequests: vi.fn().mockReturnValue(of([])),
+      approveRefundRequest: vi.fn().mockReturnValue(of({})),
+      rejectRefundRequest: vi.fn().mockReturnValue(of({})),
       modifyOrder: vi.fn(),
       getDeliveryRoute: vi.fn().mockReturnValue(of(null)),
       saveDeliveryRoute: vi.fn(),
@@ -106,6 +116,15 @@ describe('OrdersPage', () => {
   it('shows translated order statuses', () => {
     expect(component.statusLabel('pending')).toBe('Ожидает подтверждения');
     expect(component.statusLabel('delivered')).toBe('Доставлен');
+  });
+
+  it('renders order labels and ready-for-pickup status in Kazakh', () => {
+    TestBed.inject(I18nService).setLanguage('kk');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Менің тапсырыстарым');
+    expect(fixture.nativeElement.textContent).toContain('Тапсырыстарыңыздың тарихы мен күйлері.');
+    expect(component.statusLabel('ready_for_pickup')).toBe('Курьерге беруге дайын');
   });
 
   it('toggles expanded order details', () => {
@@ -290,12 +309,78 @@ describe('OrdersPage', () => {
     expect(component.assignmentErrors[order.id]).toBe('Select a valid choice.');
   });
 
-  it('cancels a pending order and reloads the list', () => {
-    component.cancelOrder(12);
+  it('offers the correct cancellation and refund action for each order status', () => {
+    expect(component.orderActionKind(makeOrder(40, 'pending'))).toBe('instantCancel');
+    expect(component.orderActionKind(makeOrder(41, 'confirmed'))).toBe('instantCancel');
+    expect(component.orderActionKind(makeOrder(42, 'preparing'))).toBe('cancelRequest');
+    expect(component.orderActionKind(makeOrder(43, 'ready_for_pickup'))).toBe('cancelRequest');
+    expect(component.orderActionKind(makeOrder(44, 'delivering'))).toBe('cancelRequest');
+    expect(component.orderActionKind(makeOrder(45, 'cancelled'))).toBeNull();
 
-    expect(ordersService.updateOrderStatus).toHaveBeenCalledWith(12, 'cancelled');
-    expect(ordersService.getOrders).toHaveBeenCalledTimes(2);
-    expect(component.cancellingOrderId).toBeNull();
+    const recentlyDelivered = {
+      ...makeOrder(46, 'delivered'),
+      actual_delivery_time: new Date(Date.now() - 23 * 60 * 60 * 1000).toISOString(),
+    };
+    const expired = {
+      ...makeOrder(47, 'delivered'),
+      actual_delivery_time: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(),
+    };
+    expect(component.orderActionKind(recentlyDelivered)).toBe('refundRequest');
+    expect(component.orderActionKind(expired)).toBeNull();
+  });
+
+  it('validates the cancellation dialog and submits a reason for instant cancellation', () => {
+    const order = makeOrder(48, 'pending');
+    component.beginOrderAction(order);
+
+    component.submitOrderAction();
+
+    expect(component.orderActionError).toBe(component.i18n.t('instantCancelReasonRequired'));
+    expect(ordersService.cancelOrder).not.toHaveBeenCalled();
+
+    component.orderActionReason = 'I no longer need this order.';
+    component.submitOrderAction();
+
+    expect(ordersService.cancelOrder).toHaveBeenCalledWith(order.id, 'I no longer need this order.');
+    expect(component.orderAction).toBeNull();
+  });
+
+  it('requires a sufficiently detailed reason for cancellation requests', () => {
+    const order = makeOrder(49, 'preparing');
+    component.beginOrderAction(order);
+    component.orderActionReason = 'Too short';
+
+    component.submitOrderAction();
+
+    expect(component.orderActionError).toBe(component.i18n.t('requestReasonMinLength'));
+    expect(ordersService.createRefundRequest).not.toHaveBeenCalled();
+
+    component.orderActionReason = 'The order is taking longer than expected.';
+    component.submitOrderAction();
+
+    expect(ordersService.createRefundRequest).toHaveBeenCalledWith(order.id, {
+      request_type: 'cancel',
+      reason_category: '',
+      reason_text: 'The order is taking longer than expected.',
+    });
+  });
+
+  it('submits refund category and comment from the delivered-order dialog', () => {
+    const order = {
+      ...makeOrder(50, 'delivered'),
+      actual_delivery_time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    };
+    component.beginOrderAction(order);
+    component.orderActionCategory = 'missing_items';
+    component.orderActionReason = 'Several items were missing from the order.';
+
+    component.submitOrderAction();
+
+    expect(ordersService.createRefundRequest).toHaveBeenCalledWith(order.id, {
+      request_type: 'refund',
+      reason_category: 'missing_items',
+      reason_text: 'Several items were missing from the order.',
+    });
   });
 
   it('prepares an editable pending order and saves its changes', () => {

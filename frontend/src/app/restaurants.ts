@@ -3,8 +3,23 @@ import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { ApiListResponse, getApiListResults } from './shared/api-list';
 
+export interface RestaurantBranch {
+  id: number;
+  catalog_key?: string | null;
+  address: string;
+  phone: string;
+  opening_time: string | null;
+  closing_time: string | null;
+  working_days: number[];
+  is_active: boolean;
+  delivery_available: boolean | null;
+  delivery_info: string;
+  source_url: string;
+}
+
 export interface Restaurant {
   cuisine?: string;
+  catalog_key?: string | null;
   demo_key?: string | null;
   id: number;
   name: string;
@@ -12,8 +27,11 @@ export interface Restaurant {
   address: string;
   phone: string;
   image_url: string;
-  opening_time: string;
-  closing_time: string;
+  source_url?: string;
+  menu_source_url?: string;
+  branches?: RestaurantBranch[];
+  opening_time: string | null;
+  closing_time: string | null;
   working_days: number[];
   is_active: boolean;
   owner?: number | null;
@@ -22,6 +40,7 @@ export interface Restaurant {
 }
 
 export type RestaurantInput = Omit<Restaurant, 'id'>;
+export type RestaurantSort = 'name' | 'rating';
 
 @Injectable({ providedIn: 'root' })
 export class Restaurants {

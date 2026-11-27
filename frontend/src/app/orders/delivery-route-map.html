@@ -14,7 +14,7 @@
     <span>{{ i18n.t('pointB') }}: {{ destinationLatitude ?? i18n.t('notSelected') }}, {{ destinationLongitude ?? i18n.t('notSelected') }}</span>
     <span *ngIf="routeDistanceKm !== null">
       {{ i18n.t('routeDistance') }}: {{ routeDistanceKm | number:'1.1-1' }} km ·
-      {{ i18n.t('routeDuration') }}: {{ routeDurationMinutes | number:'1.0-0' }} min
+      {{ i18n.t('routeDuration') }}: {{ routeDurationMinutes | number:'1.0-0' }} {{ i18n.t('minutesShort') }}
     </span>
     <span *ngIf="orderStatus === 'delivering' && deliveryStartedAt && hasDeliveryTimer" [class.route-late]="deliveryIsLate">
       {{ deliveryIsLate ? i18n.t('deliveryOverdue') : i18n.t('deliveryTimeRemaining') }}:

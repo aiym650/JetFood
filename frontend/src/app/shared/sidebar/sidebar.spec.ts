@@ -49,6 +49,7 @@ describe('Sidebar SVG navigation', () => {
     expect(root.querySelector('a[href="/dashboard"] svg path')).not.toBeNull();
     expect(root.querySelector('a[href="/admin"]')).toBeNull();
     expect(root.querySelector('a[href="/analytics"]')).toBeNull();
+    expect(root.querySelector('a[href="/reports"]')).toBeNull();
     expect(root.querySelector('.nav-label')).not.toBeNull();
     (root.querySelector('.toggle-btn') as HTMLButtonElement).click();
     fixture.detectChanges();

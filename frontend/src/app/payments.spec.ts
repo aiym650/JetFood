@@ -32,7 +32,7 @@ describe('Payments API integration', () => {
         amount: '1600.00',
         transaction_id: 'SIM-test',
         card_brand: 'visa',
-        card_last4: '4242',
+        card_last4: '0366',
         failure_reason: '',
         refund_reason: '',
         created_at: '',
@@ -64,7 +64,7 @@ describe('Payments API integration', () => {
   it('submits card details only to the order payment endpoint', () => {
     let resultStatus = '';
     service.payOrder(12, {
-      card_number: '4242424242424242',
+      card_number: '4532015112830366',
       expiry: '12/99',
       cvv: '123',
       cardholder_name: 'TEST CUSTOMER',
@@ -72,7 +72,7 @@ describe('Payments API integration', () => {
     const request = httpTesting.expectOne('http://localhost:8000/api/payments/12/pay/');
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({
-      card_number: '4242424242424242',
+      card_number: '4532015112830366',
       expiry: '12/99',
       cvv: '123',
       cardholder_name: 'TEST CUSTOMER',

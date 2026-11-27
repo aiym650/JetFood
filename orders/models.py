@@ -56,12 +56,14 @@ class PromoRedemption(models.Model):
 class MenuItem(models.Model):
     cashback_promotional = models.BooleanField(default=False, help_text="Use the promotional cashback rate for new checkouts.")
     menu_category = models.ForeignKey('restaurants.MenuCategory', on_delete=models.PROTECT, null=True, blank=True, related_name='items')
+    catalog_key = models.CharField(max_length=120, unique=True, null=True, blank=True, editable=False)
     demo_key = models.CharField(max_length=80, unique=True, null=True, blank=True, editable=False)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     category = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     image_url = models.CharField(max_length=500, blank=True, validators=[validate_image_reference])
+    source_url = models.URLField(max_length=500, blank=True)
     rating = models.DecimalField(max_digits=2, decimal_places=1, default=0)
     is_active = models.BooleanField(default=True)
     restaurant = models.ForeignKey(
@@ -158,6 +160,7 @@ class Order(models.Model):
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     delivery_address = models.TextField()
     delivery_notes = models.TextField(blank=True)
+    cancellation_reason = models.TextField(blank=True)
     estimated_delivery_time = models.DateTimeField(null=True, blank=True)
     actual_delivery_time = models.DateTimeField(null=True, blank=True)
     delivery_confirmed_at = models.DateTimeField(null=True, blank=True)
@@ -271,3 +274,90 @@ class DeliveryRoute(models.Model):
 
     def __str__(self):
         return f"Route for {self.order.order_number}"
+
+
+class RefundRequest(models.Model):
+    REQUEST_TYPE_CHOICES = [
+        ("cancel", "Cancellation"),
+        ("refund", "Refund"),
+    ]
+    REASON_CATEGORY_CHOICES = [
+        ("spoiled_food", "Spoiled food"),
+        ("missing_items", "Missing items"),
+        ("wrong_order", "Wrong order"),
+        ("other", "Other"),
+    ]
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="refund_requests",
+    )
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="refund_requests",
+    )
+    request_type = models.CharField(max_length=10, choices=REQUEST_TYPE_CHOICES)
+    reason_category = models.CharField(max_length=20, blank=True, default="")
+    reason_text = models.TextField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="pending")
+    decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="decided_refund_requests",
+    )
+    decided_at = models.DateTimeField(null=True, blank=True)
+    decision_note = models.TextField(blank=True)
+    refund_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["order"],
+                condition=Q(status="pending"),
+                name="refundreq_one_pending_per_order",
+            ),
+            models.CheckConstraint(
+                condition=Q(request_type__in=["cancel", "refund"]),
+                name="refundreq_type_valid",
+            ),
+            models.CheckConstraint(
+                condition=Q(status__in=["pending", "approved", "rejected"]),
+                name="refundreq_status_valid",
+            ),
+            models.CheckConstraint(
+                condition=Q(reason_text__regex=r"^[\s\S]{10,}$"),
+                name="refundreq_reason_min_length",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(request_type="cancel", reason_category="")
+                    | Q(request_type="refund", reason_category__in=[
+                        "spoiled_food", "missing_items", "wrong_order", "other",
+                    ])
+                ),
+                name="refundreq_reason_category_valid",
+            ),
+            models.CheckConstraint(
+                condition=Q(refund_amount__isnull=True) | Q(refund_amount__gte=0),
+                name="refundreq_amount_nonnegative",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(status="pending", decided_by__isnull=True, decided_at__isnull=True, refund_amount__isnull=True)
+                    | Q(status="approved", decided_by__isnull=False, decided_at__isnull=False, refund_amount__isnull=False)
+                    | Q(status="rejected", decided_by__isnull=False, decided_at__isnull=False, refund_amount__isnull=True)
+                ),
+                name="refundreq_decision_fields_consistent",
+            ),
+        ]

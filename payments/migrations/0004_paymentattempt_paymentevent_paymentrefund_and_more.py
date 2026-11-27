@@ -4,98 +4,192 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
+def restore_refunded_amounts(apps, schema_editor):
+    Payment = apps.get_model("payments", "Payment")
+    db_alias = schema_editor.connection.alias
+
+    Payment.objects.using(db_alias).filter(status="refunded").update(
+        refunded_amount=models.F("amount")
+    )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('orders', '0015_menuitem_cashback_promotional'),
-        ('payments', '0003_remove_payment_payment_status_valid_and_more'),
+        ("orders", "0015_menuitem_cashback_promotional"),
+        ("payments", "0003_remove_payment_payment_status_valid_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PaymentAttempt',
+            name="PaymentAttempt",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('reference', models.CharField(max_length=50, unique=True)),
-                ('provider_id', models.CharField(blank=True, max_length=100)),
-                ('status', models.CharField(default='unknown', max_length=24)),
-                ('redirect_url', models.URLField(blank=True, max_length=2000)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("reference", models.CharField(max_length=50, unique=True)),
+                ("provider_id", models.CharField(blank=True, max_length=100)),
+                ("status", models.CharField(default="unknown", max_length=24)),
+                ("redirect_url", models.URLField(blank=True, max_length=2000)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
         ),
         migrations.CreateModel(
-            name='PaymentEvent',
+            name="PaymentEvent",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('event_key', models.CharField(max_length=100, unique=True)),
-                ('source', models.CharField(max_length=20)),
-                ('facts', models.JSONField(default=dict)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("event_key", models.CharField(max_length=100, unique=True)),
+                ("source", models.CharField(max_length=20)),
+                ("facts", models.JSONField(default=dict)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
         ),
         migrations.CreateModel(
-            name='PaymentRefund',
+            name="PaymentRefund",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('key', models.CharField(max_length=100)),
-                ('amount', models.DecimalField(decimal_places=2, max_digits=10)),
-                ('previous_total', models.DecimalField(decimal_places=2, default=0, max_digits=10)),
-                ('status', models.CharField(default='unknown', max_length=20)),
-                ('reason', models.CharField(max_length=1000)),
-                ('provider_id', models.CharField(blank=True, max_length=100)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("key", models.CharField(max_length=100)),
+                ("amount", models.DecimalField(decimal_places=2, max_digits=10)),
+                (
+                    "previous_total",
+                    models.DecimalField(decimal_places=2, default=0, max_digits=10),
+                ),
+                ("status", models.CharField(default="unknown", max_length=20)),
+                ("reason", models.CharField(max_length=1000)),
+                ("provider_id", models.CharField(blank=True, max_length=100)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
         ),
         migrations.RemoveConstraint(
-            model_name='payment',
-            name='payment_status_valid',
+            model_name="payment",
+            name="payment_status_valid",
         ),
         migrations.AddField(
-            model_name='payment',
-            name='provider',
-            field=models.CharField(default='legacy', editable=False, max_length=24),
+            model_name="payment",
+            name="provider",
+            field=models.CharField(default="legacy", editable=False, max_length=24),
         ),
         migrations.AddField(
-            model_name='payment',
-            name='refunded_amount',
+            model_name="payment",
+            name="refunded_amount",
             field=models.DecimalField(decimal_places=2, default=0, max_digits=10),
         ),
-        migrations.AlterField(
-            model_name='payment',
-            name='method',
-            field=models.CharField(choices=[('online', 'Hosted online payment'), ('cash', 'Cash on delivery')], max_length=20),
+        migrations.RunPython(
+            restore_refunded_amounts,
+            migrations.RunPython.noop,
         ),
         migrations.AlterField(
-            model_name='payment',
-            name='status',
-            field=models.CharField(choices=[('pending', 'Pending'), ('failed', 'Failed'), ('paid', 'Paid'), ('refund_requested', 'Refund requested'), ('refunded', 'Refunded'), ('cancelled', 'Cancelled'), ('expired', 'Expired'), ('partially_refunded', 'Partially refunded')], default='pending', max_length=20),
+            model_name="payment",
+            name="method",
+            field=models.CharField(
+                choices=[
+                    ("online", "Hosted online payment"),
+                    ("cash", "Cash on delivery"),
+                ],
+                max_length=20,
+            ),
+        ),
+        migrations.AlterField(
+            model_name="payment",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("pending", "Pending"),
+                    ("failed", "Failed"),
+                    ("paid", "Paid"),
+                    ("refund_requested", "Refund requested"),
+                    ("refunded", "Refunded"),
+                    ("cancelled", "Cancelled"),
+                    ("expired", "Expired"),
+                    ("partially_refunded", "Partially refunded"),
+                ],
+                default="pending",
+                max_length=20,
+            ),
         ),
         migrations.AddConstraint(
-            model_name='payment',
-            constraint=models.CheckConstraint(condition=models.Q(('status__in', ['pending', 'failed', 'paid', 'refund_requested', 'refunded', 'cancelled', 'expired', 'partially_refunded'])), name='payment_status_valid'),
+            model_name="payment",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    (
+                        "status__in",
+                        [
+                            "pending",
+                            "failed",
+                            "paid",
+                            "refund_requested",
+                            "refunded",
+                            "cancelled",
+                            "expired",
+                            "partially_refunded",
+                        ],
+                    )
+                ),
+                name="payment_status_valid",
+            ),
         ),
         migrations.AddField(
-            model_name='paymentattempt',
-            name='payment',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='attempts', to='payments.payment'),
+            model_name="paymentattempt",
+            name="payment",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="attempts",
+                to="payments.payment",
+            ),
         ),
         migrations.AddField(
-            model_name='paymentevent',
-            name='attempt',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='events', to='payments.paymentattempt'),
+            model_name="paymentevent",
+            name="attempt",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="events",
+                to="payments.paymentattempt",
+            ),
         ),
         migrations.AddField(
-            model_name='paymentrefund',
-            name='payment',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='refunds', to='payments.payment'),
+            model_name="paymentrefund",
+            name="payment",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="refunds",
+                to="payments.payment",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='paymentattempt',
-            constraint=models.UniqueConstraint(condition=models.Q(('status__in', ['unknown', 'pending', 'paid'])), fields=('payment',), name='one_active_payment_attempt'),
+            model_name="paymentattempt",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(("status__in", ["unknown", "pending", "paid"])),
+                fields=("payment",),
+                name="one_active_payment_attempt",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='paymentrefund',
-            constraint=models.UniqueConstraint(fields=('payment', 'key'), name='payment_refund_key'),
+            model_name="paymentrefund",
+            constraint=models.UniqueConstraint(
+                fields=("payment", "key"), name="payment_refund_key"
+            ),
         ),
     ]

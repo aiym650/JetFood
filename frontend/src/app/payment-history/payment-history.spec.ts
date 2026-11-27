@@ -20,7 +20,7 @@ describe('PaymentHistoryPage', () => {
     amount: '25.00',
     transaction_id: 'SIM-ABC123',
     card_brand: 'visa',
-    card_last4: '4242',
+    card_last4: '0366',
     failure_reason: '',
     refund_reason: '',
     created_at: '2026-11-05T10:00:00Z',
@@ -54,7 +54,7 @@ describe('PaymentHistoryPage', () => {
     expect(component.payments).toHaveLength(1);
     expect(component.canManage).toBe(true);
     expect(fixture.nativeElement.textContent).toContain('ORD-10');
-    expect(fixture.nativeElement.textContent).toContain('Visa **** 4242');
+    expect(fixture.nativeElement.textContent).toContain('Visa **** 0366');
     expect(fixture.nativeElement.textContent).toContain('Payment receipt');
     expect(fixture.nativeElement.textContent).toContain('Issue refund');
   });
@@ -73,6 +73,16 @@ describe('PaymentHistoryPage', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Failed');
     expect(fixture.nativeElement.textContent).toContain('Card declined.');
-    expect(fixture.nativeElement.textContent).not.toContain('4000000000000002');
+    expect(fixture.nativeElement.textContent).not.toContain('4532015112830366');
+  });
+
+  it('renders payment history labels in Kazakh', () => {
+    component.currentUser = { role: 'customer' };
+    TestBed.inject(I18nService).setLanguage('kk');
+    fixture.changeDetectorRef.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Төлемдер тарихы');
+    expect(fixture.nativeElement.textContent).toContain('Төлем әдісі');
+    expect(fixture.nativeElement.textContent).toContain('Төлем түбіртегі');
   });
 });
