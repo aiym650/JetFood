@@ -1,0 +1,32 @@
+{
+  "restaurants": {
+    "almaty-doner-na-abaya": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZQrOutKDYUDq3KRn15kuFX1LFNjSMLPJTbTWmw9eDdg&s=10",
+    "almaty-doner-na-satpayeva": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTleyIU8Q8fsuo-yt6roVDohMusbsXopDwKhFQRq7Xweg&s",
+    "almaty-popeyes": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhcBM9ttu0lQpK8y8Sm7hgXa7Y8iTxIbyIAWOb8us3ihpS27oH6AX7YM9O&s=10",
+    "almaty-bahandi-burger": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTc8DAEMnNu8jDTfHOppdPg9Yo6JC4erLBU_0dbaKpiUQ&s=10",
+    "almaty-okadzaki": "https://imageproxy.wolt.com/assets/67add1097bcf8b4700f5dd03",
+    "almaty-samurai": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBh8vGeyRctjEVv6ONBYfqhLDt3VTMOsJeeiIlk2hLgg&s",
+    "almaty-kausar": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTj2UH8O-yLozRFZoCcm_LRpdKNszgQ0h0ru8UV0GWib3nMU3t9BRg_GmO6&s=10",
+    "almaty-salam-bro": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRavCQUDTx_e77ZNfbUfJsWy88yE2twp7GPBRhBIE0wag&s=10",
+    "almaty-wendys": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQooarMxKsAY2zW9ZubDA3vkCMZ1C5PCWtmTj-ViEF7rs3K5HjAutO1RHOl&s=10"
+  },
+  "dishes": {
+    "almaty-doner-na-abaya-dish-1": "https://avatars.mds.yandex.net/get-eda/20780435/739a57faebda504caf49464a89b52cda/M_height",
+    "almaty-doner-na-abaya-dish-2": "https://avatars.mds.yandex.net/get-eda/20780435/739a57faebda504caf49464a89b52cda/M_height",
+    "almaty-doner-na-abaya-dish-3": "https://avatars.mds.yandex.net/get-eda/20780435/739a57faebda504caf49464a89b52cda/M_height",
+    "almaty-doner-na-satpayeva-dish-1": "https://avatars.mds.yandex.net/get-eda/21216796/73b04b04e3be4d562e2193ff85a12db3/M_height",
+    "almaty-doner-na-satpayeva-dish-2": "https://avatars.mds.yandex.net/get-eda/21216796/73b04b04e3be4d562e2193ff85a12db3/M_height",
+    "almaty-doner-na-satpayeva-dish-3": "https://avatars.mds.yandex.net/get-eda/21216796/73b04b04e3be4d562e2193ff85a12db3/M_height",
+    "almaty-doner-na-satpayeva-dish-4": "https://avatars.mds.yandex.net/get-eda/21216796/73b04b04e3be4d562e2193ff85a12db3/M_height",
+    "almaty-bahandi-burger-dish-1": "https://bahandi.kz/netcat_files/20/31/menu_cheese_burger_chicken_550x550.jpg",
+    "almaty-bahandi-burger-dish-2": "https://bahandi.kz/netcat_files/20/31/menu_cheese_burger_beef_550x550.jpeg.jpg",
+    "almaty-bahandi-burger-dish-3": "https://bahandi.kz/netcat_files/20/31/menu_cheese_burger_chicken_x2_550x550.jpg",
+    "almaty-bahandi-burger-dish-4": "https://bahandi.kz/netcat_files/20/31/menu_cheese_burger_beef_x2_550x550.jpeg.jpg",
+    "almaty-bahandi-burger-dish-5": "https://bahandi.kz/netcat_files/20/31/menu_mix_cheese_burger_x2_550x550.jpg",
+    "almaty-bahandi-burger-dish-6": "https://bahandi.kz/netcat_files/22/64/burger_beef_550x550.jpg",
+    "almaty-bahandi-burger-dish-7": "https://bahandi.kz/netcat_files/22/64/burger_chicken_550x550.jpg",
+    "almaty-bahandi-burger-dish-8": "https://bahandi.kz/netcat_files/22/64/cheese_burger_beef_550x550.jpg",
+    "almaty-bahandi-burger-dish-9": "https://bahandi.kz/netcat_files/22/64/cheese_burger_chicken_550x550.jpg",
+    "almaty-bahandi-burger-dish-10": "https://bahandi.kz/netcat_files/22/64/fries_550x550.jpg"
+  }
+}

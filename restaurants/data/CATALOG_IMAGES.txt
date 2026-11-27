@@ -1,0 +1,19 @@
+These are existing image references selected by the JetFood team, recovered from
+the catalog database included in origin/main at e72e2a8. They are keyed by stable
+catalog keys, not database IDs, so installations can share the same references
+without sharing users, orders, or SQLite databases.
+
+Sources: the exact remote URLs in catalog_images.json. Restaurant references
+include Google cached thumbnails and Wolt; dish references include Yandex Eda and
+Bahandi's website. These are the team's existing selections, not newly sourced
+or generated photographs. No remote image files are redistributed in this repo.
+Independent verification of reproduction rights has not been performed. Before
+public deployment, the owner should confirm permission for these selections and
+replace cached thumbnail links with authorized stable originals. Remote hosts
+can remove images or restrict access.
+
+seed_restaurant_catalog fills empty image fields from this file and preserves
+nonempty photos, including manually edited photos. To repair ONLY photos:
+    python manage.py seed_restaurant_catalog --images-only
+This does not change names, prices, descriptions, availability, users or orders.
+Four Okadzaki dishes have no image references in the team's saved database.

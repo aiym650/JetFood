@@ -11,6 +11,108 @@ from .assistant import generate_support_reply, _application_context
 
 
 class GroundingTests(TestCase):
+    def test_named_restaurant_with_cyrillic_typo_does_not_borrow_another_menu(self):
+        from .project_context import catalog_context
+        salam = Restaurant.objects.create(name='Salam Bro', address='Public address')
+        other = Restaurant.objects.create(name='Bahandi Burger', address='Public address')
+        MenuItem.objects.create(name='Burger', category='Burgers', price='1650', restaurant=other)
+        context = catalog_context('сколько стоят бургеры в салам броэ')
+        self.assertEqual([row['id'] for row in context['selected_restaurants']], [salam.pk])
+        self.assertEqual(context['matching_dish_count'], 0)
+        self.assertEqual(context['dishes'], [])
+        self.assertNotIn('1650', json.dumps(context, default=str))
+
+    def test_follow_up_keeps_restaurant_but_explicit_new_name_takes_priority(self):
+        from .project_context import catalog_context
+        salam = Restaurant.objects.create(name='Salam Bro', address='Public address')
+        bahandi = Restaurant.objects.create(name='Bahandi Burger', address='Public address')
+        MenuItem.objects.create(name='Special burger', category='Burgers', price='2500', restaurant=bahandi)
+        follow = catalog_context('а сколько стоят бургеры?', ['покажи Салам Бро'])
+        self.assertEqual(follow['selected_restaurants'][0]['id'], salam.pk)
+        changed = catalog_context('а в Баханди?', ['покажи Салам Бро'])
+        self.assertEqual(changed['selected_restaurants'][0]['id'], bahandi.pk)
+        self.assertEqual(len(changed['dishes']), 1)
+
+    def test_unrecognized_new_restaurant_does_not_fall_back_to_previous_menu(self):
+        from .project_context import catalog_context
+        restaurant = Restaurant.objects.create(name='Salam Bro', address='Public address')
+        MenuItem.objects.create(name='Burger', category='Burgers', price=1500, restaurant=restaurant)
+        context = catalog_context('цены на бургеры в НесуществующемКафе', ['Salam Bro'])
+        self.assertTrue(context['restaurant_unresolved'])
+        self.assertEqual(context['selected_restaurants'], [])
+        self.assertEqual(context['dishes'], [])
+
+    def test_explicit_order_reference_does_not_silently_use_previously_linked_order(self):
+        from .assistant import _order_context
+        own = Order.objects.create(customer=self.user, order_number='OWN-OLD', total_amount='100', delivery_address='Private')
+        self.case.order = own
+        context = _order_context(self.case, [{'sender': 'customer', 'body': 'Check FOREIGN-ORDER'}])
+        self.assertIsNone(context['order_number'])
+        self.assertEqual(context['own_recent_orders'], [])
+
+    def test_numeric_order_ids_and_follow_up_remain_scoped_to_owner(self):
+        from .assistant import _order_context
+        own = Order.objects.create(customer=self.user, order_number='OWN-NUMBER', total_amount=100, delivery_address='Private')
+        other = Order.objects.create(customer=self.other, order_number='OTHER-NUMBER', total_amount=200, delivery_address='Private')
+        context = _order_context(self.case, [{'sender': 'customer', 'body': f'заказ №{own.pk}'}, {'sender': 'customer', 'body': 'какой статус?'}])
+        self.assertEqual(context['order_number'], own.order_number)
+        context = _order_context(self.case, [{'sender': 'customer', 'body': f'order {other.pk}'}])
+        self.assertIsNone(context['order_number'])
+        self.assertEqual(context['own_recent_orders'], [])
+
+    def test_registration_facts_explicitly_allow_both_contact_fields_empty(self):
+        rules = _application_context(self.case, [])['live_rules_and_own_balance']['registration']
+        self.assertFalse(rules['email_required'])
+        self.assertFalse(rules['phone_required'])
+        self.assertEqual(rules['required'], ['username', 'password'])
+
+    def test_burger_query_excludes_sides_and_unrelated_registration_data(self):
+        restaurant = Restaurant.objects.create(name='Focus Kitchen', address='Public address')
+        burger = MenuItem.objects.create(name='Бургер', category='Бургеры', price='1500', restaurant=restaurant)
+        MenuItem.objects.create(name='Картофель фри', category='Гарниры', price='750', restaurant=restaurant)
+        context = _application_context(self.case, [{'sender': 'customer', 'body': 'цены на бургеры в Focus Kitchen'}])
+        self.assertEqual([row['id'] for row in context['matching_menu']], [burger.pk])
+        self.assertNotIn('registration', context['live_rules_and_own_balance'])
+
+    def test_registration_question_does_not_send_personal_balance(self):
+        context = _application_context(self.case, [{'sender': 'customer', 'body': 'How do I register without phone?'}])
+        self.assertIn('registration', context['live_rules_and_own_balance'])
+        self.assertNotIn('cashback', context['live_rules_and_own_balance'])
+
+    def test_faq_retrieval_finds_english_question_when_response_language_is_russian(self):
+        from .project_context import retrieve_faq
+        entry = FAQ.objects.create(slug='contact-help', question_en='Register without phone', answer_en='Optional',
+            question_ru='Создание аккаунта', answer_ru='Контакты необязательны', question_kk='Тіркелу', answer_kk='Міндетті емес')
+        self.assertIn(entry, retrieve_faq('ru', 'register without phone'))
+
+    def test_faq_seed_preserves_administrator_edits(self):
+        from django.core.management import call_command
+        call_command('seed_service_faq')
+        entry = FAQ.objects.get(slug='verified-registration')
+        entry.answer_ru = 'Ручная инструкция администратора'
+        entry.save()
+        count = FAQ.objects.count()
+        call_command('seed_service_faq')
+        entry.refresh_from_db()
+        self.assertEqual(entry.answer_ru, 'Ручная инструкция администратора')
+        self.assertEqual(FAQ.objects.count(), count)
+
+    @patch('support.assistant.urlopen')
+    def test_prompt_uses_matching_prices_instead_of_the_empty_menu_faq(self, urlopen):
+        response = MagicMock()
+        response.__enter__.return_value.read.return_value = b'{"message":{"content":"Mock provider response"}}'
+        urlopen.return_value = response
+        restaurant = Restaurant.objects.create(name='Focus Kitchen', address='Public address')
+        MenuItem.objects.create(name='Actual burger', description='Chicken and cheese', category='Burgers', price='1500', restaurant=restaurant)
+        FAQ.objects.create(slug='verified-catalog-gaps', question_en='Burger prices', answer_en='UNRELATED EMPTY MENU ARTICLE',
+            question_ru='Бургеры', answer_ru='Нет меню', question_kk='Бургер', answer_kk='Мәзір жоқ')
+        generate_support_reply(self.case, [{'sender': 'customer', 'body': 'Burger prices at Focus Kitchen'}])
+        prompt = json.loads(urlopen.call_args.args[0].data)['messages'][0]['content']
+        self.assertIn('Actual burger', prompt)
+        self.assertIn('1500.00', prompt)
+        self.assertIn('Chicken and cheese', prompt)
+        self.assertNotIn('UNRELATED EMPTY MENU ARTICLE', prompt)
+
     def setUp(self):
         self.user = User.objects.create_user(username='grounding-buyer')
         self.other = User.objects.create_user(username='grounding-other')

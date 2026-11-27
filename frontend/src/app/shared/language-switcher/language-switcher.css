@@ -4,6 +4,8 @@
 }
 
 .lang-btn {
+  min-height: 44px;
+  color: #292f37;
   padding: 6px 12px;
   border: 1px solid #ddd;
   background: white;
@@ -18,9 +20,9 @@
 }
 
 .lang-btn.active {
-  background: #007bff;
+  background: #0062cc;
   color: white;
-  border-color: #007bff;
+  border-color: #0062cc;
 }
 
 .language-switcher {

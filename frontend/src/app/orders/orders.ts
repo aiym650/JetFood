@@ -11,6 +11,7 @@ import { I18nService } from '../i18n/i18n.service';
 import { Menu, FoodItem } from '../menu';
 import { DeliveryRouteMap, RouteCoordinates, RouteMetrics } from './delivery-route-map';
 import { ReviewForm, ReviewFormValue } from './review-form';
+import { Payments } from '../payments';
 
 interface EditableOrderItem {
   item_id: number | null;
@@ -26,6 +27,7 @@ interface EditableOrderItem {
   styleUrl: './orders.css',
 })
 export class OrdersPage implements OnInit {
+  confirmingCashOrderId: number | null = null;
   orders: OrderRecord[] = [];
   loading = true;
   refreshing = false;
@@ -116,6 +118,7 @@ export class OrdersPage implements OnInit {
     private changeDetector: ChangeDetectorRef,
     private destroyRef: DestroyRef,
     private http: HttpClient,
+    private payments: Payments,
     public i18n: I18nService
   ) {
     this.i18n.currentLang$
@@ -210,7 +213,33 @@ export class OrdersPage implements OnInit {
   }
 
   get hasActiveOrders(): boolean {
-    return this.orders.some((order) => !['delivered', 'cancelled'].includes(order.status));
+    return this.orders.some((order) => !['delivered', 'cancelled'].includes(order.status)
+      || (order.status === 'delivered' && order.payment?.status === 'pending'));
+  }
+
+  canConfirmCash(order: OrderRecord): boolean {
+    return order.status === 'delivered' && order.payment?.method === 'cash' && order.payment.status === 'pending'
+      && (['admin', 'manager'].includes(this.currentUser?.role)
+        || (this.currentUser?.role === 'delivery' && order.delivery_person === this.currentUser.id));
+  }
+
+  confirmCash(order: OrderRecord): void {
+    if (!this.canConfirmCash(order) || this.confirmingCashOrderId !== null) return;
+    this.confirmingCashOrderId = order.id;
+    this.statusActionErrors[order.id] = '';
+    this.payments.confirmCashPayment(order.payment!.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.confirmingCashOrderId = null;
+        order.payment!.status = 'paid';
+        this.refreshOrders();
+        this.changeDetector.markForCheck();
+      },
+      error: () => {
+        this.confirmingCashOrderId = null;
+        this.statusActionErrors[order.id] = this.i18n.t('paymentConfirmationFailed');
+        this.changeDetector.markForCheck();
+      },
+    });
   }
 
   loadOrders(): void {

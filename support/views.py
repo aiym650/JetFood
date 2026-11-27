@@ -8,6 +8,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from .assistant import SupportAIUnavailable, generate_support_reply
+from .catalog_answers import catalog_answer
+from .service_answers import service_answer
 from .models import SupportCase, SupportMessage, FAQ
 from .serializers import SupportCaseCreateSerializer, SupportCaseSerializer, SupportMessageInputSerializer
 
@@ -32,8 +34,13 @@ def reply_to(case, body=None, request_id=None):
         if body:
             SupportMessage.objects.create(support_case=case, sender='customer', body=body, request_id=request_id)
         conversation = list(case.messages.order_by('-id').values('sender', 'body')[:12])[::-1]
-        reply = generate_support_reply(case, conversation)
-        SupportMessage.objects.create(support_case=case, sender='assistant', body=reply)
+        verified = service_answer(case, conversation)
+        catalog = catalog_answer(case.language, conversation)
+        reply = '\n\n'.join(part for part in (verified, catalog) if part) or None
+        source = 'facts' if verified is not None else ('catalog' if catalog is not None else 'ai')
+        if reply is None:
+            reply = generate_support_reply(case, conversation)
+        SupportMessage.objects.create(support_case=case, sender='assistant', source=source, body=reply)
         case.status = 'waiting_for_customer'
         case.save(update_fields=['status', 'updated_at'])
     except SupportAIUnavailable as exc:

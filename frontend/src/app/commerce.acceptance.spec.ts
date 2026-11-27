@@ -72,7 +72,7 @@ describe('Acceptance T07–T12 Reviews (mock API)', () => {
     reviews = [{ ...review }];
     http = { get: vi.fn(() => of(reviews)), post: vi.fn(() => of({ ...review })), patch: vi.fn(() => of({ ...review, status: 'pending_moderation' })) };
     await TestBed.configureTestingModule({ imports: [OrdersPage, ReviewForm], providers: [provideRouter([]), { provide: HttpClient, useValue: http },
-      { provide: Orders, useValue: { getOrders: () => of([order]), getDeliveryRoute: () => of(null), getDeliveryCouriers: () => of([]) } },
+      { provide: Orders, useValue: { getOrders: () => of([order]), getDeliveryRoute: () => of(null), getDeliveryCouriers: () => of([]), getRefundRequests: () => of([]) } },
       { provide: Menu, useValue: { getItems: () => of([]) } },
       { provide: Auth, useValue: { getCurrentUser: () => buyer, currentUser$: new BehaviorSubject(buyer), refreshCurrentUser: () => of(buyer), isLoggedIn: () => true } },
     ] }).compileComponents();

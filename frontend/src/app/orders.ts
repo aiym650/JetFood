@@ -28,6 +28,8 @@ interface OrderInput {
 }
 
 export interface OrderRecord {
+  payment?: { id: number; method: 'cash' | 'online'; status: string } | null;
+  cashback?: { earned: string; earned_minor: number; state: string } | null;
   id: number;
   order_number: string;
   customer: number;

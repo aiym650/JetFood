@@ -302,7 +302,7 @@ export class Dashboard implements OnInit {
   retryPayment(): void {
     this.paymentError = '';
     this.paymentResult = null;
-    if (this.pendingPaymentOrderId !== null) this.submitLegacyPayment(this.pendingPaymentOrderId);
+    if (this.pendingPaymentOrderId !== null) this.submitHostedPayment(this.pendingPaymentOrderId);
   }
 
   loadMenu(): void {
@@ -551,9 +551,6 @@ export class Dashboard implements OnInit {
       this.checkoutError = this.i18n.t('missingDeliveryAddress');
       return;
     }
-    if (this.paymentMethod === 'online' && !this.validCardForm()) {
-      return;
-    }
 
     if (this.paymentMethod === 'online' && this.cartQuote?.online_payment_configured === false && +this.cartQuote.total_amount > 0) {
       this.checkoutError = this.i18n.t('paymentNotConfigured'); return;
@@ -564,7 +561,7 @@ export class Dashboard implements OnInit {
     this.paymentResult = null;
 
     if (this.pendingPaymentOrderId !== null) {
-      this.submitLegacyPayment(this.pendingPaymentOrderId);
+      this.submitHostedPayment(this.pendingPaymentOrderId);
       return;
     }
 
@@ -590,7 +587,7 @@ export class Dashboard implements OnInit {
         this.jetPointsPanel?.load();
         if (this.paymentMethod === 'online') {
           this.pendingPaymentOrderId = order.id;
-          this.submitLegacyPayment(order.id);
+          this.submitHostedPayment(order.id);
           return;
         }
         this.submittingOrder = false;
@@ -669,37 +666,37 @@ export class Dashboard implements OnInit {
     });
   }
 
-  private submitLegacyPayment(orderId: number): void {
+  private submitHostedPayment(orderId: number): void {
     this.submittingOrder = true;
-    this.paymentsService.payOrder(orderId, {
-      card_number: this.cardNumber,
-      expiry: this.cardExpiry,
-      cvv: this.cardCvv,
-      cardholder_name: this.cardholderName,
-    }).subscribe({
+    const pendingKey = `jetfood-payment-order-${orderId}`;
+    if (!sessionStorage.getItem(pendingKey)) sessionStorage.setItem(pendingKey, JSON.stringify({
+      userId: this.currentUser.id,
+      cart: localStorage.getItem(`jetfood-cart-${this.currentUser.id}`),
+      checkout: sessionStorage.getItem(`jetfood-checkout-${this.currentUser.id}`),
+    }));
+    this.paymentsService.startCheckout(orderId).subscribe({
       next: result => {
         this.submittingOrder = false;
-        this.pendingPaymentOrderId = null;
-        if (result.status === 'paid') {
-          this.paymentResult = result;
+        if (result.payment.status === 'paid') {
+          this.paymentResult = result.payment;
+          this.pendingPaymentOrderId = null;
           this.clearCart();
-          this.checkoutSuccess = this.i18n.t('paymentApproved');
+          this.checkoutSuccess = this.i18n.t('paymentConfirmed');
+        } else if (result.redirect_url) {
+          this.openPaymentPage(result.redirect_url);
         } else {
-          this.paymentError = this.i18n.t('cardPaymentFailed');
+          this.paymentError = this.i18n.t('paymentChecking');
         }
         this.changeDetector.markForCheck();
       },
-      error: error => {
-        this.submittingOrder = false;
-        this.pendingPaymentOrderId = null;
-        this.paymentError = error?.error?.card_number?.[0]
-          ?? error?.error?.expiry?.[0]
-          ?? error?.error?.cvv?.[0]
-          ?? error?.error?.cardholder_name?.[0]
-          ?? this.i18n.t('cardPaymentFailed');
-        this.changeDetector.markForCheck();
-      },
+      error: () => { this.submittingOrder = false; this.paymentError = this.i18n.t('paymentUnavailable'); this.changeDetector.markForCheck(); },
     });
+  }
+
+  openPaymentPage(url: string): void {
+    const parsed = new URL(url);
+    if (parsed.protocol === 'https:' && parsed.hostname.endsWith('.freedompay.kz')) window.location.assign(url);
+    else this.paymentError = this.i18n.t('paymentUnavailable');
   }
 
   paymentCardLabel(brand: string | null, last4: string | null): string {

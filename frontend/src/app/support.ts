@@ -7,6 +7,7 @@ export type SupportCaseStatus = 'open' | 'in_progress' | 'waiting_for_customer' 
 export type SupportMessageSender = 'customer' | 'assistant' | 'staff';
 
 export interface SupportMessage {
+  source?: '' | 'ai' | 'catalog' | 'facts';
   id: number;
   sender: SupportMessageSender;
   body: string;

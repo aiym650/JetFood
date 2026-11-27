@@ -4,6 +4,7 @@ from decimal import Decimal
 from threading import Barrier
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
+from django.core.cache import cache
 from django.db import close_old_connections
 from django.test import TestCase, TransactionTestCase, override_settings
 from django.utils import timezone
@@ -24,6 +25,7 @@ def setup_catalog():
 @override_settings(ORDER_DELIVERY_FEE='500.00')
 class PromotionTests(TestCase):
     def setUp(self):
+        cache.clear()
         self.user, self.restaurant, self.dish = setup_catalog()
         self.client = APIClient()
         self.client.force_authenticate(self.user)

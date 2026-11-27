@@ -1,5 +1,6 @@
 import { commerceTranslations } from './commerce-translations';
 import { featureTranslations } from './feature-translations';
+import { kazakhTranslations } from './kazakh-translations';
 const baseTranslations = {
   en: {
     // Auth
@@ -1260,5 +1261,5 @@ const baseTranslations = {
 export const translations = {
  en: { ...baseTranslations.en, ...featureTranslations.en, ...commerceTranslations.en },
  ru: { ...baseTranslations.ru, ...featureTranslations.ru, ...commerceTranslations.ru },
- kk: { ...baseTranslations.en, ...featureTranslations.kk, ...commerceTranslations.en },
+ kk: { ...kazakhTranslations, ...featureTranslations.kk },
 };

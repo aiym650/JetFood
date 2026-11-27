@@ -1,0 +1,57 @@
+Verified JetFood support data — 2026-11-27, Asia/Qyzylorda
+
+Implemented read-only allowlisted service/account lookups alongside the existing
+catalog answer tool, FAQ retrieval and Ollama adapter. Responses are explicitly
+marked as verified JetFood data (source=facts), catalog data (source=catalog),
+or generated provider text (source=ai). This is not model training or a DB dump.
+
+Sources: owned Order/Payment, own loyalty ledger/account and current policy,
+PromoCode with own PromoRedemption count, active multilingual FAQ, payment
+configuration availability and delivery fee. Secrets and arbitrary queries are
+not exposed. Explicit order references and latest-order requests share a single
+owner-scoped resolver. Unknown/ambiguous requests require clarification or are
+sent to the existing AI with the established unavailable-provider behavior.
+
+Automatic checks actually run:
+- Full Django suite: 278 PASS, 0 failures, exit code 0. A faster password hasher
+  is selected ONLY in the test runner. Real user password settings are unchanged.
+- Tests include own/foreign order IDs, payment-state changes, current policy,
+  own promo usage, live FAQ edits and deactivation, pending-cash JetPoints,
+  mixed catalog/account questions, dump requests and provider-unavailable paths.
+- These service/catalog tests use Django test databases and APIClient. Mocked
+  provider calls are used to assert that prices/balances do not depend on AI.
+- Angular: 201 PASS, exit code 0. Actual components, explicitly mocked APIs.
+  Machine report: test-results/service-facts-20261127.json.
+- Production Angular build: PASS. Existing bundle/component style size warnings.
+- Django system checks: PASS. makemigrations --check --dry-run: no changes.
+- migrate --check: PASS; support.0007_alter_supportmessage_source applied locally.
+- A local SQLite backup was made before migration. No customer financial status,
+  balance, orders or historical messages were rewritten by the implementation.
+
+Commands: python manage.py test; npm.cmd test -- --watch=false;
+npm.cmd run build; python manage.py check; python manage.py migrate --check.
+Full backend log: .jetfood-qa/service-facts-tests.log.
+
+Real Ollama quality was NOT re-evaluated in this incremental change. Earlier
+real-model probes and known language issues are separately recorded in
+test-results/support-real-ai-20261127.json. No new model accuracy guarantee is
+claimed. No manual browser rendering test was performed in this change.
+
+Manual demo:
+1. Open chat in your account and choose RU, KK or EN.
+2. Ask for your JetPoints balance: source label is verified JetFood data.
+3. Ask for your own order status, then another customer's order ID: no foreign
+   status/address should be returned. A missing number should be clarified.
+4. Ask why a delivered cash order has no points: pending cash confirmation is
+   distinct from delivery; the assistant does not mark it paid.
+5. Ask WELCOME rules and uses, and compare with PromoCode and your redemptions.
+6. Ask for a burger price and your bonus balance in one question: exact catalog
+   values and only your balance are returned without model-generated sums.
+7. Edit price/FAQ/policy in admin and repeat: new answers use the latest data.
+8. A genuinely unsupported question goes to AI; if unavailable it displays an
+   error while FAQ/operator requests remain available.
+
+Deployment: python manage.py migrate; python manage.py seed_service_faq.
+Do not send a full DB dump or secrets. Public catalog and the requesting user's
+permitted account information are sufficient. Missing catalog/FAQ records cannot
+be inferred reliably; administrators must add verified information.

@@ -8,7 +8,7 @@ admin.site.register(FAQ)
 class SupportMessageInline(admin.TabularInline):
     model = SupportMessage
     extra = 0
-    readonly_fields = ('sender', 'body', 'created_at')
+    readonly_fields = ('sender', 'source', 'body', 'created_at')
     can_delete = False
 
     def has_add_permission(self, request, obj=None):

@@ -285,36 +285,16 @@
           {{ i18n.t('paymentMethod') }}
           <select [value]="paymentMethod" [disabled]="submittingOrder || pendingPaymentOrderId !== null"
             (change)="setPaymentMethod($any($event.target).value)">
-            <option value="online">{{ i18n.t('onlinePaymentSimulation') }}</option>
+            <option value="online">{{ i18n.t('hostedPayment') }}</option>
             <option value="cash">{{ i18n.t('cashOnDelivery') }}</option>
           </select>
         </label>
         <section *ngIf="paymentMethod === 'online'" class="commerce-notice">
-          <p>{{ i18n.t('paymentTestMode') }}</p>
-          <strong>{{ i18n.t('cardDetails') }}</strong>
+          <p *ngIf="cartQuote?.payment_test_mode">{{ i18n.t('paymentTestMode') }}</p>
+          <p *ngIf="cartQuote?.online_payment_configured === false" role="alert">{{ i18n.t('paymentNotConfigured') }}</p>
+          <strong>{{ i18n.t('hostedPayment') }}</strong>
+          <p>{{ i18n.t('hostedPaymentNote') }}</p>
         </section>
-        <div *ngIf="paymentMethod === 'online'" class="checkout-card-fields">
-          <label>{{ i18n.t('cardNumber') }}
-            <input class="ui-input" name="cardNumber" autocomplete="cc-number" inputmode="numeric"
-              maxlength="19" pattern="[0-9]{4} [0-9]{4} [0-9]{4} [0-9]{4}" [(ngModel)]="cardNumber"
-              (input)="formatCardNumber($event)" placeholder="0000 0000 0000 0000" />
-          </label>
-          <label>{{ i18n.t('cardholderName') }}
-            <input class="ui-input" name="cardholderName" autocomplete="cc-name"
-              maxlength="120" pattern="[A-Z]+([ -][A-Z]+)*" [(ngModel)]="cardholderName"
-              (input)="formatCardholderName($event)" />
-          </label>
-          <label>{{ i18n.t('cardExpiry') }}
-            <input class="ui-input" name="cardExpiry" autocomplete="cc-exp"
-              maxlength="5" pattern="(0[1-9]|1[0-2])/[0-9]{2}" [(ngModel)]="cardExpiry"
-              (input)="formatCardExpiry($event)" placeholder="12/99" />
-          </label>
-          <label>{{ i18n.t('cardCvv') }}
-            <input class="ui-input" name="cardCvv" autocomplete="cc-csc" inputmode="numeric"
-              maxlength="3" pattern="[0-9]{3}" [(ngModel)]="cardCvv"
-              (input)="formatCardCvv($event)" placeholder="123" />
-          </label>
-        </div>
         <div *ngIf="paymentError" class="checkout-message checkout-error" role="alert">
           <p>{{ paymentError }}</p>
           <button type="button" class="retry-payment-btn" (click)="retryPayment()">

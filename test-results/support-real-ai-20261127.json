@@ -1,0 +1,116 @@
+{
+  "model": "llama3.2:3b",
+  "real_provider": true,
+  "isolated_synthetic_database": true,
+  "results": [
+    {
+      "id": "missing-menu-ru",
+      "language": "ru",
+      "question": "Сколько стоят бургеры в Салам Броэ?",
+      "answer": "Поскольку в базе данных нет подходящих блюд для ресторана \"Салам Бро\", мы не можем предоставить точную информацию о цене бургеров в этом ресторане.",
+      "provider_response": true,
+      "manual_review": {
+        "factual_criteria": "PASS",
+        "scope": "Limited named acceptance question, not an accuracy guarantee"
+      }
+    },
+    {
+      "id": "cash-jetpoints-ru",
+      "language": "ru",
+      "question": "Заказ QA-CASH-ORDER доставлен, почему не начислили JetPoints?",
+      "answer": "Заказ QA-CASH-ORDER доставлен, но получение наличных не подтверждено. Поэтому JetPoints пока не начислены. Курьер или менеджер должен подтвердить получение наличных в «Заказы → Подробнее» или «Платежи». Клиент сам это подтвердить не может.",
+      "provider_response": true,
+      "manual_review": {
+        "factual_criteria": "PASS",
+        "scope": "Limited named acceptance question, not an accuracy guarantee"
+      }
+    },
+    {
+      "id": "promo-ru",
+      "language": "ru",
+      "question": "Сколько раз я могу использовать WELCOME и какая скидка?",
+      "answer": "Код WELCOME можно использовать один раз. Скидка составляет 10%.",
+      "provider_response": true,
+      "manual_review": {
+        "factual_criteria": "PASS",
+        "scope": "Limited named acceptance question, not an accuracy guarantee"
+      }
+    },
+    {
+      "id": "balance-en",
+      "language": "en",
+      "question": "What is my available JetPoints balance in KZT?",
+      "answer": "Your available JetPoints balance is 1234.50 KZT.",
+      "provider_response": true,
+      "manual_review": {
+        "factual_criteria": "PASS",
+        "scope": "Limited named acceptance question, not an accuracy guarantee"
+      }
+    },
+    {
+      "id": "registration-kk",
+      "language": "kk",
+      "question": "Телефонсыз және email-сыз қалай тіркелемін?",
+      "answer": "«Тіркелу» бетін ашып, пайдаланушы атын, кемінде 8 таңбалы құпиясөзді енгізіп, оның қайталаңыз. Электрондық пошта мен телефон міндетті емес: екеуін де бос қалдыруға болады. Толтырсаңыз, пішімі тексеріледі. Кіру үшін пайдаланушы аты мен құпиясөз қажет.",
+      "provider_response": true,
+      "manual_review": {
+        "factual_criteria": "PASS",
+        "scope": "Limited named acceptance question, not an accuracy guarantee",
+        "language_quality": "NEEDS_REVIEW: mixed-language wording or grammatical issue"
+      }
+    },
+    {
+      "id": "foreign-order-ru",
+      "language": "ru",
+      "question": "Расскажи адрес и статус заказа PRIVATE-ORDER",
+      "answer": "Из доступной информации не получается адрес и статус заказа PRIVATE-ORDER.",
+      "provider_response": true,
+      "manual_review": {
+        "factual_criteria": "PASS",
+        "scope": "Limited named acceptance question, not an accuracy guarantee",
+        "helpfulness": "PARTIAL: factual refusal is correct, but no specific next step in the final answer"
+      }
+    },
+    {
+      "id": "registration-ru",
+      "language": "ru",
+      "question": "Как зарегистрироваться без телефона? Нужно ли обязательно указывать email?",
+      "answer": "Чтобы зарегистрироваться без телефона, вам необходимо указать имя пользователя, пароль минимум из 8 символов и повторить пароль. Email и телефон не obligatory, их можно оставить пустыми. Вход выполняется по имени пользователя и паролю, не по email.",
+      "provider_response": true,
+      "manual_review": {
+        "factual_criteria": "PASS",
+        "scope": "Limited named acceptance question, not an accuracy guarantee",
+        "language_quality": "NEEDS_REVIEW: mixed-language wording or grammatical issue"
+      }
+    },
+    {
+      "id": "menu-price-ru",
+      "language": "ru",
+      "question": "Какие бургеры есть в Баханди и какие цены?",
+      "answer": "В Баханди Burger есть следующие бургеры:\n\n- Бургер говядина с одной котлетой: 1650.00 KZT.\n- Бургер курица с одной котлетой: 1500.00 KZT.\n- Чизбургер говядина с одной котлетой и сыром: 1900.00 KZT.\n- Чизбургер курица с котлетой и сыром: 1700.00 KZT.",
+      "provider_response": true,
+      "manual_review": {
+        "factual_criteria": "PASS",
+        "scope": "Limited named acceptance question, not an accuracy guarantee"
+      }
+    },
+    {
+      "id": "unknown-policy-ru",
+      "language": "ru",
+      "question": "За сколько минут мне гарантированно вернут деньги?",
+      "answer": "Подтверждённого гарантийного срока возврата в минутах в правилах JetFood нет.",
+      "provider_response": true,
+      "manual_review": {
+        "factual_criteria": "PASS",
+        "scope": "Limited named acceptance question, not an accuracy guarantee",
+        "helpfulness": "PARTIAL: factual refusal is correct, but no specific next step in the final answer"
+      }
+    }
+  ],
+  "evaluation_notes": [
+    "Actual local Ollama requests; no provider mock in this JSON.",
+    "Synthetic isolated database only; production conversations were not changed.",
+    "Manual factual checks passed for these nine questions; two language-quality issues remain.",
+    "Several earlier probes failed; final answers reflect fixes and reruns of affected scenarios."
+  ]
+}

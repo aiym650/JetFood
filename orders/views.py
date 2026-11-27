@@ -676,6 +676,7 @@ def order_summary(request):
 def preview_promotion(request):
     from decimal import Decimal
     from .promotions import quote
+    from payments.freedompay import configured
     serializer = OrderSerializer(data={**request.data, 'delivery_address': 'preview'})
     serializer.is_valid(raise_exception=True)
     totals, _ = quote(request.user, serializer.validated_data['items'], serializer.validated_data.get('promo_code', ''))
@@ -685,6 +686,6 @@ def preview_promotion(request):
     return Response({
         **{key: str(value) if isinstance(value, Decimal) else value for key, value in totals.items()},
         **bonus,
-        'online_payment_configured': settings.PAYMENTS_ALLOW_LEGACY_SIMULATION,
-        'payment_test_mode': settings.PAYMENTS_ALLOW_LEGACY_SIMULATION,
+        'online_payment_configured': configured(),
+        'payment_test_mode': settings.FREEDOMPAY_TEST_MODE,
     })

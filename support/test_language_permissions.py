@@ -34,12 +34,12 @@ class ConversationTests(TestCase):
     def test_unavailable_ai_retry_and_operator_request_keep_history(self, provider):
         result = self.client.post('/api/support/cases/', {'language': 'kk'}, format='json')
         pk = result.data['id']
-        result = self.client.post(f'/api/support/cases/{pk}/messages/', {'body': 'Payment issue', 'request_id': 'abc'}, format='json')
+        result = self.client.post(f'/api/support/cases/{pk}/messages/', {'body': 'An unusual problem with the app', 'request_id': 'abc'}, format='json')
         self.assertEqual(result.status_code, 503)
         self.assertEqual(result.data['case_id'], pk)
         retry = self.client.post(f'/api/support/cases/{pk}/retry/')
         self.assertEqual(retry.status_code, 503)
-        repeated = self.client.post(f'/api/support/cases/{pk}/messages/', {'body': 'Payment issue', 'request_id': 'abc'}, format='json')
+        repeated = self.client.post(f'/api/support/cases/{pk}/messages/', {'body': 'An unusual problem with the app', 'request_id': 'abc'}, format='json')
         self.assertEqual(repeated.status_code, 200)
         self.assertEqual(SupportMessage.objects.filter(support_case_id=pk, sender='customer').count(), 1)
         escalated = self.client.patch(f'/api/support/cases/{pk}/', {'operator_requested': True}, format='json')

@@ -180,7 +180,11 @@
           >
             <div class="message-bubble" [class.from-staff]="message.sender === 'staff'">
               <strong *ngIf="message.sender !== 'customer'" class="message-author">{{
-                message.sender === 'assistant'
+                message.source === 'facts'
+                  ? text('chatVerifiedSource')
+                  : message.source === 'catalog'
+                  ? text('chatCatalogSource')
+                  : message.sender === 'assistant'
                   ? text('chatAssistantName')
                   : text('supportSender.staff')
               }}</strong>

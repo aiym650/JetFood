@@ -1,0 +1,37 @@
+Catalog price answers — 2026-11-27, Asia/Qyzylorda
+
+Root cause: the language model was still composing prices from a mixed menu.
+Observed chat example: a doner in Bahandi was assigned the 750 KZT fries price.
+
+Fix: menu/price queries now use an explicit, read-only catalog tool. It selects
+the restaurant and food type/modifiers and formats Decimal values from MenuItem.
+An explicitly named burger is not substituted with a cheeseburger. Unknown food
+and unloaded menus return clarification/missing-data messages, not another price.
+The result is identified as source=catalog and displayed as JetFood catalog data.
+It is not presented as generated AI text. General support still uses Ollama/FAQ.
+Historical messages remain unchanged. Catalog price data is read on each request.
+
+Actual current working-database checks, read-only:
+- Doner in Bahandi: no matching menu item, no quoted fries/burger price.
+- Bahandi burger list: beef 1650.00, chicken 1500.00, beef cheeseburger 1900.00,
+  chicken cheeseburger 1700.00 KZT, matching stored menu records.
+These are app database prices, not an independently verified external live menu.
+
+Backend automated tests use a separate Django test database. The chat API test
+changes a dish price and verifies the next reply contains the new Decimal value,
+persists source=catalog, and reads it back from history. The test explicitly fails
+if the AI provider is called to generate a price. No provider mock supplies prices.
+Russian, English, Kazakh, unavailable dishes, unknown restaurant and empty menus
+are covered. Frontend component tests use explicitly mocked API responses.
+
+Validation: 258 backend tests PASS (test-only MD5 password hasher for speed),
+200 frontend tests PASS, production Angular build PASS with bundle/style-size
+warnings. Django system check PASS. No missing/unexpected migrations.
+Commands: python manage.py test; npm.cmd test -- --watch=false; npm.cmd run build.
+Machine frontend report: test-results/catalog-prices-20261127.json.
+Browser/manual visual check was not performed. No real payments were made.
+
+Migration support.0006_supportmessage_source was applied locally after a SQLite
+backup. Other installations should run python manage.py migrate.
+No AI training or model-weight changes are claimed. Updated menu data is used
+directly, without re-training. Existing FAQ/AI improvements remain in place.

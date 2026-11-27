@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
-import { BehaviorSubject, of, throwError } from 'rxjs';
+import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 import { OrdersPage } from './orders';
@@ -9,6 +9,7 @@ import { OrderRecord, Orders } from '../orders';
 import { Auth } from '../auth';
 import { I18nService } from '../i18n/i18n.service';
 import { Menu } from '../menu';
+import { Payments } from '../payments';
 
 describe('OrdersPage', () => {
   const makeOrder = (id: number, status: string): OrderRecord => ({
@@ -97,6 +98,48 @@ describe('OrdersPage', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+  it('allows the assigned courier to confirm cash once and refreshes earned points', () => {
+    const order = { ...makeOrder(91, 'delivered'), delivery_person: 7,
+      payment: { id: 15, method: 'cash' as const, status: 'pending' } };
+    component.currentUser = { id: 7, role: 'delivery' };
+    component.orders = [order]; component.expandedOrderId = order.id;
+    const response = new Subject<any>();
+    const confirm = vi.spyOn(TestBed.inject(Payments), 'confirmCashPayment').mockReturnValue(response);
+    ordersService.getOrders.mockReturnValue(of([{ ...order, payment: { ...order.payment, status: 'paid' }, cashback: { earned: '200.00', earned_minor: 20000, state: 'spent' } }]));
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('.commerce-notice button') as HTMLButtonElement;
+    expect(button).not.toBeNull(); button.click(); fixture.detectChanges();
+    expect(button.disabled).toBe(true);
+    component.confirmCash(order);
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(confirm).toHaveBeenCalledWith(15);
+    response.next({ status: 'paid' });
+    expect(component.orders[0].cashback?.earned).toBe('200.00');
+  });
+  it('explains why delivered cash orders await JetPoints and keeps them refreshing', () => {
+    const order = { ...makeOrder(91, 'delivered'), delivery_person: 7,
+      payment: { id: 15, method: 'cash' as const, status: 'pending' } };
+    component.orders = [order]; component.expandedOrderId = order.id;
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain(component.i18n.t('jetPointsAwaitingCash'));
+    expect(fixture.nativeElement.querySelector('.commerce-notice button')).toBeNull();
+    expect(component.hasActiveOrders).toBe(true);
+    const confirm = vi.spyOn(TestBed.inject(Payments), 'confirmCashPayment');
+    component.confirmCash(order);
+    component.currentUser = { id: 8, role: 'delivery' }; component.confirmCash(order);
+    expect(confirm).not.toHaveBeenCalled();
+  });
+  it('shows a confirmation error without changing pending cash to paid', () => {
+    const order = { ...makeOrder(91, 'delivered'), payment: { id: 15, method: 'cash' as const, status: 'pending' } };
+    component.currentUser = { id: 1, role: 'manager' };
+    vi.spyOn(TestBed.inject(Payments), 'confirmCashPayment').mockReturnValue(throwError(() => new Error('offline')));
+    component.confirmCash(order);
+    expect(component.confirmingCashOrderId).toBeNull();
+    expect(order.payment.status).toBe('pending');
+    expect(component.statusActionErrors[91]).toBe(component.i18n.t('paymentConfirmationFailed'));
   });
 
   it('verifies the logged-in user before loading manager order actions', () => {
