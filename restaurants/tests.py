@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -7,6 +8,60 @@ from orders.models import MenuItem
 from .models import Restaurant, RestaurantBranch
 
 User = get_user_model()
+
+
+class CatalogImageTests(TestCase):
+    def setUp(self):
+        self.initial_restaurants = Restaurant.objects.count()
+        self.initial_dishes = MenuItem.objects.count()
+
+    def seed(self, **options):
+        call_command('seed_restaurant_catalog', allow_production=True, verbosity=0, **options)
+
+    def test_seed_restores_team_images_and_preserves_custom_photos_on_repeat(self):
+        self.seed()
+        self.assertEqual(Restaurant.objects.filter(catalog_key__startswith='almaty-').exclude(image_url='').count(), 9)
+        self.assertEqual(MenuItem.objects.filter(catalog_key__startswith='almaty-').exclude(image_url='').count(), 17)
+        restaurant = Restaurant.objects.get(catalog_key='almaty-bahandi-burger')
+        dish = MenuItem.objects.get(catalog_key='almaty-bahandi-burger-dish-1')
+        restaurant.image_url = 'https://example.com/my-restaurant.jpg'
+        restaurant.save()
+        dish.image_url = 'https://example.com/my-dish.jpg'
+        dish.save()
+        self.seed()
+        restaurant.refresh_from_db()
+        dish.refresh_from_db()
+        self.assertEqual(restaurant.image_url, 'https://example.com/my-restaurant.jpg')
+        self.assertEqual(dish.image_url, 'https://example.com/my-dish.jpg')
+        self.assertEqual(Restaurant.objects.count(), self.initial_restaurants + 9)
+        self.assertEqual(MenuItem.objects.count(), self.initial_dishes + 21)
+
+    def test_images_only_preserves_other_catalog_fields_and_does_not_create_records(self):
+        restaurant = Restaurant.objects.create(
+            catalog_key='almaty-bahandi-burger', name='My edited restaurant',
+            description='My description', address='My address', is_active=False,
+        )
+        dish = MenuItem.objects.create(
+            catalog_key='almaty-bahandi-burger-dish-1', restaurant=restaurant,
+            name='My edited dish', category='Main', price='1234.56', is_active=False,
+        )
+        self.seed(images_only=True)
+        restaurant.refresh_from_db()
+        dish.refresh_from_db()
+        self.assertTrue(restaurant.image_url.startswith('https://'))
+        self.assertEqual(dish.image_url, 'https://bahandi.kz/netcat_files/20/31/menu_cheese_burger_chicken_550x550.jpg')
+        self.assertEqual(restaurant.name, 'My edited restaurant')
+        self.assertEqual(restaurant.description, 'My description')
+        self.assertEqual(restaurant.address, 'My address')
+        self.assertFalse(restaurant.is_active)
+        self.assertEqual(dish.name, 'My edited dish')
+        self.assertEqual(str(dish.price), '1234.56')
+        self.assertFalse(dish.is_active)
+        self.assertEqual(Restaurant.objects.count(), self.initial_restaurants + 1)
+        self.assertEqual(MenuItem.objects.count(), self.initial_dishes + 1)
+        self.seed(images_only=True)
+        self.assertEqual(Restaurant.objects.count(), self.initial_restaurants + 1)
+        self.assertEqual(MenuItem.objects.count(), self.initial_dishes + 1)
 
 
 class RestaurantApiTests(TestCase):

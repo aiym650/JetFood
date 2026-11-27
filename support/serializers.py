@@ -7,7 +7,7 @@ from .models import SupportCase, SupportMessage
 class SupportMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = SupportMessage
-        fields = ['id', 'sender', 'body', 'created_at']
+        fields = ['id', 'sender', 'source', 'body', 'created_at']
         read_only_fields = fields
 
 

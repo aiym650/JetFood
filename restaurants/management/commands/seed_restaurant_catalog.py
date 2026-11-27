@@ -1,4 +1,6 @@
 from decimal import Decimal
+import json
+from pathlib import Path
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
@@ -6,6 +8,17 @@ from django.db import transaction
 
 from orders.models import MenuItem
 from restaurants.models import Restaurant, RestaurantBranch
+from backend.image_references import validate_image_reference
+
+
+def fill_missing_images(image_references):
+    counts = {}
+    for section, model in (('restaurants', Restaurant), ('dishes', MenuItem)):
+        counts[section] = 0
+        for catalog_key, image_url in image_references[section].items():
+            validate_image_reference(image_url)
+            counts[section] += model.objects.filter(catalog_key=catalog_key, image_url='').update(image_url=image_url)
+    return counts
 
 
 CATALOG = [
@@ -161,6 +174,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--allow-production', action='store_true')
+        parser.add_argument('--images-only', action='store_true', help='Restore missing catalog images without updating other data.')
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -170,6 +184,15 @@ class Command(BaseCommand):
                 'Pass --allow-production only after reviewing the curated data.'
             )
 
+        image_references = json.loads(
+            (Path(__file__).resolve().parents[2] / 'data' / 'catalog_images.json').read_text(encoding='utf-8')
+        )
+        if options['images_only']:
+            counts = fill_missing_images(image_references)
+            self.stdout.write(self.style.SUCCESS(
+                f"Restored images: {counts['restaurants']} restaurants, {counts['dishes']} dishes."
+            ))
+            return
         for restaurant_data in CATALOG:
             restaurant_key = f"almaty-{restaurant_data['key']}"
             first_branch = restaurant_data['branches'][0]
@@ -180,7 +203,6 @@ class Command(BaseCommand):
                 'address': first_branch[1],
                 'description': '',
                 'phone': '',
-                'image_url': '',
                 'source_url': source_url,
                 'menu_source_url': restaurant_data['menu_source_url'],
                 'opening_time': None,
@@ -242,7 +264,6 @@ class Command(BaseCommand):
                     'description': description,
                     'category': category,
                     'price': Decimal(price),
-                    'image_url': '',
                     'source_url': restaurant_data['menu_source_url'],
                     'is_active': True,
                 }
@@ -257,4 +278,5 @@ class Command(BaseCommand):
                         setattr(item, field, value)
                     item.save()
 
+        fill_missing_images(image_references)
         self.stdout.write(self.style.SUCCESS('Verified restaurant catalog is ready.'))

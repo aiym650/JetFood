@@ -1,4 +1,5 @@
-import { ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, Input, OnDestroy, OnInit, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Loyalty, LoyaltyAccount } from '../loyalty';
@@ -16,15 +17,19 @@ export class LoyaltyPanel implements OnInit, OnDestroy {
   private receivedAt = 0;
   private initialSeconds = 0;
   private timer?: ReturnType<typeof setInterval>;
+  private refreshTimer?: ReturnType<typeof setInterval>;
+  private destroyRef = inject(DestroyRef);
   constructor(private loyalty: Loyalty, public i18n: I18nService, private cdr: ChangeDetectorRef) {}
   ngOnInit() {
     this.load();
+    this.refreshTimer = setInterval(() => { if (!document.hidden) this.load(); }, 30000);
     this.timer = setInterval(() => {
       this.secondsRemaining = Math.max(0, this.initialSeconds - Math.floor((Date.now() - this.receivedAt) / 1000));
       this.cdr.markForCheck();
     }, 1000);
   }
-  ngOnDestroy() { clearInterval(this.timer); }
+  ngOnDestroy() { clearInterval(this.timer); clearInterval(this.refreshTimer); }
+  @HostListener('window:focus') refreshOnFocus() { this.load(); }
   points(minor = 0): string {
     if (!Number.isSafeInteger(minor)) return '—';
     const value = Math.abs(minor);
@@ -40,7 +45,7 @@ export class LoyaltyPanel implements OnInit, OnDestroy {
   load() {
     if (this.loading) return;
     this.loading = true; this.error = false;
-    this.loyalty.account().subscribe({ next: account => {
+    this.loyalty.account().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: account => {
       this.account = account; this.loading = false;
       this.initialSeconds = account.second_order?.seconds_remaining ?? 0;
       this.secondsRemaining = this.initialSeconds; this.receivedAt = Date.now();

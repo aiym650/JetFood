@@ -56,9 +56,9 @@ class SupportCaseApiTests(TestCase):
             'issue_description': description,
         }, format='json')
 
-    @patch('support.views.generate_support_reply', return_value='Ваш заказ доставляется.')
+    @patch('support.views.generate_support_reply', return_value='Конечно, помогу.')
     def test_customer_case_gets_ai_answer_and_saved_transcript(self, generate_reply):
-        response = self.create_case('Где мой заказ? Хочу узнать статус.')
+        response = self.create_case('Мне нужна помощь с необычной ситуацией.')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['order_number'], self.order.order_number)
@@ -66,7 +66,8 @@ class SupportCaseApiTests(TestCase):
         self.assertEqual(len(response.data['messages']), 3)
         self.assertEqual(response.data['messages'][1]['sender'], 'customer')
         self.assertEqual(response.data['messages'][2]['sender'], 'assistant')
-        self.assertEqual(response.data['messages'][2]['body'], 'Ваш заказ доставляется.')
+        self.assertEqual(response.data['messages'][2]['body'], 'Конечно, помогу.')
+        self.assertEqual(response.data['messages'][2]['source'], 'ai')
         self.assertEqual(SupportMessage.objects.filter(support_case_id=response.data['id']).count(), 3)
         generate_reply.assert_called_once()
 
@@ -86,7 +87,7 @@ class SupportCaseApiTests(TestCase):
         self.client.force_authenticate(user=self.customer)
 
         response = self.client.post('/api/support/cases/', {
-            'issue_description': 'Как изменить адрес доставки?',
+            'issue_description': 'Мне нужна помощь с необычной ситуацией в приложении.',
         }, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

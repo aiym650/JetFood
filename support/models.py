@@ -40,6 +40,7 @@ class SupportCase(models.Model):
 
 
 class SupportMessage(models.Model):
+    source = models.CharField(max_length=16, blank=True, default='', choices=[('ai', 'AI provider'), ('catalog', 'JetFood catalog'), ('facts', 'Verified JetFood data')])
     request_id = models.CharField(max_length=100, null=True, blank=True)
     SENDER_CHOICES = [
         ('customer', 'Customer'),

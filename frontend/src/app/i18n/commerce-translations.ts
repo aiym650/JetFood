@@ -1,5 +1,7 @@
 export const commerceTranslations = {
   en: {
+    jetPointsAwaitingCash: 'JetPoints will be credited after the courier or manager confirms receipt of cash payment.',
+    jetPointsEarned: 'JetPoints earned',
     jpEyebrow: 'JETFOOD REWARDS', jpOpeningBalance: 'Balance carried into JetPoints',
     jpDetails: 'My JetPoints', jpRefresh: 'Refresh', jpLevel: 'Loyalty level', jpCashback: 'cashback',
     jpLevels: { bronze: 'Bronze', silver: 'Silver', gold: 'Gold' },
@@ -38,6 +40,8 @@ export const commerceTranslations = {
     ledgerKinds: { earn: 'Earned', reserve: 'Reserved', spend: 'Spent', release: 'Reservation released', refund: 'Bonuses returned', adjustment: 'Reward adjustment' },
   },
   ru: {
+    jetPointsAwaitingCash: 'JetPoints начислятся после того, как курьер или менеджер подтвердит получение наличных.',
+    jetPointsEarned: 'Начислено JetPoints',
     jpEyebrow: 'ПРОГРАММА JETFOOD', jpOpeningBalance: 'Остаток, перенесённый в JetPoints',
     jpDetails: 'Мои JetPoints', jpRefresh: 'Обновить', jpLevel: 'Уровень лояльности', jpCashback: 'кэшбэк',
     jpLevels: { bronze: 'Бронзовый', silver: 'Серебряный', gold: 'Золотой' },

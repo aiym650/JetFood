@@ -13,6 +13,42 @@ from .services import allocate, apply_refund, journal, lock_wallet, synchronize
 
 
 class CashbackTests(TestCase):
+    def test_delivered_cash_order_awards_only_after_authorized_payment_confirmation(self):
+        created = self.checkout(payment={'status': 'paid'})
+        self.assertEqual(created.status_code, 201, created.data)
+        order = Order.objects.get(pk=created.data['id'])
+        courier = User.objects.create_user(username='cash-courier', role='delivery')
+        stranger = User.objects.create_user(username='other-courier', role='delivery')
+        order.delivery_person = courier
+        order.status = 'delivering'
+        order.save()
+        self.client.force_authenticate(courier)
+        delivered = self.client.post(f'/api/orders/{order.pk}/status/', {'status': 'delivered'})
+        self.assertEqual(delivered.status_code, 200, delivered.data)
+        payment_id = order.payment.pk
+        record = LoyaltyOrder.objects.get(order=order)
+        self.assertEqual(record.percentage_reward, 0)
+        self.assertEqual(order.payment.status, 'pending')
+
+        self.client.force_authenticate(self.user)
+        detail = self.client.get(f'/api/orders/{order.pk}/')
+        self.assertEqual(detail.data['payment'], {'id': payment_id, 'method': 'cash', 'status': 'pending'})
+        self.assertEqual(self.client.post(f'/api/payments/{payment_id}/confirm-cash/').status_code, 403)
+        self.client.force_authenticate(stranger)
+        self.assertEqual(self.client.post(f'/api/payments/{payment_id}/confirm-cash/').status_code, 403)
+
+        self.client.force_authenticate(courier)
+        confirmed = self.client.post(f'/api/payments/{payment_id}/confirm-cash/')
+        self.assertEqual(confirmed.status_code, 200, confirmed.data)
+        self.assertEqual(self.client.post(f'/api/payments/{payment_id}/confirm-cash/').status_code, 400)
+        record.refresh_from_db()
+        self.assertEqual(record.percentage_reward, 20000)
+        self.assertEqual(LedgerEntry.objects.filter(order=order, kind='earn', category='cashback').count(), 1)
+        self.client.force_authenticate(self.user)
+        account = self.client.get('/api/loyalty/')
+        self.assertEqual(account.data['available'], '5200.00')
+        self.assertEqual(self.client.get(f'/api/orders/{order.pk}/').data['cashback']['earned'], '200.00')
+
     def setUp(self):
         cache.clear()
         self.user = User.objects.create_user(username='buyer', password='safe-password')

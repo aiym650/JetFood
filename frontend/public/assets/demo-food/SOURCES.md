@@ -9,6 +9,8 @@
 The photograph is used only as a generic dashboard hero image. It does not depict
 or endorse any restaurant or menu item.
 
-Restaurant cards and dishes use neutral placeholders until authorized or
-appropriately licensed matching photographs are available. Do not assign generic
-food photos to unrelated restaurants or dishes.
+Existing team selections for restaurant and dish images are recorded separately
+in `restaurants/data/catalog_images.json`; provenance and limitations are in
+`restaurants/data/CATALOG_IMAGES.txt`. These references are not covered by the
+CC0 license of `fries.jpg`. Missing references use placeholders. Do not assign
+generic food photos to unrelated restaurants or dishes.

@@ -93,6 +93,11 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     cashback = serializers.SerializerMethodField()
+    payment = serializers.SerializerMethodField()
+
+    def get_payment(self, obj):
+        payment = getattr(obj, 'payment', None)
+        return {'id': payment.id, 'method': payment.method, 'status': payment.status} if payment else None
 
     def get_cashback(self, obj):
         from loyalty.models import LoyaltyOrder
@@ -135,7 +140,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "items",
-            "payment_method", "cashback_amount", "cashback",
+            "payment_method", "cashback_amount", "cashback", "payment",
         ]
         read_only_fields = [
             "id",

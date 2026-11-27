@@ -1,5 +1,7 @@
 export const featureTranslations = {
   en: {
+    chatVerifiedSource: 'Verified JetFood data',
+    chatCatalogSource: 'JetFood catalog data',
     toolbarDelivery: 'Delivering to',
     cityAlmaty: 'Almaty',
     changeAddress: 'Change address',
@@ -148,6 +150,8 @@ export const featureTranslations = {
     promoErrors: { not_found: 'Code not found.', inactive: 'Code is inactive.', not_started: 'Code is not active yet.', expired: 'Code has expired.', restaurant: 'Code does not apply to this restaurant.', minimum: 'The minimum item subtotal has not been reached.', limit: 'Usage limit reached.', user_limit: 'You have reached your usage limit.' },
   },
   ru: {
+    chatVerifiedSource: 'Проверенные данные JetFood',
+    chatCatalogSource: 'Данные каталога JetFood',
     toolbarDelivery: 'Доставим в',
     cityAlmaty: 'Алматы',
     changeAddress: 'Изменить адрес',
@@ -235,6 +239,8 @@ export const featureTranslations = {
     promoErrors: { not_found: 'Промокод не найден.', inactive: 'Промокод отключён.', not_started: 'Срок действия ещё не начался.', expired: 'Срок действия истёк.', restaurant: 'Промокод не подходит для этого ресторана.', minimum: 'Не достигнута минимальная стоимость товаров.', limit: 'Лимит использований исчерпан.', user_limit: 'Вы исчерпали свой лимит использований.' },
   },
   kk: {
+    chatVerifiedSource: 'JetFood расталған деректері',
+    chatCatalogSource: 'JetFood каталогының деректері',
     toolbarDelivery: 'Жеткізу орны',
     cityAlmaty: 'Алматы',
     changeAddress: 'Мекенжайды өзгерту',

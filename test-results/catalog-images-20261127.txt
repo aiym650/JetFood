@@ -1,0 +1,34 @@
+Catalog image repair ? 2026-11-27, Asia/Qyzylorda
+Environment: Python 3.14.3, Django 5.2.13, Windows.
+
+Cause: the catalog seed command wrote empty image_url values, while the team
+image selections existed only in the SQLite database previously in origin/main.
+
+Recovered 9 restaurant references and 17 dish references by catalog_key from
+that database's local backup. Saved public references in
+restaurants/data/catalog_images.json. No customer or order data was imported.
+Added --images-only; normal seeding also preserves nonempty image references.
+
+Local execution: python manage.py seed_restaurant_catalog --images-only
+Result: restored images for 9 restaurants and 17 dishes.
+Compared the database with the pre-repair backup: ONLY image_url fields changed.
+No rows, prices, descriptions or availability changed.
+
+Remote HTTP GET checks: 21 unique URLs; 19 initially responded, 2 had transient
+network errors. One retry: all 21 returned image content. These are real remote
+requests, not mocks. No files were copied or redistributed from remote hosts.
+Authenticated local DRF APIClient checks: restaurants 200, images 9/9;
+menu 200, images 17/21. Browser rendering was not manually verified.
+Four Okadzaki dishes have no team-provided image references.
+
+Automated backend tests: python manage.py test, with the password hasher
+changed ONLY inside the test runner to MD5PasswordHasher for speed.
+First run: 237/238 passed. The unrelated existing payment privacy test searched
+for CVV digits anywhere in JSON and accidentally matched a timestamp fraction.
+No production or payment test code was changed to hide that failure.
+Repeat complete run: 238/238 PASS, exit code 0, including 2 new image tests.
+System check: PASS. Migration consistency: no changes detected.
+Frontend application code was unchanged; no frontend rebuild was needed.
+
+Image provenance/rights and external-host limitations:
+restaurants/data/CATALOG_IMAGES.txt

@@ -34,6 +34,25 @@ describe('JetPoints dashboard (mock backend)', () => {
     expect(text).toContain('JetPoints'); expect(text).toContain('1234.50'); expect(text).toContain('1 JetPoint = 1 ₸');
     expect(text).toContain('1,500.00 JP'); expect(text).toContain('265.50 JP');
   });
+  it('refreshes the balance after 30 seconds and stops polling when destroyed', () => {
+    vi.useFakeTimers();
+    vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
+    render();
+    api.account.mockReturnValue(of({ ...makeAccount(), available: '1434.50' }));
+    vi.advanceTimersByTime(30000); fixture.detectChanges();
+    expect(api.account).toHaveBeenCalledTimes(2);
+    expect(fixture.nativeElement.textContent).toContain('1434.50');
+    fixture.destroy();
+    vi.advanceTimersByTime(30000);
+    expect(api.account).toHaveBeenCalledTimes(2);
+    vi.restoreAllMocks();
+  });
+  it('reloads the balance when the customer returns to the window', () => {
+    render();
+    api.account.mockReturnValue(of({ ...makeAccount(), available: '1634.50' }));
+    window.dispatchEvent(new Event('focus')); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('1634.50');
+  });
   it('displays Bronze progress and the number of orders to Silver', () => {
     render(); expect(fixture.nativeElement.textContent).toContain('Bronze');
     expect(fixture.nativeElement.textContent).toContain('5.00%');

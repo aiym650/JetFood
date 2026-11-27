@@ -1,5 +1,7 @@
 // Shared UI strings; support and checkout extensions live in feature-translations.ts.
 export const kazakhTranslations = {
+  jetPointsAwaitingCash: 'JetPoints курьер немесе менеджер қолма-қол төлемнің алынғанын растағаннан кейін есептеледі.',
+  jetPointsEarned: 'Есептелген JetPoints',
   login: 'Кіру', register: 'Тіркелу', username: 'Пайдаланушы аты', password: 'Құпиясөз',
   email: 'Электрондық пошта', phone: 'Телефон', confirmPassword: 'Құпиясөзді растау',
   loggingIn: 'Кіру орындалуда...', registering: 'Тіркелу орындалуда...',

@@ -186,6 +186,17 @@
                 <div *ngIf="order.actual_delivery_time"><span>{{ i18n.t('deliveredAt') }}</span><strong>{{ order.actual_delivery_time | date:'dd.MM.yyyy HH:mm' }}</strong></div>
                 <div *ngIf="order.delivery_confirmed_at"><span>{{ i18n.t('deliveryConfirmedAt') }}</span><strong>{{ order.delivery_confirmed_at | date:'dd.MM.yyyy HH:mm' }}</strong></div>
               </div>
+              <section *ngIf="order.status === 'delivered' && order.payment?.method === 'cash' && order.payment?.status === 'pending'" class="commerce-notice">
+                <p>{{ i18n.t('jetPointsAwaitingCash') }}</p>
+                <button *ngIf="canConfirmCash(order)" type="button" class="ui-button ui-button-primary"
+                  [disabled]="confirmingCashOrderId !== null" (click)="confirmCash(order)">
+                  {{ i18n.t('confirmCashPayment') }}
+                </button>
+                <p *ngIf="statusActionErrors[order.id]" role="alert">{{ statusActionErrors[order.id] }}</p>
+              </section>
+              <p *ngIf="currentUser?.role === 'customer' && (order.cashback?.earned_minor ?? 0) > 0">
+                {{ i18n.t('jetPointsEarned') }}: +{{ order.cashback?.earned }} JP
+              </p>
               <section *ngIf="currentUser?.role === 'customer' && order.status === 'delivered'" class="review-section">
                 <button *ngIf="!ownReviews[order.id] && !reviewForm[order.id] && !reviewSuccess[order.id]" type="button" class="details-button" (click)="beginReview(order.id)">{{ i18n.t('leaveReview') }}</button>
                 <div *ngIf="ownReviews[order.id] as review" class="commerce-panel">

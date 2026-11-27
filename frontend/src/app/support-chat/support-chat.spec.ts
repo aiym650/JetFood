@@ -8,6 +8,21 @@ import { Support, SupportCase } from '../support';
 import { SupportChat } from './support-chat';
 
 describe('SupportChat', () => {
+  it('identifies verified account data without presenting it as AI-generated text', () => {
+    component.toggleChat();
+    component.selectedCase = conversation([{ ...answer, source: 'facts', body: 'Баланс: 1234.50 JP' }]);
+    fixture.changeDetectorRef.markForCheck(); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.message-author')?.textContent).toContain('Проверенные данные JetFood');
+    expect(fixture.nativeElement.textContent).toContain('1234.50 JP');
+  });
+  it('labels live catalog results separately from AI-authored answers', async () => {
+    component.toggleChat();
+    component.selectedCase = conversation([{ ...answer, source: 'catalog', body: 'Bahandi Burger: 1500.00 ₸' }]);
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.message-author')?.textContent).toContain('Данные каталога JetFood');
+    expect(fixture.nativeElement.textContent).toContain('1500.00 ₸');
+  });
   let fixture: ComponentFixture<SupportChat>;
   let component: SupportChat;
   let api: Record<
